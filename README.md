@@ -12,6 +12,7 @@ npm start
 ## Metadata
 - rootHash
 - totalSlice
+- fileName
 - fileSize
 - contentType
 
