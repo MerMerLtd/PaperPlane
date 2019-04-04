@@ -1,0 +1,19 @@
+# PaperPlane Default Config
+
+title = "PaperPlane"
+
+[base]
+folder = "PaperPlane"
+static = "./build/frontend/"
+debug = false
+
+[blockchain]
+type = "ethereum"
+
+[database]
+type = "firebase"
+
+[api]
+pathname = [
+  "get | /,/version | Static.Utils.readPackageInfo"
+]

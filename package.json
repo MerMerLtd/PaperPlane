@@ -1,0 +1,58 @@
+{
+  "author": {
+    "name": "MerMer Ltd."
+  },
+  "bin": {
+    "paperplane": "bin/main.js"
+  },
+  "bugs": {
+    "url": "https://github.com/MerMerLtd/PaperPlane/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "command-line-args": "^5.0.2",
+    "dvalue": "^1.0.20",
+    "ecrequest": "^1.1.3",
+    "i18n": "^0.8.3",
+    "koa": "^2.7.0",
+    "koa-body": "^4.0.8",
+    "koa-router": "^7.4.0",
+    "koa-static": "^5.0.0",
+    "level": "^4.0.0",
+    "mongodb": "^3.1.13",
+    "ncp": "^2.0.0",
+    "pem": "^1.14.2",
+    "spdy": "^4.0.0",
+    "toml": "^3.0.0"
+  },
+  "deprecated": false,
+  "description": "Large File Transfer Service",
+  "devDependencies": {
+    "@babel/core": "^7.3.3",
+    "babel-loader": "^8.0.5",
+    "babel-plugin-transform-decorators-legacy": "^1.3.5",
+    "css-loader": "^2.1.0",
+    "koa-webpack": "^5.2.1",
+    "style-loader": "^0.23.1",
+    "webpack": "^4.29.5",
+    "webpack-cli": "^3.2.3",
+    "webpack-dev-server": "^3.2.0"
+  },
+  "homepage": "https://github.com/MerMerLtd/PaperPlane#readme",
+  "keywords": [
+    "file",
+    "transfer"
+  ],
+  "license": "MIT",
+  "main": "bin/main.js",
+  "name": "PaperPlane",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MerMerLtd/PaperPlane.git"
+  },
+  "scripts": {
+    "dev": "webpack-dev-server --mode development --open 'google chrome'",
+    "start": "bin/main.js"
+  },
+  "version": "0.1.5"
+}
