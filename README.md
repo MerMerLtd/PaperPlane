@@ -6,4 +6,5 @@ Large File Transfer Service
 git clone https://github.com/MerMerLtd/PaperPlane
 cd PaperPlane
 npm i
+npm start
 ```
