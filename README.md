@@ -8,3 +8,14 @@ cd PaperPlane
 npm i
 npm start
 ```
+
+## Metadata
+- rootHash
+- totalSlice
+- fileSize
+- contentType
+
+## Slice
+- totalSlice
+- sliceIndex
+- sliceBuffer
