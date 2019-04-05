@@ -5,6 +5,7 @@
     opacity: 0;
 }
 
+
 .add{
     &__icon{
         position:absolute;
@@ -81,7 +82,7 @@
         top:50%;
         left:50%;
         color: #fff;
-        z-index: 2000;
+        // z-index: 2000;
         height: 100%;
         width: 100%;
         background-color: #e91e63;
@@ -113,7 +114,7 @@
         left: 50%;
         width: 100%;
         height: 100%;
-        z-index: 3000;
+        // z-index: 3000;
     }
     
     &__file{
@@ -137,7 +138,7 @@
     overflow: scroll;
     width: 100%;
     height: 100%;
-    z-index: 1000;
+    // z-index: 1000;
     background-color: #f0f0f0;
     // background-color: #e91e63; // 檔案進到畫面的但沒有到file-container提示 || 移出
 
@@ -161,6 +162,9 @@
 .has-advanced-upload .box__dragndrop{
    display: inline;
 }
+.has-advanced-upload .add__text--small > .box__dragndrop{
+    display: none;
+ }
 
 .file{
     position: relative;
@@ -216,14 +220,14 @@
         font-size: 10px;
     }
 }
-
 .alert{
-    z-index: 10000;
+    --opacity: 0;
+    z-index: 100;
     position: fixed;
     transform: translate(-50%, -50%);
     top: 14vh;
     left: 50%;
     padding: 15px 10px;
+    // opacity: 1;
+    opacity: var(--opacity);
 }
-
-
