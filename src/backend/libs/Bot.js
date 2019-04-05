@@ -24,6 +24,45 @@ class Bot {
     });
     return Promise.resolve(bot);
   }
+  
+  write({ key, value }) {
+    const db = this.database.leveldb;
+    return new Promise((resolve, reject) => {
+      db.put(key, value, (e) => {
+        if(e) {
+          reject(e);
+        } else {
+          resolve(true);
+        }
+      });
+    });
+  }
+  findOne({ key }) {
+    const db = this.database.leveldb;
+    return new Promise((resolve) => {
+      db.get('key', (err, value) => {
+        if(err) {
+          reject(err);
+        } else {
+          resolve(value);
+        }
+      });
+    });
+  }
+  find({ key }) {
+    const db = this.database.leveldb;
+    return new Promise((resolve) => {
+      const rs = [];
+      db.createReadStream({
+        gte: key,
+        lte: String.fromCharCode(key.charCodeAt(0) + 1)
+      }).on('data', ({ key, value }) => {
+        rs.push({ key, value });
+      }).on('end', () => {
+        resolve(rs);
+      });
+    });
+  }
 
   static get isBot() {
     return true;
