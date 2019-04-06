@@ -1,4 +1,5 @@
 const path = require('path');
+const dvalue = require('dvalue');
 
 const Bot = require(path.resolve(__dirname, 'Bot.js'));
 const Utils = require(path.resolve(__dirname, 'Utils.js'));
@@ -62,6 +63,7 @@ class Job {
 class LFS extends Bot {
   constructor() {
     super();
+    this.name = 'LFS';
   }
 
   static parseSlice({ slice }) {
@@ -139,15 +141,19 @@ class LFS extends Bot {
     const stringifyJOB = Utils.jsonStableStringify(job);
     this.JOBS.push(job);
     if(write) {
-      return db.write({ key, value });
+      return db.write({ key, value })
+      .then({ fid: job.fid });
     } else {
-      return Promise.resolve(true);
+      return Promise.resolve({ fid: job.fid });
     }
   }
   updateOperation({ fid, totalSlice, sliceIndex }) {
     const job = this.JOBS.find((el) => el.fid == fid);
-    if(job.totalSlice < totalSlice) {
-      
+    const currentTotal = job.totalSlice > 0 ? job.totalSlice : 0;
+    if(currentTotal < totalSlice) {
+      let oldTotal = currentTotal;
+      job.totalSlice = totalSlice;
+      job.waiting = job.waiting.concat()
     }
   }
 
@@ -176,6 +182,7 @@ class LFS extends Bot {
       }
     })
     .then(() => this.newOperation({ job: { fid } }))
+
     .catch(() => {
       return this.initialUpload();
     })
