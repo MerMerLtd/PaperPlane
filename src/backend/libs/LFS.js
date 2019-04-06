@@ -21,22 +21,65 @@ class Job {
   set fid(value) {
     this._.fid = value;
   }
+  get fid() {
+    return this._.fid;
+  }
   set rootHash(value) {
     this._.rootHash = value;
   }
+  get rootHash() {
+    return this._.rootHash;
+  }
   set totalSlice(value) {
     if(value > this._.totalSlice || (!this._.totalSlice && value > 0)) {
+      const currentTotal = this._.totalSlice > 0 ? this._.totalSlice : 0;
+      if(currentTotal < value) {
+        this._.totalSlice = value;
+        this._.waiting = this._.waiting.concat(
+          new Array(value - currentTotal)
+          .fill(0)
+          .map((v, i) => i + currentTotal)
+        );
+      }
       this._.totalSlice = value;
     }
+  }
+  get totalSlice() {
+    return this._.totalSlice || 0;
   }
   set fileName(value) {
     this._.fileName = value;
   }
+  get fileName() {
+    return this._.fileName || '';
+  }
   set fileSize(value) {
     this._.fileSize = value > 0 ? value : 0;
   }
+  get fileSize() {
+    return this._.fileSize || 0;
+  }
   set contentType(value) {
     this._.contentType = value;
+  }
+  get contentType() {
+    return this._.contentType;
+  }
+  get waiting() {
+    return this._.waiting;
+  }
+  done(sliceIndex) {
+    const i = this._.waiting.indexOf(sliceIndex);
+    if(i > -1) {
+      this._.waiting.splice(i, 1);
+      return true;
+    }
+  }
+  toJSON() {
+    return dvalue.clone(this._);
+  }
+  toStaticString() {
+    return Utils.jsonStableStringify(this._);
   }
 }
 
@@ -127,6 +170,12 @@ class LFS extends Bot {
     }
   }
 
+  findJOB({ fid }) {
+    return this.JOBS.find((el) => {
+      return el.fid == fid;
+    });
+  }
+
   /*
     fid
     rootHash
@@ -138,31 +187,34 @@ class LFS extends Bot {
   */
   newOperation({ job, write }) {
     const key = `LFS.JOBS.${job.merkleRoot}`;
-    const stringifyJOB = Utils.jsonStableStringify(job);
-    this.JOBS.push(job);
+    const myJob = new Job(job);
+    const stringifyJOB = myJob.toStaticString();
+    this.JOBS.push(myJob);
     if(write) {
-      return db.write({ key, value })
-      .then({ fid: job.fid });
+      return this.write({ key, value: stringifyJOB })
+      .then(() => { return {fid: job.fid }; });
     } else {
       return Promise.resolve({ fid: job.fid });
     }
   }
   updateOperation({ fid, totalSlice, sliceIndex }) {
-    const job = this.JOBS.find((el) => el.fid == fid);
-    const currentTotal = job.totalSlice > 0 ? job.totalSlice : 0;
-    if(currentTotal < totalSlice) {
-      let oldTotal = currentTotal;
-      job.totalSlice = totalSlice;
-      job.waiting = job.waiting.concat()
-    }
+    const job = this.findJOB({ fid });
+    job.totalSlice = totalSlice;
+    job.done(sliceIndex);
   }
 
-  getMetadata({  }) {
-
+  getUploadJob({ fid }) {
+    const job = this.findJOB({ fid });
+    return Promise.resolve(job ? job.toJSON() : {});
   }
 
-  createMetadata({  }) {
+  getMetadata({ hash }) {
+    const job = this.findJOB({ fid });
+    return Promise.resolve(job ? job.toJSON() : {});
+  }
 
+  getSlice({ fid, index }) {
+    const slicePath = path.resolve(this);
   }
 
   /* 
@@ -181,9 +233,8 @@ class LFS extends Bot {
         return Utils.initialFolder({ homeFolder: folder })
       }
     })
-    .then(() => this.newOperation({ job: { fid } }))
-
-    .catch(() => {
+    .then(() => this.newOperation({ job: { fid }, write: true }))
+    .catch((e) => {
       return this.initialUpload();
     })
   }
@@ -207,6 +258,10 @@ class LFS extends Bot {
 
   completeFile({  }) {
     
+  }
+
+  testUpload({ files }) {
+    return Promise.resolve(files);
   }
 }
 

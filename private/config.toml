@@ -17,7 +17,8 @@ type = "firebase"
 pathname = [
   "get | /,/version | Static.Utils.readPackageInfo",
   "get | /meta/:hash | Bot.LFS.getMetadata",
-  "get | /file |Bot.LFS.initialUpload",
+  "get | /file | Bot.LFS.initialUpload",
   "post | /file | Bot.LFS.initialUpload",
+  "get | /file/:fid | Bot.LFS.getUploadJob",
   "post | /file/:fid | Bot.LFS.uploadSlice"
 ]

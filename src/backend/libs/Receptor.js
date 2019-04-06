@@ -93,7 +93,26 @@ class Receptor extends Bot {
         method: ctx.method,
         query: ctx.query
       };
-      return operation(inputs)
+
+      const formatInput = {
+        files: ctx.request.files,
+        method: ctx.method,
+        url: ctx.request.url
+      };
+      Object.keys(inputs.body).map((k) => {
+        formatInput[k] = inputs.body[k];
+      });
+      Object.keys(inputs.params).map((k) => {
+        formatInput[k] = inputs.params[k];
+      });
+      Object.keys(inputs.header).map((k) => {
+        formatInput[k] = inputs.header[k];
+      });
+      Object.keys(inputs.query).map((k) => {
+        formatInput[k] = inputs.query[k];
+      });
+
+      return operation(formatInput)
       .then((rs) => {
       	ctx.body = rs;
       	next();
