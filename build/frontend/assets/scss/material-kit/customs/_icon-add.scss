@@ -144,19 +144,13 @@
 
 
     display: grid;
-    grid-gap: 30px;
-    grid-template-columns: repeat(auto-fit, 113px); //minmax(100px, 1fr)
+    // grid-gap: 30px;
+    grid-template-columns: repeat(auto-fit, minmax( 113px, 1fr));
     grid-auto-rows: 120px;
-    // justify-content: space-evenly;
+    justify-content: space-evenly;
     justify-items: center;
     align-items: center;
-    // & .hint{
-    //     position: absolute;
-    //     transform: translate(-50%, -50%);
-    //     font-size: 24px;
-    //     top:50%;
-    //     left:50%;
-    // }
+  
 }
 
 .has-advanced-upload .box__dragndrop{
