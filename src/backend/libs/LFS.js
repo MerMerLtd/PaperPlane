@@ -16,6 +16,7 @@ const Utils = require(path.resolve(__dirname, 'Utils.js'));
 class Job {
   constructor({ fid, rootHash, totalSlice, fileName, fileSize, contentType }) {
     this._ = { fid, rootHash, totalSlice, fileName, fileSize, contentType };
+    this.totalSlice = totalSlice;
   }
 
   set fid(value) {
@@ -197,6 +198,7 @@ class LFS extends Bot {
       return Promise.resolve({ fid: job.fid });
     }
   }
+
   updateOperation({ fid, totalSlice, sliceIndex }) {
     const job = this.findJOB({ fid });
     job.totalSlice = totalSlice;
@@ -260,7 +262,7 @@ class LFS extends Bot {
     
   }
 
-  testUpload({ files }) {
+  testUpload({ files, session, sessionID }) {
     return Promise.resolve(files);
   }
 }

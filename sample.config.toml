@@ -13,6 +13,13 @@ type = "ethereum"
 [database]
 type = "firebase"
 
+[mailer]
+host = "smtp.gmail.com"
+secure = true
+port = 465
+user = "contact@drophere.io"
+password = ""
+
 [api]
 pathname = [
   "get | /,/version | Static.Utils.readPackageInfo",
