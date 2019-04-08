@@ -4,6 +4,7 @@ const pem = require('pem');
 const http = require('http');
 const spdy  = require('spdy');
 const koa = require('koa');
+const session = require('koa-session');
 const Router = require('koa-router');
 const bodyParser = require('koa-body');
 const staticServe = require('koa-static');
@@ -32,6 +33,17 @@ class Receptor extends Bot {
     .then(() => this.createPem())
     .then((options) => {
       const app = new koa();
+      const CONFIG = {
+         key: 'PaperPlane:SID',
+         maxAge: 86400000,
+         overwrite: true,
+         httpOnly: true,
+         signed: true,
+         rolling: false,
+         renew: false
+      };
+      app.keys = ['PAPER PLANE SESSION SECRET'];
+      app.use(session(CONFIG, app));
       app.use(staticServe(this.config.base.static))
          .use(bodyParser({ multipart: true }))
          .use(this.router.routes())
@@ -85,16 +97,22 @@ class Receptor extends Bot {
   register({ pathname, options, operation }) {
   	const method = options.method.toLowerCase();
     this.router[method](pathname, (ctx, next) => {
+      if(!ctx.session.id) {
+        ctx.session.id = dvalue.randomID(16);
+      }
       const inputs = {
         body: ctx.request.body,
         files: ctx.request.files,
         params: ctx.params,
         header: ctx.header,
         method: ctx.method,
-        query: ctx.query
+        query: ctx.query,
+        session: ctx.session,
+        sessionID: ctx.session.id
       };
 
       const formatInput = {
+        sessionID: inputs.sessionID,
         files: ctx.request.files,
         method: ctx.method,
         url: ctx.request.url
