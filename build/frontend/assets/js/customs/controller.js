@@ -23,7 +23,7 @@ const closeConnection = ()  => {
 const makeRequest = opts => {
     // 工作排程 && 重傳
     if(connection >= maxConnection){
-        queue.push(opts);
+        queue.push(opts); // ??
     }else{
         connection++;
         const xhr = new XMLHttpRequest();
@@ -302,6 +302,7 @@ const closeWorker = worker => {
 
     if(sha1Queue.length > 0 && worker < maxWorker){
         let next = sha1Queue.pop();
+        console.log(next);
         if(typeof next === "function"){
             next(); 
         }
@@ -309,25 +310,25 @@ const closeWorker = worker => {
     return true;
 }
 
-const SHA1 = (fid, blob) => {
+const SHA1 = target => {
     if(workers >= maxWorker){
-    
-        sha1Queue.push(SHA1(fid, blob));
+        sha1Queue.push(SHA1.bind(this, target));
+        // console.log(sha1Queue)
     }else{
         return new Promise((resolve, reject) => {
             const worker = new Worker("../assets/js/plugins/rusha.min.js"); 
             // console.log(workers)
             worker.onmessage = evt => {
-                console.log(evt)
+                // console.log(evt)
                 closeWorker(worker);
                 resolve(evt.data);
             }
             worker.onerror = evt => {
-                console.log(evt)
+                // console.log(evt)
                 closeWorker(worker);
                 reject(evt.message);
             }
-            worker.postMessage({id: fid, data: blob});   
+            worker.postMessage({id: target.fid, data: target.blob});   
             workers++;
         })
     }
@@ -335,7 +336,6 @@ const SHA1 = (fid, blob) => {
 
 // 獲得某file的第 index 個加上 shardInfo 且 hash 的碎片，以及它要去的地方 👉 path
 const getHashShard = parseFile => {
-    // console.log(parseFile)
     const file = parseFile.file;
     const fid = parseFile.fid;
     const index = parseFile.sliceIndex;
@@ -352,56 +352,47 @@ const getHashShard = parseFile => {
     }
 
     const shardInfo = genShardInfo(count, index);  // get shardInfo
-    // console.log(shardInfo)
     const blob = slice(file, start, end); // 取得file第i個blob
-    // console.log(blob, file, start, end); 
-
     const shard = new Uint8Array(shardInfo.length + sliceSize); // 組合 shardInfo & blob 👉 shard
     shard.set(shardInfo, 0);
     shard.set(blob, shardInfo.length);
 
-    // console.log(shard); 
+    const target = {fid, blob};
     return new Promise((resolve, reject) => {
-        // console.log(shard); 
-        SHA1(fid, shard)
-        .then(res => (
-            resolve({index,
+        SHA1(target)
+        .then(
+            res => {
+                parseFile.sliceIndex += 1 ; //紀錄進度
+                return resolve({
+                    index,
                     path: `/file/${fid}/${res.hash}`,
-                    blob: new Blob([res.hash]),})
-            )
+                    blob: new Blob([res.hash]),
+                })
+            }
         )
         .catch(
             err => reject({err})
         )
     });
-    // try{
-    //     console.log("does try");
-    //     const res = await SHA1(shard);
-    //     console.log(res); 
-    //     parseFile.sliceIndex += 1 ; //紀錄進度
-    //     return Promise.resolve({
-    //         index,
-    //         path: `/file/${fid}/${res.hash}`,
-    //         blob: new Blob([res.hash]),
-    //     })
-    // }catch(error){
-    //     return Promise.resolve({error});
-    // }
 }
+const uploadQueue = [];
 
 const addUploadQueue = target => {
     uploadQueue.push(target);
     return uploadQueue;
 }
 
-const startUpload = () => {
+const startUpload = async () => {
     if(!uploadQueue || uploadQueue.length === 0) return;
     if(connection >= maxConnection) {  
-        queue.push(function(){ 
-            startUpload(); 
-        });
+        queue.push(startUpload.bind(this));
         return false; 
     }
+    const target = uploadQueue.pop();
+	const hashShard =  await getHashShard(target); // 
+	const path = hashShard.path;
+	
+
 }
 
 //(path, n, callback)
@@ -456,7 +447,8 @@ const handleFilesSelected = evt => {
             return Promise.resolve({ errorMessage: "API BAD GATEWAY", error, file });
         } 
     }))
-    .then(async (resultArray) => {
+    .then(async resultArray => {// resultArray is array of files with fid provided by backend
+
         // 3. 把資料存到 state 裡 =>state.fileObj.files
         state.fileObj.files = state.fileObj.files.concat(files); // FileList object.
         // 4. render 畫面
@@ -467,17 +459,20 @@ const handleFilesSelected = evt => {
         // 加到 total els 裡面
         elements.files = elements.files.concat(currentFileEl); 
         elements.progressBars = elements.progressBars.concat(currentProgressBarEl); 
-        
+
         // console.log(elements.files, elements.progressBars);
+        // currentFileEl.forEach(el => el.addEventListener("click", (evt) => upload(evt), false));
 
-        currentFileEl.forEach(el => el.addEventListener("click", (evt) => upload(evt), false));
-
-        // 5. 切割檔案並上傳
         if (resultArray.length){
-            const parseFiles =  resultArray.map(file => getMeta(file));
- 
-            const hashShard =  await getHashShard(parseFiles[0]);
-            console.log(hashShard);
+
+            // add ParsedFiles into the uploadQueue
+            // resultArray.forEach(file => addUploadQueue(getMeta(file)));
+            const parseFiles = resultArray.map(file => getMeta(file)); //test
+
+            console.log("expect : 0", parseFiles[0].sliceIndex) // test
+            const hashShard =  await getHashShard(parseFiles[0]); //test
+            console.log("expect : 1", parseFiles[0].sliceIndex) // test
+            console.log(hashShard); //test
         }
         
         // 7. 上傳失敗 3s 後 重新傳送
