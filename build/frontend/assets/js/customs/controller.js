@@ -429,7 +429,7 @@ const addUploadQueue = target => {
 }
 
 const upload = target => {
-    //(path, n, callback)
+    //(path, n, callback) 
     addUploadQueue(target);
     startUpload();
 }
