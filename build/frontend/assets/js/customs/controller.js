@@ -1,3 +1,10 @@
+// https://blog.grossman.io/how-to-write-async-await-without-try-catch-blocks-in-javascript/
+const to = promise => {
+    return promise.then(data => {
+       return [null, data];
+    })
+    .catch(err => [err]);
+ }
 // =============================================================
 // base
 // XHR
@@ -354,6 +361,7 @@ const getHashShard = parseFile => {
     const shardInfo = genShardInfo(count, index);  // get shardInfo
     const blob = slice(file, start, end); // 取得file第i個blob
     const shard = new Uint8Array(shardInfo.length + sliceSize); // 組合 shardInfo & blob 👉 shard
+    console.log(shardInfo);
     shard.set(shardInfo, 0);
     shard.set(blob, shardInfo.length);
 
@@ -364,7 +372,6 @@ const getHashShard = parseFile => {
             res => {
                 parseFile.sliceIndex += 1 ; //紀錄進度
                 return resolve({
-                    index,
                     path: `/file/${fid}/${res.hash}`,
                     blob: new Blob([res.hash]),
                 })
@@ -377,34 +384,54 @@ const getHashShard = parseFile => {
 }
 const uploadQueue = [];
 
-const addUploadQueue = target => {
-    uploadQueue.push(target);
-    return uploadQueue;
-}
-
 const startUpload = async () => {
+    let err, data, hashShard;
+
     if(!uploadQueue || uploadQueue.length === 0) return;
     if(connection >= maxConnection) {  
         queue.push(startUpload.bind(this));
         return false; 
     }
     const target = uploadQueue.pop();
-	const hashShard =  await getHashShard(target); // 
-	const path = hashShard.path;
-	
 
+    [err, hashShard] = await to(getHashShard(target)); // target.sliceIndex will plus 1 
+    if(!hashShard) return false;
+    //hashShard = {path: String, blob: Blob}
+
+    const formData = new FormData();
+    formData.append("file", hashShard.blob);
+
+    [err, data] = await to(makeRequest({
+        method: "POST",
+        url: "/test/upload",
+        // url: hashShard.path,
+        payload: formData,
+    }))
+    if(err){
+        target.retry = target.retry ? (target.retry + 1) : 1
+        if(target.retry <= maxRetry) { 
+            addUploadList(target)
+        }
+        else { 
+            throw new Error(`can not upload shard: ${({
+                file: target.file,
+                index: target.sliceIndex,
+            })}`);
+        }
+    }else{
+        target.sliceIndex < target.sliceCount ? upload(target) : console.log(target); // ?? done()
+    }
 }
 
-//(path, n, callback)
-const upload = (file, i, retry) => {
-    let target = {
-        path: `/file/${file.fid}/${file.sha1}`, // ?? didn't get sha1 yet;
-        index: i,
-        retry,
-    }
+const addUploadQueue = target => {
+    uploadQueue.push(target);
+    return uploadQueue;
+}
+
+const upload = target => {
+    //(path, n, callback) 
     addUploadQueue(target);
     startUpload();
-
 }
 
 
@@ -466,13 +493,8 @@ const handleFilesSelected = evt => {
         if (resultArray.length){
 
             // add ParsedFiles into the uploadQueue
-            // resultArray.forEach(file => addUploadQueue(getMeta(file)));
-            const parseFiles = resultArray.map(file => getMeta(file)); //test
-
-            console.log("expect : 0", parseFiles[0].sliceIndex) // test
-            const hashShard =  await getHashShard(parseFiles[0]); //test
-            console.log("expect : 1", parseFiles[0].sliceIndex) // test
-            console.log(hashShard); //test
+            resultArray.forEach(file => upload(getMeta(file)));
+           
         }
         
         // 7. 上傳失敗 3s 後 重新傳送
