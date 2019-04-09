@@ -389,10 +389,37 @@ const startUpload = async () => {
         return false; 
     }
     const target = uploadQueue.pop();
-	const hashShard =  await getHashShard(target); // 
-	const path = hashShard.path;
-	
+	const hashShard =  await getHashShard(target); // target.sliceIndex will plus 1 //hashShard = {index: number, path: String, blob: Blob}
+    
+    if(!hashShard) return false;
+    makeRequest({
+        method: "POST",
+        url: hashShard.path,
+        payload: hashShard,
+    })
+}
 
+
+const startUpload =  () => {
+    if(!uploadQueue || uploadQueue.length === 0) return;
+    if(connection >= maxConnection) {  
+        queue.push(startUpload.bind(this));
+        return false; 
+    }
+    const target = uploadQueue.pop();
+    getHashShard(target)
+    .then(
+        res => {
+            const hashShard =  res;   // target.sliceIndex will plus 1 //hashShard = {index: number, path: String, blob: Blob}
+            makeRequest({
+                method: "POST",
+                url: hashShard.path,
+                payload: hashShard,
+            })
+        }
+    ).catch(
+        err => console.log(err)
+    )
 }
 
 //(path, n, callback)
@@ -466,13 +493,8 @@ const handleFilesSelected = evt => {
         if (resultArray.length){
 
             // add ParsedFiles into the uploadQueue
-            // resultArray.forEach(file => addUploadQueue(getMeta(file)));
-            const parseFiles = resultArray.map(file => getMeta(file)); //test
-
-            console.log("expect : 0", parseFiles[0].sliceIndex) // test
-            const hashShard =  await getHashShard(parseFiles[0]); //test
-            console.log("expect : 1", parseFiles[0].sliceIndex) // test
-            console.log(hashShard); //test
+            resultArray.forEach(file => addUploadQueue(getMeta(file)));
+           
         }
         
         // 7. 上傳失敗 3s 後 重新傳送
