@@ -321,13 +321,14 @@ const closeWorker = worker => {
 }
 
 const SHA1 = target => {
+    console.log("SHA1被呼叫")
     if(workers >= maxWorker){
         sha1Queue.push(SHA1.bind(this, target));
-        // console.log(sha1Queue)
+        console.log(sha1Queue)
     }else{
         return new Promise((resolve, reject) => {
             const worker = new Worker("../assets/js/plugins/rusha.min.js"); 
-            // console.log(workers)
+            console.log(workers)
             worker.onmessage = evt => {
                 // console.log(evt)
                 closeWorker(worker);
@@ -338,6 +339,7 @@ const SHA1 = target => {
                 closeWorker(worker);
                 reject(evt.message);
             }
+
             worker.postMessage({id: target.fid, data: target.blob});   
             workers++;
         })
@@ -380,19 +382,20 @@ const getHashShard = async parseFile => {
     const blobBuffer = await readBlob(blob);
     console.log(blobBuffer)
     // const shard = new Uint8Array(shardInfo.length + blobBuffer.size); // 組合 shardInfo & blob 👉 shard
-    blob = new Uint8Array(blobBuffer);
-    const shard = genMergeUi8A(shardInfo, blob);
-    // console.log(shardInfo);
     // shard.set(shardInfo, 0);
     // shard.set(blobBuffer, shardInfo.length);
+    blob = new Uint8Array(blobBuffer);
+    const shard = genMergeUi8A(shardInfo, blob);
+  
     console.log(shard)
 
-    const target = {fid, shard};
+    const target = {fid, blob: new Blob([shard])};
     console.log(target)
     return new Promise((resolve, reject) => {
         SHA1(target)
         .then(
             res => {
+                console.log("run?")
                 parseFile.sliceIndex += 1 ; //紀錄進度
                 return resolve({
                     path: `/file/${fid}/${res.hash}`,
