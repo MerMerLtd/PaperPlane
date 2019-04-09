@@ -376,16 +376,19 @@ const getHashShard = async parseFile => {
 
     const shardInfo = genShardInfo(count, index);  // get shardInfo
 
-    const blob = slice(file, start, end); // 取得file第i個blob
+    let blob = slice(file, start, end); // 取得file第i個blob
     const blobBuffer = await readBlob(blob);
     console.log(blobBuffer)
-    const shard = new Uint8Array(shardInfo.length + blobBuffer.size); // 組合 shardInfo & blob 👉 shard
+    // const shard = new Uint8Array(shardInfo.length + blobBuffer.size); // 組合 shardInfo & blob 👉 shard
+    blob = new Uint8Array(blobBuffer);
+    const shard = genMergeUi8A(shardInfo, blob);
     // console.log(shardInfo);
-    shard.set(shardInfo, 0);
-    shard.set(blobBuffer, shardInfo.length);
-    // console.log(shard)
+    // shard.set(shardInfo, 0);
+    // shard.set(blobBuffer, shardInfo.length);
+    console.log(shard)
 
     const target = {fid, shard};
+    console.log(target)
     return new Promise((resolve, reject) => {
         SHA1(target)
         .then(
