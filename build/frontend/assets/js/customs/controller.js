@@ -1,32 +1,57 @@
 // =============================================================
 // base
 // XHR
+const maxConnection = 5; 
+const maxRetry = 3;
+let connection = 0;
+let queue = [];
+
+
+const closeConnection = ()  => {
+    connection--;
+
+    if(queue.length > 0 && connection < maxConnection){
+        let next = queue.pop();
+        if(typeof next === "function"){
+            next();
+        }
+    }
+
+    return true;
+}
+
 const makeRequest = opts => {
     // 工作排程 && 重傳
-    const xhr = new XMLHttpRequest();
-    return new Promise((resolve, reject) => {
-        xhr.onreadystatechange = () => {
-            // only run if the request is complete
-            if(xhr.readyState !== 4) return;
-            if(xhr.status >=200 && xhr.status < 300){
-                // If successful
-                resolve(JSON.parse(xhr.responseText));
-            }else{
-                // If false 3s後重傳， 試三次
-                // 檢查重試次數
-                reject({
-                    error: JSON.parse(xhr.response).error.message,
-                });
+    if(connection >= maxConnection){
+        queue.push(opts);
+    }else{
+        connection++;
+        const xhr = new XMLHttpRequest();
+        return new Promise((resolve, reject) => {
+            xhr.onreadystatechange = () => {
+                // only run if the request is complete
+                if(xhr.readyState !== 4) return;
+                if(xhr.status >=200 && xhr.status < 300){
+                    // If successful
+                    closeConnection();
+                    resolve(JSON.parse(xhr.responseText));
+                }else{
+                    // If false                    
+                    closeConnection();
+                    reject({
+                        error: JSON.parse(xhr.response).error.message,
+                    });
+                }
             }
-        }
-        // Setup HTTP request
-        xhr.open(opts.method || "GET", opts.url, true);
-        if(opts.header){
-            Object.keys(opts.headers).forEach(key => xhr.setRequestHeader(key, opts.headers[key]));
-        }
-        // Send the request
-        xhr.send(opts.payload);
-    });
+            // Setup HTTP request
+            xhr.open(opts.method || "GET", opts.url, true);
+            if(opts.header){
+                Object.keys(opts.headers).forEach(key => xhr.setRequestHeader(key, opts.headers[key]));
+            }
+            // Send the request
+            xhr.send(opts.payload);
+        });
+    }
 }
 
 // =============================================================
@@ -141,14 +166,29 @@ const File = {
 }
 // =============================================================
 // Controller
+const state = {};
+
 const minSliceCount = 25;
 const minSize = 512;
 const defaultSize = 4 * 1024 * 1024 // 4MB;
-const maxConnection = 5; 
-const maxRetry = 3;
-const uploadQueue = [];
 
-const state = {};
+
+// let size = 0;
+// let sliceSize = 0;
+// let sliceCount = 0;
+// let uploads = [];
+// let shardList = [];
+
+// const init = () => {
+//     size = 0;
+//     sliceSize = 0;
+//     sliceCount = 0;
+//     uploads = [];
+//     shardList = [];
+
+//     return true;
+// }
+
 
 const addMultiListener = (element, events, func) => {
     events.split(" ").forEach(event => element.addEventListener(event, func, false));
@@ -162,6 +202,8 @@ const handleDefault = evt => {
     evt.preventDefault();
     evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
 }
+
+
 
 // Formalize file.slice 切割檔案
 const noop = () => {}
@@ -207,21 +249,21 @@ const genMergeUi8A = (ui8a1, ui8a2) => {
     return mergeUi8A;
 }
 
-const genShardInfo = (fragmentCounts, n) => {
-    return genMergeUi8A(genUi8A(fragmentCounts), genUi8A(n));
+const genShardInfo = (sliceCount, sliceIndex) => {
+    return genMergeUi8A(genUi8A(sliceCount), genUi8A(sliceIndex));
 }
 
 // const info = genShardInfo(parseInt("ffffffff", 16), 234);
 
 const getMeta = file => {
+    let fid = file.fid;
     let name = file.name;
     let type = file.type;
     let size = file.size;
-    let sliceCount, sliceSize, duplicate;
+    let sliceCount, sliceSize;
 
     if(size > defaultSize * minSliceCount){
         sliceCount = Math.ceil(size/defaultSize);
-        // sliceCount += (sliceCount + 1) % 2;  // ?? 為什麼要變成奇數
         sliceSize = defaultSize;
     }else if (size > minSize * minSliceCount){
         sliceCount = minSliceCount;
@@ -229,48 +271,110 @@ const getMeta = file => {
     }else{
         sliceCount = 1;
         sliceSize = size;
-        duplicate = true;
     }
 
     return {
+        file,
+        fid,
         name,
         type,
         size,
         sliceCount,
         sliceSize,
-        duplicate: !!duplicate,
+        sliceIndex: 0,
+        retryCount: 0,
     };
 };
 
 // https://gist.github.com/shiawuen/1534477
 
-
 // 佇列 [{file: f, from: 'byte', to: 'byte'}, {...}, ...]
 // 產生佇列 👉[{fid: fid, fragment: blob}, {...}, ...]
 
-const genShardArr = file => {
-    const meta = getMeta(file);
-    const sliceCount = genUi8A(meta.sliceCount);
+// 需改良 類似maxConnection的做法
+const maxWorker = 5;
+const sha1Queue = [];
+let workers = 0;
 
-    const genArr = (file, i = 0, a = []) => {
-        if(i < meta.sliceCount){
-            const sliceIndex = genUi8A(i);
-            const shardInfo = genShardInfo(sliceCount, sliceIndex)
-            const blob = slice(file, i * meta.sliceSize, (i + 1) * meta.sliceSize > meta.size ? meta.size : (i + 1) * meta.sliceSize);
-            const shard = new Uint8Array(shardInfo.length + meta.sliceSize);
-            shard.set(shardInfo, 0);
-            shard.set(blob, shardInfo.length);
-            a.push({
-                fid: file.fid,
-                shard: new Blob([shard]),
-            })
-            i++;
-            return genArr(file, i, a)
-        }else{
-            return a;
+const closeWorker = worker => {
+    worker.terminate();
+    workers--;
+
+    if(sha1Queue.length > 0 && worker < maxWorker){
+        let next = sha1Queue.pop();
+        if(typeof next === "function"){
+            next(); 
         }
     }
-    return genArr(file);
+    return true;
+}
+
+const SHA1 = blob => {
+    // console.log("sha1 is called")
+    if(workers >= maxWorker){
+    // console.log("sha1 : check worker")
+        sha1Queue.push(SHA1(blob));
+    }else{
+    // console.log("sha1 : done about checking worker")
+        return new Promise((resolve, reject) => {
+            const worker = new Worker("../assets/js/plugins/rusha.min.js"); 
+
+            worker.postMessage({data: blob});   
+            workers++;
+            // console.log(workers)
+            worker.onmessage = evt => {
+                console.log(evt)
+                resolve(evt.data);
+                // closeWorker(worker);
+            }
+            worker.onerror = evt => {
+                console.log(evt)
+                reject(evt.message);
+                // closeWorker(worker);
+            }
+        })
+    }
+}
+
+// 獲得某file的第 index 個加上 shardInfo 且 hash 的碎片，以及它要去的地方 👉 path
+const getHashShard = async parseFile => {
+    // console.log(parseFile)
+    const file = parseFile.file;
+    const fid = parseFile.fid;
+    const index = parseFile.sliceIndex;
+    const count = parseFile.sliceCount;
+    const size = parseFile.size;
+    const sliceSize = parseFile.sliceSize;
+    const start = index * sliceSize;
+
+    let end;
+    if((index + 1) * sliceSize > size){
+        end = size;
+    }else{
+        end = (index + 1) * sliceSize;
+    }
+
+    const shardInfo = genShardInfo(count, index);  // get shardInfo
+    // console.log(shardInfo)
+    const blob = slice(file, start, end); // 取得file第i個blob
+    // console.log(blob, file, start, end); 
+
+    const shard = new Uint8Array(shardInfo.length + sliceSize); // 組合 shardInfo & blob 👉 shard
+    shard.set(shardInfo, 0);
+    shard.set(blob, shardInfo.length);
+
+    try{
+        const res = await SHA1(shard);
+        console.log(res);
+        parseFile.sliceIndex += 1 ; //紀錄進度
+        return ({
+            index,
+            path: `/file/${fid}/${res.hash}`,
+            blob: new Blob([res.hash]),
+        })
+    }catch(error){
+        console.log(error)
+    }
 }
 
 const addUploadQueue = target => {
@@ -278,112 +382,28 @@ const addUploadQueue = target => {
     return uploadQueue;
 }
 
-const createList = (file, start, end, sliceSize, list=[]) => {
-    const totalFragments = Math.ceil(file.size/sliceSize);
-    
-    if(file.size <= end) {
-        end = file.size;
-    };
-    list.push({
-        fid: file.fid, 
-        fragment:slice(file, start, end) ,
-    });
-    if(end < file.size){
-        start += sliceSize;
-        end = start + sliceSize;
-        createList(file, start, end, sliceSize, list);
-    }
-    return list;
-}
-
-
-
-// 傳送檔案到後端 
-const send = async (piece, start, end) => {
-    // instead of using File API, using formdata 👈現成做好的（之後來學習 File API）
-    const formdata = new FormData();
-    formdata.append('start', start);
-    formdata.append('end', end);
-    formdata.append('file', piece);
-    const opts = {
-        method: "POST",
-        url: '/test/upload',
-        payload: formdata,
-    }
-    try{
-        return makeRequest(opts);
-    }catch(error){
-        return Promise.resolve(error);
+const startUpload = () => {
+    if(!uploadQueue || uploadQueue.length === 0) return;
+    if(connection >= maxConnection) {  
+        queue.push(function(){ 
+            startUpload(); 
+        });
+        return false; 
     }
 }
 
-// 排程 Promise
-
-// 需改良
-const rusha = (fragment, fid) => {
-    const worker = new Worker("../assets/js/plugins/rusha.min.js"); 
-    return new Promise((resolve, reject) => {
-        worker.postMessage({id: fid, data: fragment});
-        worker.onmessage = event => {
-            resolve(event.data)
-        }
-        worker.onerror = error => {
-            reject(error)
-        }
-    })
-}
-
-const uploadFragment = item => new Promise(async (resolve, reject) => {
-     //檢驗
-     let fragmentx = await rusha(item.fragment, item.fid);
-     //傳送
-     let res = await send(fid, fragmentx, start, end);
-     console.log(fragmentx, res);
-});
-
-const loop = async (file, start, end, sliceSize, count) => {
-    const totalCount = Math.ceil(file.size/sliceSize);
-    const size = file.size;
-    const fid = file.fid;
-    let progress = 0;
-
-    //停止點
-    if(size < end) {
-        end = size;
-        progress = 100;
-
-        showFileProgress(file.fid, progress);
-    };
-
-    //切片
-    let fragment = slice(file, start, end);
-    //檢驗
-    let fragmentx = await rusha(fragment, file.fid);
-    //傳送
-    send(fid, fragmentx, start, end);
-
-    //判斷是否繼續
-    if(end < size){
-        count++; 
-        progress = count/totalCount;
-        showFileProgress(file.fid, progress);
-        start += sliceSize;
-        loop(file, start, end, sliceSize, count);
+//(path, n, callback)
+const upload = (file, i, retry) => {
+    let target = {
+        path: `/file/${file.fid}/${file.sha1}`, // ?? didn't get sha1 yet;
+        index: i,
+        retry,
     }
+    addUploadQueue(target);
+    startUpload();
+
 }
 
-// sliceSize = 4194304; //4MB = 4194304
-const processFile = (file, sliceSize = 4194304) => {
-    let count = 0; 
-    let start = 0;
-    let end = start + sliceSize;
-
-    let list1 = createList(file, start, end, sliceSize); // 生成佇列
-    let list2 = genShardArr(file);
-
-    console.log(list1);
-    console.log(list2);
-}
 
 const handleFilesSelected = evt => {
     // （view: 提示訊息們）
@@ -436,11 +456,20 @@ const handleFilesSelected = evt => {
         elements.files = elements.files.concat(currentFileEl); 
         elements.progressBars = elements.progressBars.concat(currentProgressBarEl); 
         
-        console.log(elements.files, elements.progressBars);
+        // console.log(elements.files, elements.progressBars);
+
+        currentFileEl.forEach(el => el.addEventListener("click", (evt) => upload(evt), false));
 
         // 5. 切割檔案並上傳
-        if (resultArray.length)
-        resultArray.forEach(file => processFile(file));
+        if (resultArray.length){
+           const parseFiles =  resultArray.map(file => getMeta(file));
+           console.log(parseFiles[0].sliceIndex)
+           parseFiles[0].sliceIndex += 1;
+           console.log(parseFiles[0].sliceIndex)
+           let hashShards = parseFiles.map(parseFile => getHashShard(parseFile));
+           console.log(hashShards)
+        }
+        
   
         
         // 7. 上傳失敗 3s 後 重新傳送
