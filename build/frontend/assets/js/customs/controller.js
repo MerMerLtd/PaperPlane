@@ -309,16 +309,13 @@ const closeWorker = worker => {
     return true;
 }
 
-const SHA1 = blob => {
+const SHA1 = (fid, blob) => {
     if(workers >= maxWorker){
     
-        sha1Queue.push(SHA1(blob));
+        sha1Queue.push(SHA1(fid, blob));
     }else{
         return new Promise((resolve, reject) => {
             const worker = new Worker("../assets/js/plugins/rusha.min.js"); 
-
-            worker.postMessage({data: blob});   
-            workers++;
             // console.log(workers)
             worker.onmessage = evt => {
                 console.log(evt)
@@ -330,13 +327,15 @@ const SHA1 = blob => {
                 closeWorker(worker);
                 reject(evt.message);
             }
+            worker.postMessage({id: fid, data: blob});   
+            workers++;
         })
     }
 }
 
 // 獲得某file的第 index 個加上 shardInfo 且 hash 的碎片，以及它要去的地方 👉 path
 const getHashShard = parseFile => {
-    console.log(parseFile)
+    // console.log(parseFile)
     const file = parseFile.file;
     const fid = parseFile.fid;
     const index = parseFile.sliceIndex;
@@ -361,15 +360,15 @@ const getHashShard = parseFile => {
     shard.set(shardInfo, 0);
     shard.set(blob, shardInfo.length);
 
-    console.log(shard); 
+    // console.log(shard); 
     return new Promise((resolve, reject) => {
-        console.log(shard); 
-        SHA1(shard)
-        .then(
-            res => (resolve({index,
+        // console.log(shard); 
+        SHA1(fid, shard)
+        .then(res => (
+            resolve({index,
                     path: `/file/${fid}/${res.hash}`,
-                    blob: new Blob([res.hash]),
-                }))
+                    blob: new Blob([res.hash]),})
+            )
         )
         .catch(
             err => reject({err})
