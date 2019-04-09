@@ -27,6 +27,6 @@ pathname = [
   "get | /file | Bot.LFS.initialUpload",
   "post | /file | Bot.LFS.initialUpload",
   "get | /file/:fid | Bot.LFS.getUploadJob",
-  "post | /file/:fid | Bot.LFS.uploadSlice",
+  "post | /file/:fid/:hash | Bot.LFS.uploadSlice",
   "post | /test/upload | Bot.LFS.testUpload"
 ]

@@ -34,18 +34,18 @@ class Receptor extends Bot {
     .then((options) => {
       const app = new koa();
       const CONFIG = {
-         key: 'PaperPlane:SID',
-         maxAge: 86400000,
-         overwrite: true,
-         httpOnly: true,
-         signed: true,
-         rolling: false,
-         renew: false
+        key: 'PaperPlane:SID',
+        maxAge: 86400000,
+        overwrite: true,
+        httpOnly: true,
+        signed: true,
+        rolling: false,
+        renew: false
       };
       app.keys = ['PAPER PLANE SESSION SECRET'];
       app.use(session(CONFIG, app));
       app.use(staticServe(this.config.base.static))
-         .use(bodyParser({ multipart: true }))
+         .use(bodyParser({ multipart: true, maxFileSize: 10 * 1024 * 1024 }))
          .use(this.router.routes())
          .use(this.router.allowedMethods());
       return this.listen({ options, callback: app.callback() });
@@ -97,22 +97,22 @@ class Receptor extends Bot {
   register({ pathname, options, operation }) {
   	const method = options.method.toLowerCase();
     this.router[method](pathname, (ctx, next) => {
+      ctx.session = ctx.session || {};
       if(!ctx.session.id) {
         ctx.session.id = dvalue.randomID(16);
       }
+
       const inputs = {
         body: ctx.request.body,
         files: ctx.request.files,
         params: ctx.params,
         header: ctx.header,
-        method: ctx.method,
         query: ctx.query,
-        session: ctx.session,
-        sessionID: ctx.session.id
+        session: ctx.session
       };
 
       const formatInput = {
-        sessionID: inputs.sessionID,
+        sessionID: ctx.session.id,
         files: ctx.request.files,
         method: ctx.method,
         url: ctx.request.url

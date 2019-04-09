@@ -1,4 +1,6 @@
+const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const dvalue = require('dvalue');
 
 const Bot = require(path.resolve(__dirname, 'Bot.js'));
@@ -114,10 +116,10 @@ class LFS extends Bot {
     if(!Buffer.isBuffer(slice) || slice.length < 16) {
       return Promise.reject(new Error('Invalid Slice Format'));
     }
-    const total = slice.split(0, 8).readUIntBE(0, 8);
-    const index = slice.split(8, 16).readUIntBE(0, 8);
-    const buffer = slice.split(16);
-    const result = { total, index, buffer };
+    const total = slice.slice(0, 8).readUInt32BE(0, 8);
+    const index = slice.slice(8, 16).readUInt32BE(0, 8);
+    const sha1 = crypto.createHash('sha1').update(slice).digest('hex');
+    const result = { total, index, sha1 };
     return Promise.resolve(result);
   }
 
@@ -246,11 +248,28 @@ class LFS extends Bot {
     - save slice file
     - update job status
   */
-  saveSlice({ fid, slice }) {
-    const sliceData = this.constructor.parseSlice(slice);
+  uploadSlice({ fid, hash, files }) {
+    try {
+      const sliceMeta = Object.values(files)[0];
+      return new Promise((resolve, reject) => {
+        fs.readFile(sliceMeta.path, (e, slice) => {
+          if(e) {
+            return reject(e);
+          }
+          return this.constructor.parseSlice({ slice })
+          .then((sliceData) => {
+            sliceData.match = (sliceData.sha1 == hash);
+            return Promise.resolve(sliceData);
+          })
+          .then(resolve);
+        });
+      });
+    } catch(e) {
+      return Promise.reject(e);
+    }
   }
 
-  saveSliceFile({  }) {
+  saveSlice({ slice }) {
 
   }
 
