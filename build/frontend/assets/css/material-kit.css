@@ -14901,7 +14901,7 @@ select.selectpicker {
   height: auto;
   display: inherit; }
   .login-page .page-header .container {
-    padding-top: 20vh; }
+    padding-top: 15vh; }
 
 .login-page .footer .container {
   padding: 0; }
@@ -14921,7 +14921,7 @@ select.selectpicker {
     height: auto;
     display: inherit; }
     .login-page .page-header .container {
-      padding-top: 15vh; } }
+      padding-top: 12vh; } }
 
 .ecommerce-page .container {
   position: relative;
