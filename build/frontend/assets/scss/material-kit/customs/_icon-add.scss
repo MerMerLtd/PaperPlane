@@ -215,11 +215,11 @@
     }
 }
 .alert{
-    --opacity: 1;
+    --opacity: 0;
     z-index: 100;
     position: fixed;
     transform: translate(-50%, -50%);
-    top: 5vh;
+    top: 6vh;
     left: 50%;
     padding: 15px 10px;
     // opacity: 1;

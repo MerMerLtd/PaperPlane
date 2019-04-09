@@ -343,9 +343,22 @@ const SHA1 = target => {
         })
     }
 }
+const fileReader = new FileReader();
+
+const readBlob = blob => {
+    return new Promise((resolve, reject) => {
+        fileReader.onload = evt =>  {
+            resolve(evt.target.result);
+        };
+        fileReader.onerror = err => {
+            reject({err});
+        }
+        fileReader.readAsArrayBuffer(blob);
+    });
+}
 
 // 獲得某file的第 index 個加上 shardInfo 且 hash 的碎片，以及它要去的地方 👉 path
-const getHashShard = parseFile => {
+const getHashShard = async parseFile => {
     const file = parseFile.file;
     const fid = parseFile.fid;
     const index = parseFile.sliceIndex;
@@ -362,15 +375,17 @@ const getHashShard = parseFile => {
     }
 
     const shardInfo = genShardInfo(count, index);  // get shardInfo
-    const blob = slice(file, start, end); // 取得file第i個blob
-    console.log(blob)
-    const shard = new Uint8Array(shardInfo.length + blob.size); // 組合 shardInfo & blob 👉 shard
-    console.log(shardInfo);
-    shard.set(shardInfo, 0);
-    shard.set(blob, shardInfo.length);
-    console.log(shard)
 
-    const target = {fid, blob};
+    const blob = slice(file, start, end); // 取得file第i個blob
+    const blobBuffer = await readBlob(blob);
+    console.log(blobBuffer)
+    const shard = new Uint8Array(shardInfo.length + blobBuffer.size); // 組合 shardInfo & blob 👉 shard
+    // console.log(shardInfo);
+    shard.set(shardInfo, 0);
+    shard.set(blobBuffer, shardInfo.length);
+    // console.log(shard)
+
+    const target = {fid, shard};
     return new Promise((resolve, reject) => {
         SHA1(target)
         .then(
