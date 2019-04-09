@@ -70,6 +70,7 @@ const elements = {
     alertSuccess: document.querySelector(".alert"),
     addIcon: document.querySelector(".add__icon"),
     addText: document.querySelector(".add__text"),
+    placeholder: document.querySelector(".placeholder"),
     dropndDrop: document.querySelector(".box__dragndrop"),
     body: document.querySelector("body"),
     hint: document.querySelector(".card-header > .hint"),
@@ -128,13 +129,15 @@ const removeHintLocation = () => {
 // drag file over the fileList 之後
 const handleInFileList = () => {
     removeHintLocation();
+    elements.placeholder.classList.add("u-margin-top--sm");
     elements.addIcon.classList.add("add__icon--small");
     elements.addText.classList.add("add__text--small");
-    elements.fileList.classList.add("u-margin-top--sm");// 位置一時半會還沒調好
+    // elements.fileList.classList.add("u-margin-top--sm");// 位置一時半會還沒調好
     elements.alertSuccess.style.setProperty("--opacity", 1);
 }
 const handleOutFileList = () => {
     hintLocation();
+    elements.placeholder.classList.remove("u-margin-top--sm");
     elements.addIcon.classList.remove("add__icon--small");
     elements.addText.classList.remove("add__text--small");
     elements.fileList.classList.remove("u-margin-top--sm");// 位置一時半會還沒調好
@@ -360,10 +363,12 @@ const getHashShard = parseFile => {
 
     const shardInfo = genShardInfo(count, index);  // get shardInfo
     const blob = slice(file, start, end); // 取得file第i個blob
-    const shard = new Uint8Array(shardInfo.length + sliceSize); // 組合 shardInfo & blob 👉 shard
+    console.log(blob)
+    const shard = new Uint8Array(shardInfo.length + blob.size); // 組合 shardInfo & blob 👉 shard
     console.log(shardInfo);
     shard.set(shardInfo, 0);
     shard.set(blob, shardInfo.length);
+    console.log(shard)
 
     const target = {fid, blob};
     return new Promise((resolve, reject) => {
@@ -373,7 +378,7 @@ const getHashShard = parseFile => {
                 parseFile.sliceIndex += 1 ; //紀錄進度
                 return resolve({
                     path: `/file/${fid}/${res.hash}`,
-                    blob: new Blob([res.hash]),
+                    blob: new Blob([shard]),
                 })
             }
         )
@@ -403,8 +408,8 @@ const startUpload = async () => {
 
     [err, data] = await to(makeRequest({
         method: "POST",
-        url: "/test/upload",
-        // url: hashShard.path,
+        // url: "/test/upload",
+        url: hashShard.path,
         payload: formData,
     }))
     if(err){

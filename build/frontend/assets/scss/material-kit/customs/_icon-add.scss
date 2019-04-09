@@ -37,8 +37,8 @@
         position:absolute;
         width: 26px;
         height: 26px;
-        top:26px;
-        left:26px;
+        top: 0px;
+        left: 26px;
         
         &::before,
         &::after{
@@ -65,7 +65,7 @@
         top: 70%;
         left: 50%;
         &--small{
-            top: 26px;
+            top: 0px;
             left: 90px;
         }
     }  

@@ -670,6 +670,30 @@
     }
 }
 
+// custom
+@media screen and (max-width: 767px){
+    .login-page{
+        .card-signup{
+            .card-header{
+                width: auto;
+            }
+            .input-group{
+                padding-bottom: 7px;
+                margin: 27px 0 0 0;
+            }
+        }
+        .page-header{
+            min-height: 100vh;
+            height: auto;
+            display: inherit;
+    
+            .container{
+                padding-top: 15vh;
+            }
+        }
+    }
+}
+
 
 .ecommerce-page{
     .container{
