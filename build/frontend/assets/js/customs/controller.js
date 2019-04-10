@@ -340,11 +340,11 @@ const sha1Queue = [];
 let workers = 0;
 
 const closeWorker = worker => {
-    console.log(workers);
+    console.log("workers: ", workers);
     worker.terminate();
     workers--;
 
-    if(sha1Queue.length > 0 && worker < maxWorker){
+    if(sha1Queue.length > 0 && workers < maxWorker){
         let next = sha1Queue.pop();
         console.log(next);
         if(typeof next === "function"){
@@ -355,13 +355,13 @@ const closeWorker = worker => {
 }
 
 const SHA1 = target => {
-    console.log("SHA1被呼叫");
     
     if(workers >= maxWorker){
         sha1Queue.push(SHA1.bind(this, target)); // 其實沒有用到多個worker 因為 await 每個hashshard？
     }else{
+        const worker = new Worker("../assets/js/plugins/rusha.min.js"); 
+        workers++;
         return new Promise((resolve, reject) => {
-            const worker = new Worker("../assets/js/plugins/rusha.min.js"); 
             worker.onmessage = evt => {
                 // console.log(evt)
                 closeWorker(worker);
@@ -372,25 +372,50 @@ const SHA1 = target => {
                 closeWorker(worker);
                 reject(evt.message);
             }
-
             worker.postMessage({id: target.fid, data: target.blob});   
-            workers++;
         })
     }
 }
+
+
 // const fileReader = new FileReader();
+const maxFileReader = 5;
+const blobQueue = [];
+let fileReaders = 0;
+
+const closeFileReader = fileReader => {
+    console.log("fileReaders: ", fileReaders);
+    fileReader.abort();
+    fileReaders--;
+
+    if(blobQueue.length > 0 && fileReaders < maxFileReader){
+        let next = blobQueue.pop();
+        console.log(next);
+        if(typeof next === "function"){
+            next(); 
+        }
+    }
+    return true;
+}
 
 const readBlob = blob => {
-    const fileReader = new FileReader();
-    return new Promise((resolve, reject) => {
-        fileReader.onload = evt =>  {
-            resolve(evt.target.result);
-        };
-        fileReader.onerror = err => {
-            reject({err});
-        }
-        fileReader.readAsArrayBuffer(blob);
-    });
+    if(fileReaders >= maxFileReader){
+        blobQueue.push(readBlob.bind(this, blob)); 
+    }else{
+        const fileReader = new FileReader();
+        fileReaders++;
+        return new Promise((resolve, reject) => {
+            fileReader.onload = evt =>  {
+                closeFileReader(fileReader);
+                resolve(evt.target.result);
+            };
+            fileReader.onerror = err => {
+                closeFileReader(fileReader);
+                reject({err});
+            }
+            fileReader.readAsArrayBuffer(blob);
+        });
+    }
 }
 
 // 獲得某file的第 index 個加上 shardInfo 且 hash 的碎片，以及它要去的地方 👉 path
@@ -414,7 +439,7 @@ const getHashShard = async parseFile => {
 
     let blob = slice(file, start, end); // 取得file第i個blob
     const blobBuffer = await readBlob(blob);
-    console.log(blobBuffer)
+
     // const shard = new Uint8Array(shardInfo.length + blobBuffer.size); // 組合 shardInfo & blob 👉 shard
     // shard.set(shardInfo, 0);
     // shard.set(blobBuffer, shardInfo.length);
@@ -424,12 +449,11 @@ const getHashShard = async parseFile => {
     console.log(shard)
 
     const target = {fid, blob: new Blob([shard])};
-    console.log(target)
+    // console.log(target)
     return new Promise((resolve, reject) => {
         SHA1(target)
         .then(
             res => {
-                console.log("run?")
                 parseFile.sliceIndex += 1 ; //紀錄進度
                 return resolve({
                     path: `/file/${fid}/${res.hash}`,
@@ -455,6 +479,7 @@ const startUpload = async () => {
     }
     const target = uploadQueue.pop();
 
+    // to func 在接錯誤時有錯誤, 先不管它;
     // [err, hashShard] = await to(getHashShard(target)); // target.sliceIndex will plus 1 
     const hashShard = await getHashShard(target);
 
@@ -531,15 +556,10 @@ const handleFilesSelected = evt => {
         }
         // return each result make of new Array
         try {
-            // 成功：[{fid: "QaIkjVmW"},...]
-            // return await makeRequest(opts)
-
-            // 不要只是回傳 fid 回傳整個 file with id
             const res = await makeRequest(opts);
-            file.fid = res.fid;
+            file.fid = res.fid; //！！！！object.create 的 object 不能直接用 ...operation
             return file;
-            // console.log({...file, fid: res.fid}) 
-            //！！！！object.create 的 object 不能直接用 ...operation
+            
         }
         catch (error) {
             // 失敗： 錯誤訊息 及 file obj
@@ -563,14 +583,9 @@ const handleFilesSelected = evt => {
         // currentFileEl.forEach(el => el.addEventListener("click", (evt) => upload(evt), false));
 
         if (resultArray.length){
-
             // add ParsedFiles into the uploadQueue
-            // resultArray.forEach(file => upload(getMeta(file)));
-            resultArray.forEach(file => {
-                upload(getMeta(file))
-                console.log("upload(getMeta(file))", uploadQueue)
-            }); // test
-           
+            resultArray.forEach(file => upload(getMeta(file)));
+          
         }
         
         // 7. 上傳失敗 3s 後 重新傳送
