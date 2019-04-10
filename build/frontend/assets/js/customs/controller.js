@@ -5,6 +5,23 @@ const to = promise => {
     })
     .catch(err => [err]);
  }
+
+ // polyfill for Element.closest from MDN
+if (!Element.prototype.matches)
+Element.prototype.matches = Element.prototype.msMatchesSelector ||
+                            Element.prototype.webkitMatchesSelector;
+
+if (!Element.prototype.closest)
+Element.prototype.closest = function(s) {
+    var el = this;
+    if (!document.documentElement.contains(el)) return null;
+    do {
+        if (el.matches(s)) return el;
+        el = el.parentElement;
+    } while (el !== null);
+    return null;
+};
+
 // =============================================================
 // base
 // XHR
@@ -83,7 +100,6 @@ const formatFileSize = size => {
     return `${formatted}${unit[power]}`
 }
 
-
 const elements = {
     boxFile: document.querySelector(".box__file"),
     alertSuccess: document.querySelector(".alert"),
@@ -100,11 +116,8 @@ const elements = {
     pageHeader: document.querySelector(".page-header"),
     fileList: document.querySelector(".file-list"),
     progressBars: [],
-    files: [],
+    // files: [],
 }
-
-
-
 
 const renderFile = file =>{
     // console.log(file);
@@ -159,6 +172,7 @@ const handleInFileList = () => {
     elements.addText.classList.add("add__text--small");
     elements.alertSuccess.style.setProperty("--opacity", 1); // 待修改
     elements.dropZone.classList.add("pointer");
+    // fileList.addEventListener 可以考慮加在這裡， 然後在下面可以remove
     // dropZone pointer Event: none
 }
 const handleOutFileList = () => {
@@ -194,6 +208,7 @@ const showFileProgress = (fid, progress) => {
     // console.log(index);
     elements.progressBars[index].style.width = `${progress}%`;
 }
+
 // =============================================================
 // Models
 
@@ -224,14 +239,6 @@ const defaultSize = 4 * 1024 * 1024 // 4MB;
 
 //     return true;
 // }
-
-
-const addMultiListener = (element, events, func) => {
-    events.split(" ").forEach(event => element.addEventListener(event, func, false));
-}
-const removeMultiListener = (element, events, func) => {
-    events.split(" ").forEach(event => element.removeEventListener(event, func, false));
-}
 
 const handleDefault = evt => {
     evt.stopPropagation();
@@ -333,6 +340,7 @@ const sha1Queue = [];
 let workers = 0;
 
 const closeWorker = worker => {
+    console.log(workers);
     worker.terminate();
     workers--;
 
@@ -347,14 +355,13 @@ const closeWorker = worker => {
 }
 
 const SHA1 = target => {
-    console.log("SHA1被呼叫")
+    console.log("SHA1被呼叫");
+    
     if(workers >= maxWorker){
-        sha1Queue.push(SHA1.bind(this, target));
-        console.log(sha1Queue)
+        sha1Queue.push(SHA1.bind(this, target)); // 其實沒有用到多個worker 因為 await 每個hashshard？
     }else{
         return new Promise((resolve, reject) => {
             const worker = new Worker("../assets/js/plugins/rusha.min.js"); 
-            console.log(workers)
             worker.onmessage = evt => {
                 // console.log(evt)
                 closeWorker(worker);
@@ -371,9 +378,10 @@ const SHA1 = target => {
         })
     }
 }
-const fileReader = new FileReader();
+// const fileReader = new FileReader();
 
 const readBlob = blob => {
+    const fileReader = new FileReader();
     return new Promise((resolve, reject) => {
         fileReader.onload = evt =>  {
             resolve(evt.target.result);
@@ -437,7 +445,8 @@ const getHashShard = async parseFile => {
 const uploadQueue = [];
 
 const startUpload = async () => {
-    let err, data, hashShard;
+    // let err, data, hashShard;
+    let err, data;
 
     if(!uploadQueue || uploadQueue.length === 0) return;
     if(connection >= maxConnection) {  
@@ -446,7 +455,9 @@ const startUpload = async () => {
     }
     const target = uploadQueue.pop();
 
-    [err, hashShard] = await to(getHashShard(target)); // target.sliceIndex will plus 1 
+    // [err, hashShard] = await to(getHashShard(target)); // target.sliceIndex will plus 1 
+    const hashShard = await getHashShard(target);
+
     if(!hashShard) return false;
     //hashShard = {path: String, blob: Blob}
 
@@ -484,6 +495,15 @@ const upload = target => {
     //(path, n, callback) 
     addUploadQueue(target);
     startUpload();
+}
+
+// UI Control
+const uploadFileControl = evt => {
+    if(evt.target.matches(".delete-button, .delete-button *")){
+        console.log("delete", evt.target.closest(".file"));
+    }else if(evt.target.closest(".file")){
+        console.log(evt.target.closest(".file"))
+    }
 }
 
 
@@ -533,10 +553,10 @@ const handleFilesSelected = evt => {
         // 4. render 畫面
         renderFiles(resultArray);
         // 選目前的 files && progress bars
-        const currentFileEl = resultArray.map(file => document.querySelector(`[data-fid='${file.fid}']`));
+        // const currentFileEl = resultArray.map(file => document.querySelector(`[data-fid='${file.fid}']`));
         const currentProgressBarEl = resultArray.map(file => document.querySelector(`[data-progressId='${file.fid}']`));
         // 加到 total els 裡面
-        elements.files = elements.files.concat(currentFileEl); 
+        // elements.files = elements.files.concat(currentFileEl); 
         elements.progressBars = elements.progressBars.concat(currentProgressBarEl); 
 
         // console.log(elements.files, elements.progressBars);
@@ -570,7 +590,16 @@ let isAdvancedUpload = function() {
     return (('draggable' in div) || ('ondragstart' in div && 'ondrop' in div));
 }();
 
-elements.boxFile.addEventListener("change",  evt => handleFilesSelected(evt))
+
+const addMultiListener = (element, events, func) => {
+    events.split(" ").forEach(event => element.addEventListener(event, func, false));
+}
+const removeMultiListener = (element, events, func) => {
+    events.split(" ").forEach(event => element.removeEventListener(event, func, false));
+}
+
+elements.boxFile.addEventListener("change",  evt => handleFilesSelected(evt));
+elements.fileList.addEventListener("click", evt => uploadFileControl(evt));
 
 if(isAdvancedUpload){
     elements.cardHeader.classList.add("has-advanced-upload");
