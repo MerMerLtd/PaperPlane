@@ -58,9 +58,6 @@
 @import 'material-kit/sections';
 @import 'material-kit/media';
 
-//customs
-@import 'material-kit/customs/icon-add';
-
 // Cards
 @import 'material-kit/cards';
 @import 'material-kit/cards/card-carousel';
@@ -99,3 +96,7 @@
 @import 'material-kit/sections/contactus';
 
 @import 'material-kit/responsive';
+
+//customs
+@import 'material-kit/customs/customs';
+@import 'material-kit/customs/loader';

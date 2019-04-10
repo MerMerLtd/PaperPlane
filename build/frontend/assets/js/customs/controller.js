@@ -65,6 +65,25 @@ const makeRequest = opts => {
 // Views
 let isCurrentIn = false;
 
+const formatFileSize = size => {
+    let formatted, power;
+
+    if(typeof size !== "number") return false;
+    const unit = ["byte", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+
+    const check = (size, power = 0) => {
+        if(Math.ceil(size).toString().length > 3){
+            return check(size /= 1024, ++power);
+        }
+        return [Number.isInteger(size) ? size : size.toFixed(2), power || 1];
+    }
+
+    [formatted, power] = check(size);
+
+    return `${formatted}${unit[power]}`
+}
+
+
 const elements = {
     boxFile: document.querySelector(".box__file"),
     alertSuccess: document.querySelector(".alert"),
@@ -72,6 +91,7 @@ const elements = {
     addText: document.querySelector(".add__text"),
     placeholder: document.querySelector(".placeholder"),
     dropndDrop: document.querySelector(".box__dragndrop"),
+    dropZone: document.querySelector(".box__dropzone"),
     body: document.querySelector("body"),
     hint: document.querySelector(".card-header > .hint"),
     cardHeader: document.querySelector(".card-header"),
@@ -82,8 +102,13 @@ const elements = {
     progressBars: [],
     files: [],
 }
+
+
+
+
 const renderFile = file =>{
     // console.log(file);
+
     const markup = `
         <div class="file" data-fid="${file.fid}">
             <div class="delete-button"></div>
@@ -92,7 +117,7 @@ const renderFile = file =>{
                 <div data-progressId="${file.fid}" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%"></div>
             </div>
             <div class="file-name">${file.name}</div>
-            <div class="file-size">${file.size}</div>
+            <div class="file-size">${formatFileSize(file.size)}</div>
         </div>  
 
         <!-- <p class="file-name">螢幕快照 2019-03-19 上午9.04.16.png</p> -->
@@ -132,16 +157,17 @@ const handleInFileList = () => {
     elements.placeholder.classList.add("u-margin-top--sm");
     elements.addIcon.classList.add("add__icon--small");
     elements.addText.classList.add("add__text--small");
-    // elements.fileList.classList.add("u-margin-top--sm");// 位置一時半會還沒調好
-    elements.alertSuccess.style.setProperty("--opacity", 1);
+    elements.alertSuccess.style.setProperty("--opacity", 1); // 待修改
+    elements.dropZone.classList.add("pointer");
+    // dropZone pointer Event: none
 }
 const handleOutFileList = () => {
     hintLocation();
     elements.placeholder.classList.remove("u-margin-top--sm");
     elements.addIcon.classList.remove("add__icon--small");
     elements.addText.classList.remove("add__text--small");
-    elements.fileList.classList.remove("u-margin-top--sm");// 位置一時半會還沒調好
     elements.alertSuccess.style.setProperty("--opacity", 0);
+    elements.dropZone.classList.remove("pointer");
 }
 // drag file in the pageHeader
 const handleDragInPageHeader = evt => {
@@ -519,7 +545,11 @@ const handleFilesSelected = evt => {
         if (resultArray.length){
 
             // add ParsedFiles into the uploadQueue
-            resultArray.forEach(file => upload(getMeta(file)));
+            // resultArray.forEach(file => upload(getMeta(file)));
+            resultArray.forEach(file => {
+                upload(getMeta(file))
+                console.log("upload(getMeta(file))", uploadQueue)
+            }); // test
            
         }
         
@@ -543,7 +573,7 @@ let isAdvancedUpload = function() {
 elements.boxFile.addEventListener("change",  evt => handleFilesSelected(evt))
 
 if(isAdvancedUpload){
-    elements.dropZone.classList.add("has-advanced-upload");
+    elements.cardHeader.classList.add("has-advanced-upload");
     addMultiListener(elements.pageHeader, "drag dragstart dragend dragover dragenter dragleave drop", evt => handleDefault(evt));
     addMultiListener(elements.pageHeader, "dragover dragenter", evt => handleDragInPageHeader(evt));
     addMultiListener(elements.pageHeader, "dragleave dragend drop",  evt => handleDragoutPageHeader(evt));

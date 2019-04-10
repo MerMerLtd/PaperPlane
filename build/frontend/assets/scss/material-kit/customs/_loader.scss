@@ -1,0 +1,79 @@
+@charset "UTF-8";
+/**
+ * Computes a CSS calc function that betweens a value from
+ * A to B over viewport-width A to viewport-width B.
+ * Requires a media query to cap the value at B.
+ */
+[class*='loader'] {
+  position: relative;
+  top: 40%;
+  display: inline-block;
+  margin: 0 auto;
+  cursor: wait;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.loader-progress-bar {
+    width: 6em;
+    height: 1.5em;
+    border-radius: .5em;
+    border: .125em solid;
+    color: #0E5F76;
+  }
+//   #toggle:checked ~ #sect .loader-progress-bar {
+//     -webkit-filter: drop-shadow(0.2em 0.2em 0.2em rgba(0, 0, 0, 0.5));
+//             filter: drop-shadow(0.2em 0.2em 0.2em rgba(0, 0, 0, 0.5));
+//   }
+  .loader-progress-bar:before, .loader-progress-bar:after {
+    content: '';
+    top: .2em;
+    left: .2em;
+    // right: .2em;
+    bottom: .2em;
+    border-radius: .25em;
+    // display: block;
+    position: absolute;
+    // overflow: hidden;
+  }
+  .loader-progress-bar:after {
+    right: 100%;
+    right: 2%;
+    background-position: 104px 0;
+    // -webkit-animation: loaderBarInfinite 10s 1 linear, loaderBarScroll 10s 1 linear;
+    //         animation: loaderBarInfinite 10s 1 linear, loaderBarScroll 10s 1 linear;
+    // box-shadow: inset 0 0.5em 0.5em rgba(25, 166, 207, 0.25), inset 0 -0.5em 0.5em rgba(8, 30, 63, 0.5);
+    // background-image: repeating-linear-gradient(45deg, #083D56 0px, #083D56 4px, #0E5F76 5px, #0E5F76 9px);
+    background-color: #083D56;
+    // background-size: 26px 13px;
+  }
+  
+  @-webkit-keyframes loaderBarInfinite {
+    from {
+      background-position: 104px 0;
+    }
+    to {
+      background-position: -104px 0;
+    }
+  }
+  
+  @keyframes loaderBarInfinite {
+    from {
+      background-position: 104px 0;
+    }
+    to {
+      background-position: -104px 0;
+    }
+  }
+  @-webkit-keyframes loaderBarScroll {
+    to {
+      right: 2%;
+    }
+  }
+  @keyframes loaderBarScroll {
+    to {
+      right: 2%;
+    }
+  }
+  

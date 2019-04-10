@@ -270,7 +270,10 @@
   .bmd-label-floating,
   .bmd-label-placeholder {
     //@debug "top: #{$label-as-placeholder-top}";
-    top: $label-placeholder-top; // place the floating label to look like a placeholder with input padding
+    // top: $label-placeholder-top; // place the floating label to look like a placeholder with input padding
+    //custom
+    top: 1.5rem;
+    left: 2px; //custom   
   }
 
   // floating focused/filled will look like static
@@ -278,6 +281,7 @@
   .is-filled {
     .bmd-label-floating {
       @include bmd-label-static($label-static-top, $floating-font-size);
+      left: 2px; //custom
     }
   }
 
