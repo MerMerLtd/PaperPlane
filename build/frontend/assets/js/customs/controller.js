@@ -114,7 +114,7 @@ const elements = {
     page: document.querySelector(".login-page"),
     pageHeader: document.querySelector(".page-header"),
     fileList: document.querySelector(".file-list"),
-    progressBars: [],
+    // progressBars: [],
     // files: [],
 }
 
@@ -126,7 +126,7 @@ const renderFile = file =>{
             <div class="delete-button"></div>
             <div class="file-icon"></div>
             <div class="progress">
-                <div data-progressId="${file.fid}" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%"></div>
+                <div data-progressId="${file.fid}" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 0%"></div>
             </div>
             <div class="file-name">${file.name}</div>
             <div class="file-size">${formatFileSize(file.size)}</div>
@@ -201,11 +201,9 @@ const handleDragoutPageHeader = evt => {
     }
 }
 
-const showFileProgress = (fid, progress) => {
-    // console.log(file.fid)
-    let index = elements.progressBars.findIndex(el => el.dataset.progressid === fid);
-    // console.log(index);
-    elements.progressBars[index].style.width = `${progress}%`;
+const showFileProgress = file => {
+    const progress = (file.sliceIndex/file.sliceCount).toFixed(2)*100;
+    document.querySelector(`[data-progressid='${file.fid}']`).style.width = `${progress}%`;
 }
 
 // =============================================================
@@ -306,6 +304,7 @@ const getMeta = file => {
         sliceSize,
         sliceIndex: 0,
         retryCount: 0,
+        isPaused: false,
     };
 };
 
@@ -432,6 +431,7 @@ const getHashShard = async parseFile => {
         SHA1(target)
         .then(
             res => {
+                console.log(shardInfo, fid);
                 parseFile.sliceIndex += 1 ; //紀錄進度
                 return resolve({
                     path: `/file/${fid}/${res.hash}`,
@@ -445,9 +445,23 @@ const getHashShard = async parseFile => {
     });
 }
 
+const uploadQueue = [];
+
+const addUploadQueue = target => {
+    uploadQueue.push(target);
+    return uploadQueue;
+}
+
+const popUploadQueue = target => {
+    const index = uploadQueue.findIndex(file => file.fid === target.fid);
+    uploadQueue.splice(index, 1);
+    return uploadQueue;
+}
+
 const uploadShard = async target => {
-    if(target.isPaused) return;
-    
+    console.log("uploadShard/ isPaused",target.fid ,target.isPaused)
+    if(target.isPaused || target.sliceIndex === target.sliceCount ) return;
+
     let err, data, hashShard;
 
     // 1. to slice a blob add info then hash it;
@@ -467,6 +481,7 @@ const uploadShard = async target => {
         url: hashShard.path,
         payload: formData,
     }));
+   
 
     if(err){
         target.retry = target.retry ? (target.retry + 1) : 1
@@ -480,114 +495,41 @@ const uploadShard = async target => {
                 index: target.sliceIndex,
             })}`);
         }
-    }
-
-    return data;
-}
-
-const uploadQueue = [];
-// const pauseUploadList = [];
-
-const continuing = () => {
-    uploadQueue.pop();
-    startUpload();
-}
-
-const startUpload = async () => {
-    let err, data, hashShard;
-    // let err, data;
-    console.log(uploadQueue)
-
-    if(!uploadQueue || uploadQueue.length === 0) return;
-    if(connection >= maxConnection) {  
-        queue.push(startUpload.bind(this));
-        return false; 
-    }
-    // const target = uploadQueue.pop();
-    const target = uploadQueue[uploadQueue.length - 1];
-    // const target = uploadQueue[uploadQueue.reverse().findIndex(i => i.isPaused !== true)];
-
-    //hashShard = {path: String, blob: Blob}
-    [err, hashShard] = await to(getHashShard(target)); // target.sliceIndex will plus 1 
-
-    if(!hashShard){
-        // throw err;
-        console.log(err);
-        throw new Error("一次最多上傳 ？？ 個檔案"); // 寫個方法呈現到畫面上
-    }
-    
-    console.log({...target});
-
-    const formData = new FormData();
-    formData.append("file", hashShard.blob);
-
-    [err, data] = await to(makeRequest({
-        method: "POST",
-        // url: "/test/upload",
-        url: hashShard.path,
-        payload: formData,
-    }))
-    if(err){
-        target.retry = target.retry ? (target.retry + 1) : 1
-        if(target.retry <= maxRetry) { 
-            addUploadList(target)
-        }
-        else { 
-            throw new Error(`can not upload shard: ${({
-                file: target.file,
-                index: target.sliceIndex,
-            })}`);
-        }
     }else{
-        // console.log(data) // ?? will return current progress from backend
-        target.sliceIndex < target.sliceCount ? startUpload() : continuing(); // ?? done()
-        // target.sliceIndex < target.sliceCount ? startUpload() : console.log(target); // ?? done()
+        target.sliceIndex < target.sliceCount ? uploadShard(target) : null; // ?? popUploadQueue(target); 需要嗎？
+        showFileProgress(target);
     }
 }
 
-const upload = target => {
-    uploadQueue.push(target);
-    startUpload();
+const uploadFiles = () => {
+    if(!uploadQueue || uploadQueue.length === 0) return;
+
+    uploadQueue.forEach(target =>{
+        if(connection >= maxConnection) {  
+            queue.push(uploadShard.bind(this, target));
+            return false; 
+        }
+        uploadShard(target)
+    });
 }
-
-// const addUploadQueue = target => {
-//     uploadQueue.push(target);
-//     // console.log(uploadQueue)
-//     return uploadQueue;
-// }
-
-// const upload = target => {
-//     addUploadQueue(target); //(path, n, callback) 
-//     startUpload();
-// }
 
 // UI Control
 const uploadFileControl = evt => {
+    const element = evt.target.closest(".file");
+    const fid = element.dataset.fid; // UI onClickedFid
+    const index = uploadQueue.findIndex(file => file.fid === fid); 
+    const file = uploadQueue[index];
+
     if(evt.target.matches(".delete-button, .delete-button *")){
-        console.log("delete", evt.target.closest(".file"));
+        element.parentElement.removeChild(element);
+        uploadQueue.splice(index, 1);
+
     }else if(evt.target.closest(".file")){
-        const fid = evt.target.closest(".file").dataset.fid; // UI onClickedFid
-        let index = uploadQueue.findIndex(file => file.fid === fid); 
-        const file = uploadQueue[index];
-
-        if(file.isPaused) file.isPaused = !file.isPaused; // ?? 之後在這樣寫， 這樣的寫法需要改良upload的邏輯
-
-        // if(index !== -1){
-        //     const file = uploadQueue.splice(index, 1);
-        //     // file.isPaused = true;
-        //     pauseUploadList.push(file);
-        //     return;
-        // }else{
-        //     index = pauseUploadList.findIndex(file => file.fid === fid); 
-        //     const file = uploadQueue.splice(index, 1);
-        //     // file.isPaused = false;
-        //     // uploadQueue.push(file);
-        //     // upload(file);
-        //     window.testfile = uploadQueue.splice(index, 1);
-           
-        // }
-       
-        // console.log(pauseUploadList);
+        file.isPaused = !file.isPaused; 
+        console.log("uploadFileControl/ isPaused: ", file.fid, file.isPaused);
+        if(!file.isPaused){
+            uploadShard(file);
+        }
     }
 }
 
@@ -637,15 +579,15 @@ const handleFilesSelected = evt => {
         const currentProgressBarEl = resultArray.map(file => document.querySelector(`[data-progressId='${file.fid}']`));
         // 加到 total els 裡面
         // elements.files = elements.files.concat(currentFileEl); 
-        elements.progressBars = elements.progressBars.concat(currentProgressBarEl); 
+        // elements.progressBars = elements.progressBars.concat(currentProgressBarEl); 
 
         // console.log(elements.files, elements.progressBars);
         // currentFileEl.forEach(el => el.addEventListener("click", (evt) => upload(evt), false));
 
         if (resultArray.length){
             // add ParsedFiles into the uploadQueue
-            resultArray.forEach(file => uploadQueue.push(getMeta(file)));
-            startUpload();
+            resultArray.forEach(file => addUploadQueue(getMeta(file)));
+            uploadFiles();
           
         }
         
