@@ -9660,7 +9660,7 @@ fieldset[disabled][disabled] .has-rose .form-control, .has-rose .form-control.di
     font-size: 0.875rem; }
   .bmd-form-group .bmd-label-floating,
   .bmd-form-group .bmd-label-placeholder {
-    top: 1.5rem;
+    top: 0.8rem;
     left: 2px; }
   .bmd-form-group .is-focused .bmd-label-floating,
   .bmd-form-group .is-filled .bmd-label-floating {
@@ -9715,7 +9715,7 @@ fieldset[disabled][disabled] .has-rose .form-control, .has-rose .form-control.di
     font-size: 0.875rem; }
   .bmd-form-group.bmd-form-group-sm .bmd-label-floating,
   .bmd-form-group.bmd-form-group-sm .bmd-label-placeholder {
-    top: 1.5rem;
+    top: 0.8rem;
     left: 2px; }
   .bmd-form-group.bmd-form-group-sm .is-focused .bmd-label-floating,
   .bmd-form-group.bmd-form-group-sm .is-filled .bmd-label-floating {
@@ -9770,7 +9770,7 @@ fieldset[disabled][disabled] .has-rose .form-control, .has-rose .form-control.di
     font-size: 0.875rem; }
   .bmd-form-group.bmd-form-group-lg .bmd-label-floating,
   .bmd-form-group.bmd-form-group-lg .bmd-label-placeholder {
-    top: 1.5rem;
+    top: 0.8rem;
     left: 2px; }
   .bmd-form-group.bmd-form-group-lg .is-focused .bmd-label-floating,
   .bmd-form-group.bmd-form-group-lg .is-filled .bmd-label-floating {
@@ -9832,7 +9832,7 @@ label {
 
 .bmd-label-floating,
 .bmd-label-placeholder {
-  top: 1.5rem;
+  top: 0.8rem;
   left: 2px; }
 
 .is-focused .bmd-label-floating,
@@ -14654,7 +14654,7 @@ select.selectpicker {
 .index-page .navbar-transparent,
 .signup-page .navbar-transparent,
 .presentation-page .navbar-transparent {
-  padding-top: 25px; }
+  padding-top: 12px; }
 
 .blog-post .page-header {
   min-height: 100vh; }
@@ -14734,7 +14734,7 @@ select.selectpicker {
   height: auto;
   display: inherit; }
   .login-page .page-header .container {
-    padding-top: 15vh; }
+    padding-top: 12vh; }
 
 .login-page .footer .container {
   padding: 0; }
@@ -15570,7 +15570,7 @@ select.selectpicker {
   .index-page .cd-section .tim-typo .tim-note {
     width: 60px; }
   .login-page .page-header > .container {
-    padding-bottom: 150px; } }
+    padding-bottom: 100px; } }
 
 @media screen and (max-width: 400px) {
   .cd-vertical-nav {
@@ -15701,6 +15701,9 @@ select.selectpicker {
 
 #tab2 .card .card-body {
   padding: 1.5rem 1.875rem; }
+
+#tab1 .card .card-body {
+  padding: 0 1.875rem 0.75rem; }
 
 .box__dropzone {
   position: absolute;

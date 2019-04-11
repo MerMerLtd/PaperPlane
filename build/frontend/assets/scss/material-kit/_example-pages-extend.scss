@@ -537,7 +537,7 @@
 .signup-page,
 .presentation-page{
     .navbar-transparent{
-        padding-top: 25px;
+        padding-top: 12px; //25px; //custom
     }
 }
 .blog-post{
@@ -655,7 +655,7 @@
         display: inherit;
 
         .container{
-            padding-top: 15vh;
+            padding-top: 12vh;
         }
     }
 
