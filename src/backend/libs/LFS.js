@@ -17,7 +17,7 @@ const Utils = require(path.resolve(__dirname, 'Utils.js'));
 */
 class Job {
   constructor({ fid, rootHash, totalSlice, fileName, fileSize, contentType }) {
-    this._ = { fid, rootHash, totalSlice, fileName, fileSize, contentType };
+    this._ = { fid, rootHash, totalSlice, fileName, fileSize, contentType, waiting: [] };
     this.totalSlice = totalSlice;
   }
 
@@ -71,6 +71,13 @@ class Job {
   get waiting() {
     return this._.waiting;
   }
+  get progress() {
+    try {
+      return ((this.totalSlice - this.waiting.length) / this.totalSlice);
+    } catch(e) {
+      return 0;
+    }
+  }
   done(sliceIndex) {
     const i = this._.waiting.indexOf(sliceIndex);
     if(i > -1) {
@@ -79,7 +86,12 @@ class Job {
     }
   }
   toJSON() {
-    return dvalue.clone(this._);
+    const json = dvalue.clone(this._);
+    json.slice = new Array(json.totalSlice).fill(0).map((v, i) => {
+      return json.waiting.indexOf(i) == -1;
+    });
+    json.progress = this.progress;
+    return json;
   }
   toStaticString() {
     return Utils.jsonStableStringify(this._);
@@ -116,8 +128,8 @@ class LFS extends Bot {
     if(!Buffer.isBuffer(slice) || slice.length < 16) {
       return Promise.reject(new Error('Invalid Slice Format'));
     }
-    const total = slice.slice(0, 8).readUInt32BE(0, 8);
-    const index = slice.slice(8, 16).readUInt32BE(0, 8);
+    const total = slice.slice(0, 8).readIntBE(2, 6);
+    const index = slice.slice(8, 16).readIntBE(2, 6);
     const sha1 = crypto.createHash('sha1').update(slice).digest('hex');
     const result = { total, index, sha1 };
     return Promise.resolve(result);
@@ -144,11 +156,9 @@ class LFS extends Bot {
   initialFolder() {
     const base = path.resolve(this.config.homeFolder, 'LFS');
     this.folder = {
-      temp: path.resolve(base, 'TEMP'),
       file: path.resolve(base, 'FILE')
     };
     return Utils.initialFolder({ homeFolder: base })
-    .then(() => Utils.initialFolder({ homeFolder: this.folder.temp }))
     .then(() => Utils.initialFolder({ homeFolder: this.folder.file }));
   }
 
@@ -205,6 +215,8 @@ class LFS extends Bot {
     const job = this.findJOB({ fid });
     job.totalSlice = totalSlice;
     job.done(sliceIndex);
+
+    return job;
   }
 
   getUploadJob({ fid }) {
@@ -228,7 +240,7 @@ class LFS extends Bot {
   */
   initialUpload() {
     const fid = dvalue.randomID();
-    const folder = path.resolve(this.folder.temp, fid);
+    const folder = path.resolve(this.folder.file, fid);
     return Utils.exists({ target: folder })
     .then((rs) => {
       if(rs) {
@@ -237,7 +249,7 @@ class LFS extends Bot {
         return Utils.initialFolder({ homeFolder: folder })
       }
     })
-    .then(() => this.newOperation({ job: { fid }, write: true }))
+    .then(() => this.newOperation({ job: { fid, folder }, write: true }))
     .catch((e) => {
       return this.initialUpload();
     })
@@ -253,13 +265,22 @@ class LFS extends Bot {
       const sliceMeta = Object.values(files)[0];
       return new Promise((resolve, reject) => {
         fs.readFile(sliceMeta.path, (e, slice) => {
+          slice.fid = fid;
+          slice.checkHash = hash;
+          slice.temp = sliceMeta.path;
           if(e) {
             return reject(e);
           }
           return this.constructor.parseSlice({ slice })
           .then((sliceData) => {
             sliceData.match = (sliceData.sha1 == hash);
-            return Promise.resolve(sliceData);
+            if(sliceData.match) {
+              const job = this.updateOperation({ fid, totalSlice: sliceData.total, sliceIndex: sliceData.index });
+              return this.saveSlice({ fid, slice })
+              .then(() => job.toJSON());
+            } else {
+              return Promise.reject(new Error('Broken Shard'));
+            }
           })
           .then(resolve);
         });
@@ -269,8 +290,29 @@ class LFS extends Bot {
     }
   }
 
-  saveSlice({ slice }) {
-
+  saveSlice({ fid, slice }) {
+    const sliceFolder = path.resolve(this.folder.file, fid);
+    const slicePath = path.resolve(sliceFolder, slice.checkHash);
+    return new Promise((resolve, reject) => {
+      fs.writeFile(slicePath, slice, (e, d) => {
+        if(e) {
+          reject(e);
+        } else {
+          resolve(true);
+        }
+      });
+    })
+    .then(() => {
+      return new Promise((resolve, reject) => {
+        fs.unlink(slice.temp, (e, d) => {
+          if(e) {
+            reject(e);
+          } else {
+            resolve(true);
+          }
+        });
+      });
+    })
   }
 
   checkFile({  }) {
