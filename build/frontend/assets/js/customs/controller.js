@@ -1,3 +1,4 @@
+
 // https://blog.grossman.io/how-to-write-async-await-without-try-catch-blocks-in-javascript/
 const to = promise => {
     return promise.then(data => {
@@ -114,33 +115,10 @@ const elements = {
     page: document.querySelector(".login-page"),
     pageHeader: document.querySelector(".page-header"),
     fileList: document.querySelector(".file-list"),
-    // progressBars: [],
-    // files: [],
+    btnSend: document.querySelector(".btn-send"),
+    btnDownload: document.querySelector(".btn-download"),
+    dropCard: document.querySelector(".dropOrdownload .card"),
 }
-
-const renderFile = file =>{
-    // console.log(file);
-
-    const markup = `
-        <div class="file" data-fid="${file.fid}">
-            <div class="delete-button"></div>
-            <div class="file-icon"></div>
-            <div class="progress">
-                <div data-progressId="${file.fid}" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 0%"></div>
-            </div>
-            <div class="file-name">${file.name}</div>
-            <div class="file-size">${formatFileSize(file.size)}</div>
-        </div>  
-
-        <!-- <p class="file-name">螢幕快照 2019-03-19 上午9.04.16.png</p> -->
-        <!-- <p class="file-name">螢幕快照 ...04.16.png</p> -->
-    `;
-    elements.fileList.insertAdjacentHTML("beforeend", markup);
-}
-const renderFiles = files => {
-    files.forEach(file => renderFile(file));
-}
-
 
 // // 放進 file-container 的 提示
 // const hintReward = () => {
@@ -165,7 +143,7 @@ const removeHintLocation = () => {
 }
 // drag file over the fileList 之後
 const handleInFileList = () => {
-    removeHintLocation();
+    
     elements.placeholder.classList.add("u-margin-top--sm");
     elements.addIcon.classList.add("add__icon--small");
     elements.addText.classList.add("add__text--small");
@@ -175,7 +153,7 @@ const handleInFileList = () => {
     // dropZone pointer Event: none
 }
 const handleOutFileList = () => {
-    hintLocation();
+    
     elements.placeholder.classList.remove("u-margin-top--sm");
     elements.addIcon.classList.remove("add__icon--small");
     elements.addText.classList.remove("add__text--small");
@@ -189,8 +167,10 @@ const handleDragInPageHeader = evt => {
         hintLocation();
     }
     if(evt.target.matches(".box__dropzone, .box__dropzone * " || state.fileObj.files.length)){
+        removeHintLocation();
         handleInFileList();
     }else{
+        hintLocation();
         handleOutFileList();
     }
 }
@@ -524,8 +504,10 @@ const uploadFileControl = evt => {
     if(evt.target.matches(".delete-button, .delete-button *")){
         element.parentElement.removeChild(element);
         uploadQueue.splice(index, 1);
+        if(!elements.fileList.childElementCount) handleOutFileList();
 
     }else if(evt.target.closest(".file")){
+        if(file.sliceIndex === file.sliceCount) return;
         file.isPaused = !file.isPaused; 
         console.log("uploadFileControl/ isPaused: ", file.fid, file.isPaused);
         if(!file.isPaused){
@@ -594,7 +576,17 @@ const handleFilesSelected = evt => {
         
         // 7. 上傳失敗 3s 後 重新傳送
     });  
-  }
+}
+
+const send = evt => {
+    const type = document.querySelector("#tab1 .active").innerText || "EMAIL";
+    renderSendingPage(type);
+    console.log(uploadQueue);
+}
+
+const downloadFiles = evt => {
+    // ??
+}
 
 // Check for the various File API support.
 if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -617,8 +609,10 @@ const removeMultiListener = (element, events, func) => {
     events.split(" ").forEach(event => element.removeEventListener(event, func, false));
 }
 
-elements.boxFile.addEventListener("change",  evt => handleFilesSelected(evt));
+elements.boxFile.addEventListener("change",  evt => handleFilesSelected(evt));  
 elements.fileList.addEventListener("click", evt => uploadFileControl(evt));
+elements.btnDownload.addEventListener("click", evt => downloadFiles(evt));
+elements.btnSend.addEventListener("click", evt => send(evt));
 
 if(isAdvancedUpload){
     elements.cardHeader.classList.add("has-advanced-upload");
