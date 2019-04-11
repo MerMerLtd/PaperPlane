@@ -25,7 +25,7 @@ Element.prototype.closest = function(s) {
 // =============================================================
 // base
 // XHR
-const maxConnection = 5; 
+const maxConnection = Infinity; 
 const maxRetry = 3;
 let connection = 0;
 let queue = [];
@@ -96,7 +96,6 @@ const formatFileSize = size => {
     }
 
     [formatted, power] = check(size);
-
     return `${formatted}${unit[power]}`
 }
 
@@ -335,24 +334,24 @@ const getMeta = file => {
 // 產生佇列 👉[{fid: fid, fragment: blob}, {...}, ...]
 
 // 需改良 類似maxConnection的做法
-const maxWorker = 5;
-const sha1Queue = [];
-let workers = 0;
 
-const closeWorker = worker => {
-    console.log("workers: ", workers);
-    worker.terminate();
-    workers--;
+const releaseSlave = slave => {
+    slave.type === "Worker" ? slave.theSlave.terminate() : slave.theSlave.abort();
+    slave.slaves--;
 
-    if(sha1Queue.length > 0 && workers < maxWorker){
-        let next = sha1Queue.pop();
-        console.log(next);
+    if(slave.workload.length > 0 && slave.slaves < slave.maxSlave){
+        let next = slave.workload.pop();
+
         if(typeof next === "function"){
             next(); 
         }
     }
     return true;
 }
+
+const maxWorker = Infinity;
+const sha1Queue = [];
+let workers = 0;
 
 const SHA1 = target => {
     
@@ -363,13 +362,24 @@ const SHA1 = target => {
         workers++;
         return new Promise((resolve, reject) => {
             worker.onmessage = evt => {
-                // console.log(evt)
-                closeWorker(worker);
+                releaseSlave({
+                    type: "Worker", 
+                    theSlave: worker, 
+                    slaves: workers, 
+                    maxSlave: maxWorker, 
+                    workload: sha1Queue
+                });
                 resolve(evt.data);
             }
             worker.onerror = evt => {
                 // console.log(evt)
-                closeWorker(worker);
+                releaseSlave({
+                    type: "Worker", 
+                    theSlave: worker, 
+                    slaves: workers, 
+                    maxSlave: maxWorker, 
+                    workload: sha1Queue
+                });
                 reject(evt.message);
             }
             worker.postMessage({id: target.fid, data: target.blob});   
@@ -377,26 +387,9 @@ const SHA1 = target => {
     }
 }
 
-
-// const fileReader = new FileReader();
-const maxFileReader = 5;
+const maxFileReader = Infinity;
 const blobQueue = [];
 let fileReaders = 0;
-
-const closeFileReader = fileReader => {
-    console.log("fileReaders: ", fileReaders);
-    fileReader.abort();
-    fileReaders--;
-
-    if(blobQueue.length > 0 && fileReaders < maxFileReader){
-        let next = blobQueue.pop();
-        console.log(next);
-        if(typeof next === "function"){
-            next(); 
-        }
-    }
-    return true;
-}
 
 const readBlob = blob => {
     if(fileReaders >= maxFileReader){
@@ -406,11 +399,23 @@ const readBlob = blob => {
         fileReaders++;
         return new Promise((resolve, reject) => {
             fileReader.onload = evt =>  {
-                closeFileReader(fileReader);
+                releaseSlave({
+                    type: "FileReader", 
+                    theSlave: fileReader, 
+                    slaves: fileReaders, 
+                    maxSlave: maxFileReader, 
+                    workload: blobQueue,
+                });
                 resolve(evt.target.result);
             };
             fileReader.onerror = err => {
-                closeFileReader(fileReader);
+                releaseSlave({
+                    type: "FileReader", 
+                    theSlave: fileReader, 
+                    slaves: fileReaders, 
+                    maxSlave: maxFileReader, 
+                    workload: blobQueue,
+                });
                 reject({err});
             }
             fileReader.readAsArrayBuffer(blob);
@@ -436,20 +441,12 @@ const getHashShard = async parseFile => {
     }
 
     const shardInfo = genShardInfo(count, index);  // get shardInfo
-
     let blob = slice(file, start, end); // 取得file第i個blob
     const blobBuffer = await readBlob(blob);
-
-    // const shard = new Uint8Array(shardInfo.length + blobBuffer.size); // 組合 shardInfo & blob 👉 shard
-    // shard.set(shardInfo, 0);
-    // shard.set(blobBuffer, shardInfo.length);
     blob = new Uint8Array(blobBuffer);
     const shard = genMergeUi8A(shardInfo, blob);
-  
-    console.log(shard)
-
     const target = {fid, blob: new Blob([shard])};
-    // console.log(target)
+
     return new Promise((resolve, reject) => {
         SHA1(target)
         .then(
@@ -466,25 +463,38 @@ const getHashShard = async parseFile => {
         )
     });
 }
+
 const uploadQueue = [];
+const pauseUploadList = []
+
+const continuing = () => {
+    uploadQueue.pop();
+    startUpload();
+}
 
 const startUpload = async () => {
-    // let err, data, hashShard;
-    let err, data;
+    let err, data, hashShard;
+    // let err, data;
+    console.log(uploadQueue)
 
     if(!uploadQueue || uploadQueue.length === 0) return;
     if(connection >= maxConnection) {  
         queue.push(startUpload.bind(this));
         return false; 
     }
-    const target = uploadQueue.pop();
+    // const target = uploadQueue.pop();
+    const target = uploadQueue[uploadQueue.length - 1];
 
-    // to func 在接錯誤時有錯誤, 先不管它;
-    // [err, hashShard] = await to(getHashShard(target)); // target.sliceIndex will plus 1 
-    const hashShard = await getHashShard(target);
-
-    if(!hashShard) return false;
     //hashShard = {path: String, blob: Blob}
+    [err, hashShard] = await to(getHashShard(target)); // target.sliceIndex will plus 1 
+
+    if(!hashShard){
+        // throw err;
+        console.log(err);
+        throw new Error("一次最多上傳 ？？ 個檔案"); // 寫個方法呈現到畫面上
+    }
+    
+    console.log({...target});
 
     const formData = new FormData();
     formData.append("file", hashShard.blob);
@@ -507,20 +517,23 @@ const startUpload = async () => {
             })}`);
         }
     }else{
-        target.sliceIndex < target.sliceCount ? upload(target) : console.log(target); // ?? done()
+        // console.log(data) // ?? will return current progress from backend
+        target.sliceIndex < target.sliceCount ? startUpload() : continuing(); // ?? done()
+        // target.sliceIndex < target.sliceCount ? startUpload() : console.log(target); // ?? done()
     }
 }
 
+
 const addUploadQueue = target => {
     uploadQueue.push(target);
+    // console.log(uploadQueue)
     return uploadQueue;
 }
 
-const upload = target => {
-    //(path, n, callback) 
-    addUploadQueue(target);
-    startUpload();
-}
+// const upload = target => {
+//     addUploadQueue(target); //(path, n, callback) 
+//     startUpload();
+// }
 
 // UI Control
 const uploadFileControl = evt => {
@@ -528,6 +541,10 @@ const uploadFileControl = evt => {
         console.log("delete", evt.target.closest(".file"));
     }else if(evt.target.closest(".file")){
         console.log(evt.target.closest(".file"))
+        const onClickedFid = evt.target.closest(".file").dataset.fid;
+        const onClickedFile = uploadQueue.findIndex(file => file.fid === onClickedFid);
+        pauseUploadList.push( uploadQueue.splice(onClickedFile, 1));
+        console.log(pauseUploadList);
     }
 }
 
@@ -584,7 +601,8 @@ const handleFilesSelected = evt => {
 
         if (resultArray.length){
             // add ParsedFiles into the uploadQueue
-            resultArray.forEach(file => upload(getMeta(file)));
+            resultArray.forEach(file => addUploadQueue(getMeta(file)));
+            startUpload();
           
         }
         
