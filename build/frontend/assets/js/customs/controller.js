@@ -118,6 +118,7 @@ const elements = {
     btnSend: document.querySelector(".btn-send"),
     btnDownload: document.querySelector(".btn-download"),
     dropCard: document.querySelector(".dropOrdownload .card"),
+    display: document.querySelector(".display"),
 }
 
 // // 放進 file-container 的 提示

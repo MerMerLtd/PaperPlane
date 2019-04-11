@@ -170,12 +170,133 @@ const renderDropZone = files => {
     if (!files || !files.length) return;
     renderFiles(files) // uploadQueue || state;
 }
-const renderSendingPage = type => {
+const rederTotalProgress = files => {
+    // ?? 這裡要做計算
     const markup = `
-        <div class="card-body">
-        
+        <div class="display-progress">
+        <div class="progress progress-custom">
+            <div class="progress-num">progress% *0.85</div>
+            <div class="progress-bar progress-bar-striped progress-bar-animated " role="progressbar"
+                aria-valuenow="75" aria-valuemin="0%" aria-valuemax="100" style="width: 50%"></div>
+            </div>
+            <div class="text-box">
+                <p class="file-nums">Total 3 files</p>
+                <p class="file-size">(progress * total)/ total</p>
+            </div>
         </div>
-        `;
+    `;
+    elements.display.insertAdjacentHTML("beforeend", markup);
+}
+
+const renderSendingPage = type => {
+    const direct = `
+        <div class="card-body">
+            <div class="text-box">
+                <h3>
+                    <span class="btn-back">
+                        <i class="material-icons">arrow_back</i>
+                    </span>
+                    <span class="tim-note">Sending...</span>
+                </h3>
+                <h5 class="tim-note btn-cancel">Cancel</h5>
+            </div>
+            <p class="countdown">Expire in <span>10:00</span> </p>
+            <div class="display">
+                <div class="display-digit">
+                    <span>1</span>
+                    <span>3</span>
+                    <span>3</span>
+                    <span>4</span>
+                    <span>7</span>
+                    <span>2</span>
+                </div> 
+                <div class="display-code"></div>
+                <div class="display-progress">
+                <div class="progress progress-custom">
+                    <div class="progress-num">progress% *0.85</div>
+                    <div class="progress-bar progress-bar-striped progress-bar-animated " role="progressbar"
+                        aria-valuenow="75" aria-valuemin="0%" aria-valuemax="100" style="width: 50%"></div>
+                    </div>
+                    <div class="text-box">
+                        <p class="file-nums">Total 3 files</p>
+                        <p class="file-size">(progress * total)/ total</p>
+                    </div>
+                </div>
+            </div>
+            <div class="btn  btn-block btn-ok ">O K !</div>
+        </div>
+    `;
+    const link = `
+    <div class="card-body">
+    <div class="text-box">
+      <h3>
+        <span class="btn-back">
+          <i class="material-icons">arrow_back</i>
+        </span>
+        <span class="tim-note">Sending...</span>
+      </h3>
+      <h5 class="tim-note btn-cancel">Cancel</h5>
+    </div>
+    <div class="display">
+      <div class="display-code"></div>
+      <div class="display-link">
+        <a href="https://drophere.io" class="link">
+          <span><i class="material-icons">file_copy</i></span>
+          https://drophere.io
+        </a>
+      </div>
+      <div class="display-progress">
+        <div class="progress progress-custom">
+          <div class="progress-num">progress% *0.85</div>
+          <div class="progress-bar progress-bar-striped progress-bar-animated " role="progressbar"
+            aria-valuenow="75" aria-valuemin="0%" aria-valuemax="100" style="width: 50%"></div>
+        </div>
+        <div class="text-box">
+          <p class="file-nums">Total 3 files</p>
+          <p class="file-size">(progress * total)/ total</p>
+        </div>
+      </div>
+      
+    </div>
+    <div class="btn  btn-block btn-ok ">O K !</div>
+  </div>
+    `;
+    const email =`
+    <div class="card-body">
+    <div class="text-box">
+      <h3>
+        <span class="btn-back">
+          <i class="material-icons">arrow_back</i>
+        </span>
+        <span class="tim-note">Sending...</span>
+      </h3>
+      <h5 class="tim-note btn-cancel">Cancel</h5>
+    </div>
+
+    <div class="display">
+      <div class="display-paperplane">
+          <div class="loader">
+              <i class="material-icons">send</i>
+          </div>
+          <i class="material-icons gift">card_giftcard</i>
+      </div>
+
+      <div class="display-progress">
+        <div class="progress progress-custom">
+          <div class="progress-num">progress% *0.85</div>
+          <div class="progress-bar progress-bar-striped progress-bar-animated " role="progressbar"
+            aria-valuenow="75" aria-valuemin="0%" aria-valuemax="100" style="width: 50%"></div>
+        </div>
+        <div class="text-box">
+          <p class="file-nums">Total 3 files</p>
+          <p class="file-size">(progress * total)/ total</p>
+        </div>
+      </div>
+      
+    </div>
+    <div class="btn  btn-block btn-ok ">O K !</div>
+  </div>
+    `;
     elements.dropCard.innerHTML = "";
     elements.dropCard.insertAdjacentHTML("afterbegin", markup);
 }

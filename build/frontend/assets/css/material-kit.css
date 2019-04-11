@@ -15859,11 +15859,177 @@ select.selectpicker {
   font-size: 20px;
   padding: 4px 0; }
 
+@-webkit-keyframes drop {
+  0% {
+    bottom: 50px;
+    opacity: 0; }
+  59% {
+    opacity: 0; }
+  60% {
+    bottom: 50px;
+    opacity: 1; }
+  65% {
+    bottom: 0px;
+    opacity: 1; }
+  67% {
+    bottom: 20px;
+    opacity: 1; }
+  69% {
+    bottom: 15px;
+    opacity: 1; }
+  70% {
+    bottom: 0px;
+    opacity: 1; }
+  100% {
+    bottom: 0px;
+    opacity: 1; } }
+
+@keyframes drop {
+  0% {
+    bottom: 50px;
+    opacity: 0; }
+  59% {
+    opacity: 0; }
+  60% {
+    bottom: 50px;
+    opacity: 1; }
+  65% {
+    bottom: 0px;
+    opacity: 1; }
+  67% {
+    bottom: 20px;
+    opacity: 1; }
+  69% {
+    bottom: 15px;
+    opacity: 1; }
+  70% {
+    bottom: 0px;
+    opacity: 1; }
+  100% {
+    bottom: 0px;
+    opacity: 1; } }
+
+@-webkit-keyframes run {
+  0% {
+    left: -5%; }
+  10%,
+  60% {
+    left: calc((100% - 5%) / 2); }
+  70%,
+  100% {
+    left: 100%; } }
+
+@keyframes run {
+  0% {
+    left: -5%; }
+  10%,
+  60% {
+    left: calc((100% - 5%) / 2); }
+  70%,
+  100% {
+    left: 100%; } }
+
+@-webkit-keyframes rotating {
+  0%,
+  10% {
+    -webkit-transform: rotate(0deg);
+            transform: rotate(0deg); }
+  60%,
+  100% {
+    -webkit-transform: rotate(-1turn);
+            transform: rotate(-1turn); } }
+
+@keyframes rotating {
+  0%,
+  10% {
+    -webkit-transform: rotate(0deg);
+            transform: rotate(0deg); }
+  60%,
+  100% {
+    -webkit-transform: rotate(-1turn);
+            transform: rotate(-1turn); } }
+
+.loader {
+  /* width: 16em; */
+  width: 100%;
+  height: 6em;
+  position: relative;
+  margin: 0 auto;
+  text-align: center; }
+
+.loader .material-icons {
+  font-size: 36px;
+  position: absolute;
+  width: 5%;
+  height: 4%;
+  border-radius: 50%;
+  bottom: 25px;
+  left: -5%;
+  -webkit-animation: 3s linear infinite;
+          animation: 3s linear infinite;
+  -webkit-transform-origin: 50% -.75em;
+          transform-origin: 50% -.75em;
+  -webkit-animation-name: run, rotating;
+          animation-name: run, rotating; }
+
 .display {
   display: flex;
   flex-direction: column;
-  height: 300px;
+  min-height: 200px;
   justify-content: space-evenly; }
+
+.display-paperplane {
+  position: relative;
+  width: 90%;
+  text-align: center;
+  color: #e9e9e9; }
+
+.countdown {
+  text-align: right; }
+  .countdown > span {
+    color: #ff2d55; }
+
+.display-digit {
+  text-align: center;
+  font-size: 40px;
+  font-weight: 400;
+  padding: 20px;
+  color: #6d6d6d; }
+  .display-digit > span {
+    padding: 7px;
+    margin: 3px;
+    outline: 2px solid #efefef; }
+
+.gift {
+  position: absolute;
+  font-size: 36px;
+  -webkit-animation: drop 3s linear infinite;
+          animation: drop 3s linear infinite;
+  /* animation: drop; */ }
+
+@media screen and (max-width: 400px) {
+  .display-digit {
+    font-size: 24px; } }
+
+.display-code {
+  background-color: #ff2d55;
+  height: 100px;
+  width: 100px;
+  margin: 20px auto; }
+
+.display-progress {
+  margin: 20px 0; }
+
+a,
+a:active,
+a:visited {
+  display: block;
+  text-decoration: none;
+  color: #6d6d6d;
+  margin: 10px 0;
+  padding: 5px;
+  font-size: 18px;
+  border-bottom: 1px solid  #6d6d6d; }
 
 /**
  * Computes a CSS calc function that betweens a value from
