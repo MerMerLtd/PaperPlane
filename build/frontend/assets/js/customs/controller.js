@@ -204,6 +204,7 @@ const handleDragoutPageHeader = evt => {
 const showFileProgress = file => {
     const progress = (file.sliceIndex/file.sliceCount).toFixed(2)*100;
     document.querySelector(`[data-progressid='${file.fid}']`).style.width = `${progress}%`;
+    // ??之後我想要改這裡的樣式
 }
 
 // =============================================================

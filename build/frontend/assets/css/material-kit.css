@@ -15700,7 +15700,7 @@ select.selectpicker {
   height: 30px; }
 
 #tab2 .card .card-body {
-  padding: 1.5rem 1.875rem; }
+  padding: 1.2rem 1.875rem; }
 
 #tab1 .card .card-body {
   padding: 0 1.875rem 0.75rem; }
@@ -15806,6 +15806,9 @@ select.selectpicker {
   left: 50%;
   padding: 15px 10px;
   opacity: var(--opacity); }
+
+.btn-download {
+  margin-top: 15px; }
 
 /**
  * Computes a CSS calc function that betweens a value from

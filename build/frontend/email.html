@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .container {
+            
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px 20px;
+            border-radius: 5px;
+            color: #333;
+            /* background: #d8d8d8; */
+            /* test */
+        }
+        .logo-box{
+            color: #fff;
+            position: relative;
+            text-align: center;
+            border-radius: 5px;
+            background-color: #ff2d55;
+           
+        }
+        .logo-text{
+            padding: 10px;
+            margin: 0;
+        }
+        .gift{
+        
+            position: absolute;
+            bottom: 0;
+            font-size: 36px;
+            transform: translateX(-20px);
+            animation: drop 2s linear infinite;
+            /* animation: drop; */
+        }
+
+        a,
+        a:active,
+        a:visited{
+            display: block;
+            text-decoration: none;
+        }
+
+        /* https://codepen.io/comehope/pen/KBxYZg */
+        .loader {
+            /* width: 16em; */
+            height: 8em;
+            position: relative;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .loader .material-icons {
+            font-size: 36px;
+      
+            position: absolute;
+            width: 5%;
+            height: 20%;
+            border-radius: 50%;
+            bottom: 0.2em;
+            left: -5%;
+            animation: 2s linear infinite;
+            transform-origin: 50% -.75em;
+            animation-name: run, rotating;
+        }
+        @keyframes drop{
+           0%{
+            bottom: 50px;
+            opacity: 0;
+           }
+           59%{
+            opacity: 0;
+           }
+           60%{
+            bottom: 50px;
+            opacity: 1;
+           }
+           65% {
+            bottom: 0px;
+            opacity: 1;
+           }
+           67%{
+            bottom: 20px;
+            opacity: 1;
+           }
+           69%{
+            bottom: 15px;
+            opacity: 1;
+           }
+           70%{
+            bottom: 0px;
+            opacity: 1;
+           }
+    
+           100%{
+            bottom:0px;
+            opacity: 1;
+           }
+        }
+
+        @keyframes run {
+            0% {
+                left: -5%;
+            }
+
+            10%,
+            60% {
+                left: calc((100% - 5%) / 2);
+            }
+
+            70%,
+            100% {
+                left: 100%;
+            }
+        }
+
+        @keyframes rotating {
+            0%,
+            10% {
+                
+                transform: rotate(0deg);
+            }
+
+            60%,
+            100% {
+               
+                transform: rotate(-1turn);
+            }
+        }
+        a span i{
+            color: #fff;
+            background-color: #ff2d55;
+            margin-right: 5px ;
+            transform: translateY(2px);
+        }
+        a span{
+            color: #ff2d55;
+        }
+        a{
+            padding: 10px 0 ;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="logo-box">
+            <h1 class="logo-text">DropHere.io</h1>
+            <div class="loader">
+                <i class="material-icons">send</i>
+            </div>
+            <i class="material-icons gift">card_giftcard</i>
+        </div>
+        <h2 class="title">Let's get your packages!</h2>
+        <p>
+            Hello there,
+        </p>
+        <p>
+            <span class="from">luphia@mermer.cc</span> sent you some files via Drophere.io
+        </p>
+        <p>Just click the link below to download them.</p>
+        <a href="#">
+            <span>
+                <i class="material-icons">get_app</i>
+            </span>
+            <span> https://drophere.io</span>
+        </a>
+    </div>
+
+</body>
+
+</html>
