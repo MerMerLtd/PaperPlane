@@ -40,7 +40,6 @@ const optionDefinitions = [
 const argv = commandLineArgs(optionDefinitions);
 const command = path.resolve(__dirname, 'main.js');
 const cfg = argv.configPath ? argv.configPath : path.resolve(__dirname, '../private/config.toml');
-
 Utils.readConfig({ filePath: cfg })
 .then((config) => {
   const { packageInfo, homeFolder } = config;

@@ -134,6 +134,11 @@ class Receptor extends Bot {
       .then((rs) => {
       	ctx.body = rs;
       	next();
+      })
+      .catch((e) => {
+        console.trace(e)
+        ctx.body = { error: e.message, code: e.code };
+        ctx.status = 403;
       });
     });
     return Promise.resolve(true);
