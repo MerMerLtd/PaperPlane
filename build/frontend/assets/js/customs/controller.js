@@ -222,30 +222,11 @@ const minSliceCount = 25;
 const minSize = 512;
 const defaultSize = 4 * 1024 * 1024 // 4MB;
 
-
-// let size = 0;
-// let sliceSize = 0;
-// let sliceCount = 0;
-// let uploads = [];
-// let shardList = [];
-
-// const init = () => {
-//     size = 0;
-//     sliceSize = 0;
-//     sliceCount = 0;
-//     uploads = [];
-//     shardList = [];
-
-//     return true;
-// }
-
 const handleDefault = evt => {
     evt.stopPropagation();
     evt.preventDefault();
     evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
 }
-
-
 
 // Formalize file.slice 切割檔案
 const noop = () => {}
@@ -464,8 +445,48 @@ const getHashShard = async parseFile => {
     });
 }
 
+const uploadShard = async target => {
+    if(target.isPaused) return;
+    
+    let err, data, hashShard;
+
+    // 1. to slice a blob add info then hash it;
+    [err, hashShard] = await to(getHashShard(target)); // target.sliceIndex will plus 1 
+    //hashShard = {path: String, blob: Blob}
+
+    if(!hashShard){
+        throw err;  // ?? 寫個方法呈現 err 到畫面上
+    }
+
+    // 2. send it to backend
+    const formData = new FormData();
+    formData.append("file", hashShard.blob);
+    [err, data] = await to(makeRequest({
+        method: "POST",
+        // url: "/test/upload",
+        url: hashShard.path,
+        payload: formData,
+    }));
+
+    if(err){
+        target.retry = target.retry ? (target.retry + 1) : 1
+        if(target.retry <= maxRetry) { 
+            uploadShard(target);
+            return false;
+        }
+        else { 
+            throw new Error(`can not upload shard: ${({
+                file: target.file,
+                index: target.sliceIndex,
+            })}`);
+        }
+    }
+
+    return data;
+}
+
 const uploadQueue = [];
-const pauseUploadList = []
+// const pauseUploadList = [];
 
 const continuing = () => {
     uploadQueue.pop();
@@ -484,6 +505,7 @@ const startUpload = async () => {
     }
     // const target = uploadQueue.pop();
     const target = uploadQueue[uploadQueue.length - 1];
+    // const target = uploadQueue[uploadQueue.reverse().findIndex(i => i.isPaused !== true)];
 
     //hashShard = {path: String, blob: Blob}
     [err, hashShard] = await to(getHashShard(target)); // target.sliceIndex will plus 1 
@@ -523,12 +545,16 @@ const startUpload = async () => {
     }
 }
 
-
-const addUploadQueue = target => {
+const upload = target => {
     uploadQueue.push(target);
-    // console.log(uploadQueue)
-    return uploadQueue;
+    startUpload();
 }
+
+// const addUploadQueue = target => {
+//     uploadQueue.push(target);
+//     // console.log(uploadQueue)
+//     return uploadQueue;
+// }
 
 // const upload = target => {
 //     addUploadQueue(target); //(path, n, callback) 
@@ -540,11 +566,28 @@ const uploadFileControl = evt => {
     if(evt.target.matches(".delete-button, .delete-button *")){
         console.log("delete", evt.target.closest(".file"));
     }else if(evt.target.closest(".file")){
-        console.log(evt.target.closest(".file"))
-        const onClickedFid = evt.target.closest(".file").dataset.fid;
-        const onClickedFile = uploadQueue.findIndex(file => file.fid === onClickedFid);
-        pauseUploadList.push( uploadQueue.splice(onClickedFile, 1));
-        console.log(pauseUploadList);
+        const fid = evt.target.closest(".file").dataset.fid; // UI onClickedFid
+        let index = uploadQueue.findIndex(file => file.fid === fid); 
+        const file = uploadQueue[index];
+
+        if(file.isPaused) file.isPaused = !file.isPaused; // ?? 之後在這樣寫， 這樣的寫法需要改良upload的邏輯
+
+        // if(index !== -1){
+        //     const file = uploadQueue.splice(index, 1);
+        //     // file.isPaused = true;
+        //     pauseUploadList.push(file);
+        //     return;
+        // }else{
+        //     index = pauseUploadList.findIndex(file => file.fid === fid); 
+        //     const file = uploadQueue.splice(index, 1);
+        //     // file.isPaused = false;
+        //     // uploadQueue.push(file);
+        //     // upload(file);
+        //     window.testfile = uploadQueue.splice(index, 1);
+           
+        // }
+       
+        // console.log(pauseUploadList);
     }
 }
 
@@ -601,7 +644,7 @@ const handleFilesSelected = evt => {
 
         if (resultArray.length){
             // add ParsedFiles into the uploadQueue
-            resultArray.forEach(file => addUploadQueue(getMeta(file)));
+            resultArray.forEach(file => uploadQueue.push(getMeta(file)));
             startUpload();
           
         }
