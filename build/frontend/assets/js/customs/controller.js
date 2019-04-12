@@ -89,28 +89,12 @@ elements = {...elements,
     body: document.querySelector("body"),
    
     page: document.querySelector(".login-page"),
-   
-  
+
     btnDownload: document.querySelector(".btn-download"),
 
 }
 
-const formatFileSize = size => {
-    let formatted, power;
 
-    if(typeof size !== "number") return false;
-    const unit = ["byte", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-
-    const check = (size, power = 0) => {
-        if(Math.ceil(size).toString().length > 3){
-            return check(size /= 1024, ++power);
-        }
-        return [Number.isInteger(size) ? size : size.toFixed(2), power || 1];
-    }
-
-    [formatted, power] = check(size);
-    return `${formatted}${unit[power]}`
-}
 
 // // 放進 file-container 的 提示
 // const hintReward = () => {
@@ -133,25 +117,9 @@ const removeHintLocation = () => {
     elements.dropZone.classList.remove("invisible");
     // elements.fileList.classList.remove("invisible");
 }
-// drag file over the fileList 之後
-const handleInFileList = () => {
-    
-    elements.placeholder.classList.add("u-margin-top--sm");
-    elements.addIcon.classList.add("add__icon--small");
-    elements.addText.classList.add("add__text--small");
-    elements.alertSuccess.style.setProperty("--opacity", 1); // 待修改
-    elements.dropZone.classList.add("pointer");
-    // fileList.addEventListener 可以考慮加在這裡， 然後在下面可以remove
-    // dropZone pointer Event: none
-}
-const handleOutFileList = () => {
-    
-    elements.placeholder.classList.remove("u-margin-top--sm");
-    elements.addIcon.classList.remove("add__icon--small");
-    elements.addText.classList.remove("add__text--small");
-    elements.alertSuccess.style.setProperty("--opacity", 0);
-    elements.dropZone.classList.remove("pointer");
-}
+
+
+
 // drag file in the pageHeader
 const handleDragInPageHeader = evt => {
     if(!isCurrentIn){
@@ -173,11 +141,6 @@ const handleDragoutPageHeader = evt => {
     }
 }
 
-const showFileProgress = file => {
-    const progress = (file.sliceIndex/file.sliceCount).toFixed(2)*100;
-    document.querySelector(`[data-progressid='${file.fid}']`).style.width = `${progress}%`;
-    // ??之後我想要改這裡的樣式
-}
 
 // =============================================================
 // Models
@@ -420,7 +383,8 @@ const getHashShard = async parseFile => {
 
 const uploadQueue = [];
 let isDone = false;
-let totalProgress= 0;
+let isSend = false; // 用來判斷現在是顯示 dropZone Or Sending View
+
 
 const addUploadQueue = target => {
     uploadQueue.push(target);
@@ -440,6 +404,9 @@ const emptyUploadQueue = () => {
     }
     return uploadQueue;
 }
+
+
+
 
 const uploadShard = async target => {
     console.log("uploadShard/ isPaused",target.fid ,target.isPaused)
@@ -480,7 +447,7 @@ const uploadShard = async target => {
         }
     }else{
         target.sliceIndex < target.sliceCount ? uploadShard(target) : null; // ?? popUploadQueue(target); 需要嗎？
-        showFileProgress(target);
+        isSend ? showTotalProgress() : showFileProgress(target);
     }
 }
 
@@ -538,21 +505,11 @@ const handleFilesSelected = evt => {
         state.fileObj.files = state.fileObj.files.concat(files); // FileList object.
         // 4. render 畫面
         renderFiles(resultArray);
-        // 選目前的 files && progress bars
-        // const currentFileEl = resultArray.map(file => document.querySelector(`[data-fid='${file.fid}']`));
-        const currentProgressBarEl = resultArray.map(file => document.querySelector(`[data-progressId='${file.fid}']`));
-        // 加到 total els 裡面
-        // elements.files = elements.files.concat(currentFileEl); 
-        // elements.progressBars = elements.progressBars.concat(currentProgressBarEl); 
-
-        // console.log(elements.files, elements.progressBars);
-        // currentFileEl.forEach(el => el.addEventListener("click", (evt) => upload(evt), false));
 
         if (resultArray.length){
             // add ParsedFiles into the uploadQueue
             resultArray.forEach(file => addUploadQueue(getMeta(file)));
             uploadFiles();
-          
         }
         
         // 7. 上傳失敗 3s 後 重新傳送
@@ -560,13 +517,9 @@ const handleFilesSelected = evt => {
 }
 
 
-const calTotalProgress = () => {
-    // setInterval check
-    elements.btnOk.classList.remove("disable");
-}
 
 const send = evt => {
-
+    isSend = true;
     const data = {
         type: document.querySelector("#tab1 .active").innerText || "LINK",
     }

@@ -89,7 +89,22 @@ let isAdvancedUpload = function() {
     return (('draggable' in div) || ('ondragstart' in div && 'ondrop' in div));
 }();
     
+const formatFileSize = size => {
+    let formatted, power;
 
+    if(typeof size !== "number") return false;
+    const unit = ["byte", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+
+    const check = (size, power = 0) => {
+        if(Math.ceil(size).toString().length > 3){
+            return check(size /= 1024, ++power);
+        }
+        return [Number.isInteger(size) ? size : size.toFixed(2), power || 1];
+    }
+
+    [formatted, power] = check(size);
+    return `${formatted}${unit[power]}`
+}
 
 const renderFile = file => {
     const markup = `
@@ -112,7 +127,61 @@ const renderFile = file => {
 const renderFiles = files => {
     files.forEach(file => renderFile(file));
 }
+ 
+const calculator = () => {
+    // ?? Or setInterval check
+    let completeCount = 0, totalCount = 0, totalSize = 0;
 
+    uploadQueue.forEach(file => {
+        completeCount += file.sliceIndex + 1;
+        totalCount += file.sliceCount;
+        totalSize += file.size;
+    })
+
+    totalProgress = (completeCount/totalCount).toFixed(2) * 100;
+
+    if(totalProgress === 100){
+        isDone = true;
+        elements.btnOk.classList.remove("disable"); // ?? 不應該放這裡不過就先這樣吧
+    }
+    return {
+        totalProgress, 
+        totalSize, 
+        fileCount: uploadQueue.length
+    };
+}
+
+const showTotalProgress = () => {
+    elements.totalProgressBar.style.width = `${totalProgress}%`;
+    elements.progressNum.style.marginLeft = `${(data.totalProgress || 0 )* 0.85 || 10}px`;
+    elements.progressNum.innerText = `${(data.totalProgress || 0 )}%`;
+    elements.fileNum.innerText = `Total ${data.fileCount || 0} files`;
+    elements.fileSize.innerText = `${formatFileSize(data.totalProgress * data.totalSize || 0) || "0B"}/${formatFileSize(data.totalSize) || "0B"}`;
+}
+
+const showFileProgress = file => {
+    const progress = (file.sliceIndex/file.sliceCount).toFixed(2)*100;
+    document.querySelector(`[data-progressid='${file.fid}']`).style.width = `${progress}%`;
+    // ??之後我想要改這裡的樣式
+}
+
+// after file in the fileList
+const handleInFileList = () => {
+    elements.placeholder.classList.add("u-margin-top--sm");
+    elements.addIcon.classList.add("add__icon--small");
+    elements.addText.classList.add("add__text--small");
+    // elements.alertSuccess.style.setProperty("--opacity", 1); // 待修改
+    elements.dropZone.classList.add("pointer");
+    // fileList.addEventListener 可以考慮加在這裡， 然後在下面可以remove
+    // dropZone pointer Event: none
+}
+const handleOutFileList = () => {
+    elements.placeholder.classList.remove("u-margin-top--sm");
+    elements.addIcon.classList.remove("add__icon--small");
+    elements.addText.classList.remove("add__text--small");
+    // elements.alertSuccess.style.setProperty("--opacity", 0);
+    elements.dropZone.classList.remove("pointer");
+}
 
 // UI Control
 const uploadFileControl = evt => {
@@ -122,11 +191,13 @@ const uploadFileControl = evt => {
     const file = uploadQueue[index];
 
     if(evt.target.matches(".delete-button, .delete-button *")){
+        isSend = false;
         element.parentElement.removeChild(element);
         uploadQueue.splice(index, 1);
         if(!elements.fileList.childElementCount) handleOutFileList();
 
     }else if(evt.target.closest(".file")){
+        isSend = false;
         if(file.sliceIndex === file.sliceCount) return;
         file.isPaused = !file.isPaused; 
         console.log("uploadFileControl/ isPaused: ", file.fid, file.isPaused);
@@ -236,29 +307,34 @@ const renderDropView = files => {
     }
 
     if (!files || !files.length) return;
+    handleInFileList();
     renderFiles(files) // uploadQueue || state;
-    console.log(files);
 }
 
 //================================================
 //================= Sending View =================
-
-const rederTotalProgress = files => {
-    // ?? 這裡要做計算   
+// ?? if Choose EMAIL disable btnBack but can cancel uploading 問題在於什麼時候寄email
+const renderTotalProgress = data => {
     const markup = `
     <div class="display-progress">
         <div class="progress progress-custom">
-            <div class="progress-num">progress% *0.85</div>
-            <div class="progress-bar progress-bar-striped progress-bar-animated " role="progressbar"
-                aria-valuenow="75" aria-valuemin="0%" aria-valuemax="100" style="width: 50%"></div>
+            <div class="progress-num" style = "margin-left: ${(data.totalProgress || 0 )* 0.85 || 10}px">${(data.totalProgress || 0 )}%</div>
+            <div class="progress-bar progress-bar-striped progress-bar-animated total-progress-bar" role="progressbar"
+                aria-valuenow="75" aria-valuemin="0%" aria-valuemax="100" style="width: ${(data.totalProgress || 0 )}%"></div>
         </div>
         <div class="text-box">
-            <p class="file-nums">Total 3 files</p>
-            <p class="file-size">(progress * total)/ total</p>
+            <p class="file-nums">Total ${data.fileCount || 0} files</p>
+            <p class="file-size">${formatFileSize(data.totalProgress * data.totalSize || 0) || "0B"}/${formatFileSize(data.totalSize) || "0B"}</p>
         </div>
     </div>
     `;
     elements.display.insertAdjacentHTML("beforeend", markup);
+    elements = {...elements,
+        progressNum: document.querySelector(".progress-num"),
+        fileNums: document.querySelector(".file-nums"),
+        fileSize: document.querySelector(".file-size"),
+        totalProgressBar: document.querySelector(".total-progress-bar"),
+    }
 }
 
 const renderSendingWays = data => {
@@ -325,7 +401,8 @@ const renderSendingWays = data => {
     elements = {...elements, 
         display: document.querySelector(".display"),
     }
-    rederTotalProgress(data);
+    const progressData = calculator();
+    renderTotalProgress(progressData);
 }
 
 const renderSendingView = data => {
