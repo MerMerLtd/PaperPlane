@@ -83,6 +83,18 @@ const makeRequest = opts => {
 // Views
 let isCurrentIn = false;
 
+elements = {...elements,
+    alertSuccess: document.querySelector(".alert"),
+    
+    body: document.querySelector("body"),
+   
+    page: document.querySelector(".login-page"),
+   
+  
+    btnDownload: document.querySelector(".btn-download"),
+
+}
+
 const formatFileSize = size => {
     let formatted, power;
 
@@ -98,27 +110,6 @@ const formatFileSize = size => {
 
     [formatted, power] = check(size);
     return `${formatted}${unit[power]}`
-}
-
-const elements = {
-    boxFile: document.querySelector(".box__file"),
-    alertSuccess: document.querySelector(".alert"),
-    addIcon: document.querySelector(".add__icon"),
-    addText: document.querySelector(".add__text"),
-    placeholder: document.querySelector(".placeholder"),
-    dropndDrop: document.querySelector(".box__dragndrop"),
-    dropZone: document.querySelector(".box__dropzone"),
-    body: document.querySelector("body"),
-    hint: document.querySelector(".card-header > .hint"),
-    cardHeader: document.querySelector(".card-header"),
-    dropZone: document.querySelector(".box__dropzone"),
-    page: document.querySelector(".login-page"),
-    pageHeader: document.querySelector(".page-header"),
-    fileList: document.querySelector(".file-list"),
-    btnSend: document.querySelector(".btn-send"),
-    btnDownload: document.querySelector(".btn-download"),
-    dropCard: document.querySelector(".dropOrdownload .card"),
-    display: document.querySelector(".display"),
 }
 
 // // 放進 file-container 的 提示
@@ -428,6 +419,8 @@ const getHashShard = async parseFile => {
 }
 
 const uploadQueue = [];
+let isDone = false;
+let totalProgress= 0;
 
 const addUploadQueue = target => {
     uploadQueue.push(target);
@@ -437,6 +430,14 @@ const addUploadQueue = target => {
 const popUploadQueue = target => {
     const index = uploadQueue.findIndex(file => file.fid === target.fid);
     uploadQueue.splice(index, 1);
+    return uploadQueue;
+}
+
+const emptyUploadQueue = () => {
+    if(uploadQueue.length){
+        uploadQueue.pop();
+        return  emptyUploadQueue();
+    }
     return uploadQueue;
 }
 
@@ -495,27 +496,6 @@ const uploadFiles = () => {
     });
 }
 
-// UI Control
-const uploadFileControl = evt => {
-    const element = evt.target.closest(".file");
-    const fid = element.dataset.fid; // UI onClickedFid
-    const index = uploadQueue.findIndex(file => file.fid === fid); 
-    const file = uploadQueue[index];
-
-    if(evt.target.matches(".delete-button, .delete-button *")){
-        element.parentElement.removeChild(element);
-        uploadQueue.splice(index, 1);
-        if(!elements.fileList.childElementCount) handleOutFileList();
-
-    }else if(evt.target.closest(".file")){
-        if(file.sliceIndex === file.sliceCount) return;
-        file.isPaused = !file.isPaused; 
-        console.log("uploadFileControl/ isPaused: ", file.fid, file.isPaused);
-        if(!file.isPaused){
-            uploadShard(file);
-        }
-    }
-}
 
 
 const handleFilesSelected = evt => {
@@ -579,10 +559,20 @@ const handleFilesSelected = evt => {
     });  
 }
 
+
+const calTotalProgress = () => {
+    // setInterval check
+    elements.btnOk.classList.remove("disable");
+}
+
 const send = evt => {
-    const type = document.querySelector("#tab1 .active").innerText || "EMAIL";
-    renderSendingPage(type);
-    console.log(uploadQueue);
+
+    const data = {
+        type: document.querySelector("#tab1 .active").innerText || "LINK",
+    }
+    renderSendingView(data);
+    elements.sendingCard.addEventListener("click", evt => sendingViewControl(evt));
+
 }
 
 const downloadFiles = evt => {
@@ -596,31 +586,6 @@ if (window.File && window.FileReader && window.FileList && window.Blob) {
     alert('The File APIs are not fully supported in this browser.');
 }
 
-// 判斷瀏覽器是否支持拖拉上傳
-let isAdvancedUpload = function() {
-    let div = document.createElement('div');
-    return (('draggable' in div) || ('ondragstart' in div && 'ondrop' in div));
-}();
 
-
-const addMultiListener = (element, events, func) => {
-    events.split(" ").forEach(event => element.addEventListener(event, func, false));
-}
-const removeMultiListener = (element, events, func) => {
-    events.split(" ").forEach(event => element.removeEventListener(event, func, false));
-}
-
-elements.boxFile.addEventListener("change",  evt => handleFilesSelected(evt));  
-elements.fileList.addEventListener("click", evt => uploadFileControl(evt));
-elements.btnDownload.addEventListener("click", evt => downloadFiles(evt));
-elements.btnSend.addEventListener("click", evt => send(evt));
-
-if(isAdvancedUpload){
-    elements.cardHeader.classList.add("has-advanced-upload");
-    addMultiListener(elements.pageHeader, "drag dragstart dragend dragover dragenter dragleave drop", evt => handleDefault(evt));
-    addMultiListener(elements.pageHeader, "dragover dragenter", evt => handleDragInPageHeader(evt));
-    addMultiListener(elements.pageHeader, "dragleave dragend drop",  evt => handleDragoutPageHeader(evt));
-    addMultiListener(elements.pageHeader, "drop",  evt => handleFilesSelected(evt));
-}
 
 

@@ -15861,12 +15861,12 @@ select.selectpicker {
 
 @-webkit-keyframes drop {
   0% {
-    bottom: 50px;
+    bottom: 45px;
     opacity: 0; }
   59% {
     opacity: 0; }
   60% {
-    bottom: 50px;
+    bottom: 45px;
     opacity: 1; }
   65% {
     bottom: 0px;
@@ -15886,12 +15886,12 @@ select.selectpicker {
 
 @keyframes drop {
   0% {
-    bottom: 50px;
+    bottom: 45px;
     opacity: 0; }
   59% {
     opacity: 0; }
   60% {
-    bottom: 50px;
+    bottom: 45px;
     opacity: 1; }
   65% {
     bottom: 0px;
