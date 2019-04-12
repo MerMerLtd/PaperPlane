@@ -130,15 +130,25 @@ const renderFiles = files => {
  
 const calculator = () => {
     // ?? Or setInterval check
-    let completeCount = 0, totalCount = 0, totalSize = 0;
+    let completeCount = 0,
+        totalCount = 0, 
+        totalSize = 0, 
+        completeSize = 0,
+        fileCount = 0, 
+        marginLeft = 0;
 
     uploadQueue.forEach(file => {
-        completeCount += file.sliceIndex + 1;
+        completeCount += file.sliceIndex ;
         totalCount += file.sliceCount;
         totalSize += file.size;
     })
 
-    totalProgress = (completeCount/totalCount).toFixed(2) * 100;
+    totalProgress = (completeCount/totalCount).toFixed(2);  // 0.??;
+    completeSize = Math.round(totalProgress * totalSize);
+    totalProgress *= 100; // ??
+    marginLeft = Math.round(totalProgress * 0.85);
+    fileCount = uploadQueue.length;
+
 
     if(totalProgress === 100){
         isDone = true;
@@ -147,15 +157,18 @@ const calculator = () => {
     return {
         totalProgress, 
         totalSize, 
-        fileCount: uploadQueue.length
+        completeSize,
+        fileCount,
+        marginLeft,
     };
 }
 
 const showTotalProgress = () => {
-    elements.totalProgressBar.style.width = `${totalProgress}%`;
+    const data = calculator();
+    elements.totalProgressBar.style.width = `${data.totalProgress}%`;
     elements.progressNum.style.marginLeft = `${(data.totalProgress || 0 )* 0.85 || 10}px`;
     elements.progressNum.innerText = `${(data.totalProgress || 0 )}%`;
-    elements.fileNum.innerText = `Total ${data.fileCount || 0} files`;
+    elements.fileNums.innerText = `Total ${data.fileCount || 0} files`;
     elements.fileSize.innerText = `${formatFileSize(data.totalProgress * data.totalSize || 0) || "0B"}/${formatFileSize(data.totalSize) || "0B"}`;
 }
 
@@ -172,7 +185,6 @@ const handleInFileList = () => {
     elements.addText.classList.add("add__text--small");
     // elements.alertSuccess.style.setProperty("--opacity", 1); // 待修改
     elements.dropZone.classList.add("pointer");
-    // fileList.addEventListener 可以考慮加在這裡， 然後在下面可以remove
     // dropZone pointer Event: none
 }
 const handleOutFileList = () => {
@@ -293,10 +305,10 @@ const renderDropView = files => {
         btnSend: document.querySelector(".btn-send"),
     }
 
-    elements.boxFile.addEventListener("change",  evt => handleFilesSelected(evt));  
-    elements.fileList.addEventListener("click", evt => uploadFileControl(evt));
-    // elements.btnDownload.addEventListener("click", evt => downloadFiles(evt));
-    elements.btnSend.addEventListener("click", evt => send(evt));
+    elements.boxFile.addEventListener("change",  evt => handleFilesSelected(evt), false);  
+    elements.fileList.addEventListener("click", evt => uploadFileControl(evt), false);
+    // elements.btnDownload.addEventListener("click", evt => downloadFiles(evt), false);
+    elements.btnSend.addEventListener("click", evt => send(evt), false);
 
     if(isAdvancedUpload){
         elements.cardHeader.classList.add("has-advanced-upload");
@@ -313,18 +325,55 @@ const renderDropView = files => {
 
 //================================================
 //================= Sending View =================
+let isCountdown = false;
+let timerTime = 0;
+
+const formatTime = time => {
+    const min = Math.trunc(time / 1000 / 60).toString().length === 2 
+                ? `${Math.trunc(time / 1000 / 60)}`
+                : `0${Math.trunc(time / 1000 / 60)}`;
+    const sec = ((time / 1000) % 60).toString().length === 2 
+                ? `${(time / 1000) % 60}`
+                : `0${(time / 1000) % 60}`;
+    return [min, sec];
+}
+
+const countdown = time => {
+    isCountdown = true
+    time *= 60*1000;
+
+    if(!time){
+        elements.countdown.innerText = `00:00`;
+        isCountdown = false;
+        timerTime = 0;
+        clearInterval(interval);
+        return;
+        // return `00:00`;
+    }
+    const interval = () => {
+        let min, sec;
+        time -= 1000;
+        [min, sec] = formatTime(time);
+        elements.countdown.innerText = `${min}:${sec}`;
+        timerTime = time;
+        return;
+        // return `${min}:${sec}`;
+    }
+    setInterval(interval, 1000);
+}
+
 // ?? if Choose EMAIL disable btnBack but can cancel uploading 問題在於什麼時候寄email
 const renderTotalProgress = data => {
     const markup = `
     <div class="display-progress">
         <div class="progress progress-custom">
-            <div class="progress-num" style = "margin-left: ${(data.totalProgress || 0 )* 0.85 || 10}px">${(data.totalProgress || 0 )}%</div>
+            <div class="progress-num" style = "margin-left: ${ data.marginLeft || 10}px">${(data.totalProgress || 0 )}%</div>
             <div class="progress-bar progress-bar-striped progress-bar-animated total-progress-bar" role="progressbar"
                 aria-valuenow="75" aria-valuemin="0%" aria-valuemax="100" style="width: ${(data.totalProgress || 0 )}%"></div>
         </div>
         <div class="text-box">
             <p class="file-nums">Total ${data.fileCount || 0} files</p>
-            <p class="file-size">${formatFileSize(data.totalProgress * data.totalSize || 0) || "0B"}/${formatFileSize(data.totalSize) || "0B"}</p>
+            <p class="file-size">${formatFileSize(data.completeSize) || "0B"}/${formatFileSize(data.totalSize) || "0B"}</p>
         </div>
     </div>
     `;
@@ -339,8 +388,13 @@ const renderTotalProgress = data => {
 
 const renderSendingWays = data => {
     // ?? download link && Qrcode
+    elements.boxFile.removeEventListener("change",  evt => handleFilesSelected(evt));  
+    elements.fileList.removeEventListener("click", evt => uploadFileControl(evt));
+    // elements.btnDownload.removeEventListener("click", evt => downloadFiles(evt));
+    elements.btnSend.removeEventListener("click", evt => send(evt));
+    
     const direct = `
-    <p class="countdown">Expire in <span>10:00</span> </p>
+    <p class="countdown">Expire in <span>${isCountdown? formatTime(timerTime) : countdown(10) || "10:00"}</span></p>
     <div class="display">
         <div class="display-digit">
             <span>1</span>
@@ -400,7 +454,9 @@ const renderSendingWays = data => {
     elements.sendingWays.insertAdjacentHTML("afterbegin", markup);
     elements = {...elements, 
         display: document.querySelector(".display"),
+        countdown: document.querySelector(".countdown > span"),
     }
+
     const progressData = calculator();
     renderTotalProgress(progressData);
 }
@@ -454,10 +510,11 @@ const enableBtnOk = () => {
 // btn-cancel || btn-ok 
 const doneWithSending = () => {
     if(!isDone && uploadQueue.length){
-        // alert ??
+        // alert ?? 自己寫一個library；
         alert("Are you sure about canceling the sending?");
     }
     // 還我一個初始畫面 && 清空 uploadQueue // ?? 順序有差嗎？
+    isCountdown = false;
     renderDropView();
     emptyUploadQueue();
     // renderDropView(uploadQueue) // uploadQueue.length should be 0
