@@ -94,6 +94,36 @@ class Receptor extends Bot {
     }));
   }
 
+  readSession(data) {
+    return Object.keys(data).map((k) => {
+      if(k.indexOf('_') != 0) {
+        return data[k];
+      }
+    }).filter((v) => v !== undefined)
+  }
+
+  resultParse({ ctx, rs }) {
+    // copy result
+    let result = {};
+    Object.keys(rs).map((k) => {
+      if(k.indexOf('_') != 0) {
+        result[k] = rs[k];
+      }
+    });
+
+    // session operation
+    let sessionOperation = rs._session || {};
+    Object.keys(sessionOperation).map((k) => {
+      if(sessionOperation[k] === null) {
+        delete ctx.session[k];
+      } else {
+        ctx.session[k] = sessionOperation[k];
+      }
+    });
+    
+    return result;
+  }
+
   register({ pathname, options, operation }) {
   	const method = options.method.toLowerCase();
     this.router[method](pathname, (ctx, next) => {
@@ -101,18 +131,16 @@ class Receptor extends Bot {
       if(!ctx.session.id) {
         ctx.session.id = dvalue.randomID(16);
       }
-
       const inputs = {
         body: ctx.request.body,
         files: ctx.request.files,
         params: ctx.params,
         header: ctx.header,
         query: ctx.query,
-        session: ctx.session
+        session: this.readSession(ctx.session)
       };
-
       const formatInput = {
-        sessionID: ctx.session.id,
+        sessionID: inputs.session.id,
         files: ctx.request.files,
         method: ctx.method,
         url: ctx.request.url
@@ -132,7 +160,7 @@ class Receptor extends Bot {
 
       return operation(formatInput)
       .then((rs) => {
-      	ctx.body = rs;
+      	ctx.body = this.resultParse({ rs, ctx });
       	next();
       })
       .catch((e) => {

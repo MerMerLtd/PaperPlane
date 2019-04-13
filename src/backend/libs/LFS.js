@@ -17,7 +17,7 @@ const Utils = require(path.resolve(__dirname, 'Utils.js'));
 */
 class Job {
   constructor({ fid, rootHash, totalSlice, fileName, fileSize, contentType }) {
-    this._ = { fid, rootHash, totalSlice, fileName, fileSize, contentType, waiting: [] };
+    this._ = { fid, rootHash, totalSlice, fileName, fileSize, contentType, hash: [] };
     this.totalSlice = totalSlice;
   }
 
@@ -38,10 +38,8 @@ class Job {
       const currentTotal = this._.totalSlice > 0 ? this._.totalSlice : 0;
       if(currentTotal < value) {
         this._.totalSlice = value;
-        this._.waiting = this._.waiting.concat(
-          new Array(value - currentTotal)
-          .fill(0)
-          .map((v, i) => i + currentTotal)
+        this._.hash = this._.hash.concat(
+          new Array(value - currentTotal).fill(false)
         );
       }
       this._.totalSlice = value;
@@ -69,28 +67,25 @@ class Job {
     return this._.contentType;
   }
   get waiting() {
-    return this._.waiting;
+    return this._.hash.map((v, i) => !v ? i : false).filter((v) => v)
   }
   get progress() {
     try {
-      return ((this.totalSlice - this.waiting.length) / this.totalSlice);
+      const completeCount = this._.hash.reduce((prev, curr) => {
+        return curr ? prev + 1 : prev
+      }, 0)
+      return (completeCount / this.totalSlice);
     } catch(e) {
       return 0;
     }
   }
-  done(sliceIndex) {
-    const i = this._.waiting.indexOf(sliceIndex);
-    if(i > -1) {
-      this._.waiting.splice(i, 1);
-      return true;
-    }
+  done({ sliceIndex, sliceHash }) {
+    this._.hash[sliceIndex] = sliceHash;
   }
   toJSON() {
     const json = dvalue.clone(this._);
-    json.slice = new Array(json.totalSlice).fill(0).map((v, i) => {
-      return json.waiting.indexOf(i) == -1;
-    });
     json.progress = this.progress;
+    json.waiting = this.waiting;
     return json;
   }
   toStaticString() {
@@ -211,10 +206,10 @@ class LFS extends Bot {
     }
   }
 
-  updateOperation({ fid, totalSlice, sliceIndex }) {
+  updateOperation({ fid, totalSlice, sliceIndex, sliceHash }) {
     const job = this.findJOB({ fid });
     job.totalSlice = totalSlice;
-    job.done(sliceIndex);
+    job.done({ sliceIndex, sliceHash });
 
     return job;
   }
@@ -233,12 +228,21 @@ class LFS extends Bot {
     const slicePath = path.resolve(this);
   }
 
+  initialLetter({ session }) {
+    const codeLength = 6;
+    const text = '0123456789';
+    let code = '';
+    while(code.length < 6) {
+      code = code.concat(text.charAt(parseInt(Math.random() * text.length)));
+    }
+  }
+
   /* 
     - generate file id
     - create tmp folder
     - create operation
   */
-  initialUpload() {
+  initialUpload({ name, size, type, total }) {
     const fid = dvalue.randomID();
     const folder = path.resolve(this.folder.file, fid);
     return Utils.exists({ target: folder })
@@ -275,16 +279,26 @@ class LFS extends Bot {
           .then((sliceData) => {
             sliceData.match = (sliceData.sha1 == hash);
             if(sliceData.match) {
-              const job = this.updateOperation({ fid, totalSlice: sliceData.total, sliceIndex: sliceData.index });
+              const job = this.updateOperation({
+                fid,
+                totalSlice: sliceData.total,
+                sliceIndex: sliceData.index,
+                sliceHash: sliceData.sha1
+              });
               return this.saveSlice({ fid, slice })
-              .then(() => job.toJSON());
+              .then(() => {
+                return job.progress == 1 ?
+                  this.completeFile({ fid }) : 
+                  Promise.resolve(true);
+              })
+              .then(() => job.toJSON())
             } else {
-              return Promise.reject(new Error('Broken Shard'));
+              return Promise.reject(new Error(`Broken Shard: ${sliceData.sha1}`));
             }
           })
-          .then(resolve);
+          .then(resolve, reject);
         });
-      });
+      })
     } catch(e) {
       return Promise.reject(e);
     }
@@ -315,16 +329,33 @@ class LFS extends Bot {
     })
   }
 
+  deleteFile({ fid, hash }) {
+
+  }
+
+  deleteJob({ fid }) {
+
+  }
+
   checkFile({  }) {
     
   }
 
-  completeFile({  }) {
-    
+  completeFile({ fid }) {
+    console.log(`complete ${fid}`);
+
   }
 
   testUpload({ files, session, sessionID }) {
     return Promise.resolve(files);
+  }
+
+
+  testSession1({}) {
+    return Promise.resolve({ _session: { a: 111, b: 222, c: 333 } });
+  }
+  testSession2({}) {
+    return Promise.resolve({ _session: { a: null } });
   }
 }
 
