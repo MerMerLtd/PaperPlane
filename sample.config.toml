@@ -17,7 +17,7 @@ type = "firebase"
 host = "smtp.gmail.com"
 secure = true
 port = 465
-user = "contact@drophere.io"
+user = "contact@mermer.cc"
 password = ""
 
 [api]
@@ -28,5 +28,5 @@ pathname = [
   "post | /file | Bot.LFS.initialUpload",
   "get | /file/:fid | Bot.LFS.getUploadJob",
   "post | /file/:fid/:hash | Bot.LFS.uploadSlice",
-  "post | /test/upload | Bot.LFS.testUpload"
+  "get | /slice/:fileHash/:sliceHash | Bot.LFS.getSlice"
 ]
