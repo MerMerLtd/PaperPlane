@@ -70,11 +70,16 @@ const makeRequest = opts => {
             }
             // Setup HTTP request
             xhr.open(opts.method || "GET", opts.url, true);
-            if(opts.header){
+            if(opts.headers){
                 Object.keys(opts.headers).forEach(key => xhr.setRequestHeader(key, opts.headers[key]));
             }
             // Send the request
-            xhr.send(opts.payload);
+            if(opts.contentType == 'application/json') {
+                xhr.setRequestHeader('content-type', 'application/json');
+                xhr.send(JSON.stringify(opts.payload));
+            } else {
+                xhr.send(opts.payload);
+            }
         });
     }
 }
@@ -152,7 +157,7 @@ const File = {
 // Controller
 const state = {};
 
-const minSliceCount = 25;
+const minSliceCount = 4;
 const minSize = 512;
 const defaultSize = 4 * 1024 * 1024 // 4MB;
 
@@ -213,7 +218,7 @@ const genShardInfo = (sliceCount, sliceIndex) => {
 // const info = genShardInfo(parseInt("ffffffff", 16), 234);
 
 const getMeta = file => {
-    let fid = file.fid;
+    let jid = file.jid;
     let name = file.name;
     let type = file.type;
     let size = file.size;
@@ -232,7 +237,7 @@ const getMeta = file => {
 
     return {
         file,
-        fid,
+        jid,
         name,
         type,
         size,
@@ -247,7 +252,7 @@ const getMeta = file => {
 // https://gist.github.com/shiawuen/1534477
 
 // 佇列 [{file: f, from: 'byte', to: 'byte'}, {...}, ...]
-// 產生佇列 👉[{fid: fid, fragment: blob}, {...}, ...]
+// 產生佇列 👉[{jid: jid, fragment: blob}, {...}, ...]
 
 // 需改良 類似maxConnection的做法
 
@@ -298,7 +303,7 @@ const SHA1 = target => {
                 });
                 reject(evt.message);
             }
-            worker.postMessage({id: target.fid, data: target.blob});   
+            worker.postMessage({id: target.jid, data: target.blob});   
         })
     }
 }
@@ -342,7 +347,7 @@ const readBlob = blob => {
 // 獲得某file的第 index 個加上 shardInfo 且 hash 的碎片，以及它要去的地方 👉 path
 const getHashShard = async parseFile => {
     const file = parseFile.file;
-    const fid = parseFile.fid;
+    const jid = parseFile.jid;
     const index = parseFile.sliceIndex;
     const count = parseFile.sliceCount;
     const size = parseFile.size;
@@ -361,16 +366,16 @@ const getHashShard = async parseFile => {
     const blobBuffer = await readBlob(blob);
     blob = new Uint8Array(blobBuffer);
     const shard = genMergeUi8A(shardInfo, blob);
-    const target = {fid, blob: new Blob([shard])};
+    const target = {jid, blob: new Blob([shard])};
 
     return new Promise((resolve, reject) => {
         SHA1(target)
         .then(
             res => {
-                console.log(shardInfo, fid);
+                console.log(shardInfo, jid);
                 parseFile.sliceIndex += 1 ; //紀錄進度
                 return resolve({
-                    path: `/file/${fid}/${res.hash}`,
+                    path: `/upload/${jid}/${res.hash}`,
                     blob: new Blob([shard]),
                 })
             }
@@ -392,7 +397,7 @@ const addUploadQueue = target => {
 }
 
 const popUploadQueue = target => {
-    const index = uploadQueue.findIndex(file => file.fid === target.fid);
+    const index = uploadQueue.findIndex(file => file.jid === target.jid);
     uploadQueue.splice(index, 1);
     return uploadQueue;
 }
@@ -409,7 +414,7 @@ const emptyUploadQueue = () => {
 
 
 const uploadShard = async target => {
-    console.log("uploadShard/ isPaused",target.fid ,target.isPaused)
+    console.log("uploadShard/ isPaused",target.jid ,target.isPaused)
     if(target.isPaused || target.sliceIndex === target.sliceCount ) return;
 
     let err, data, hashShard;
@@ -427,19 +432,19 @@ const uploadShard = async target => {
     formData.append("file", hashShard.blob);
     [err, data] = await to(makeRequest({
         method: "POST",
-        // url: "/test/upload",
         url: hashShard.path,
         payload: formData,
     }));
    
 
     if(err){
+console.trace(err)
         target.retry = target.retry ? (target.retry + 1) : 1
         if(target.retry <= maxRetry) { 
             uploadShard(target);
             return false;
         }
-        else { 
+        else {
             throw new Error(`can not upload shard: ${({
                 file: target.file,
                 index: target.sliceIndex,
@@ -476,21 +481,22 @@ const handleFilesSelected = evt => {
     // files is a FileList of File objects change it to Array.
     let files = Array.from(evt.target.files || evt.dataTransfer.files);
 
-    // 2. 提供 (fileName && contenType && fileSize ) => fid
+    // 2. 提供 (fileName && contentType && fileSize ) => jid
     Promise.all(files.map(async file => {
         const opts = {
+            contentType: 'application/json',
             method: "POST",
-            url: "/file",
+            url: "/upload",
             payload: {
                 fileName: file.name,
                 fileSize: file.send,
-                contenType: file.type,
+                contentType: file.type,
             },
         }
         // return each result make of new Array
         try {
             const res = await makeRequest(opts);
-            file.fid = res.fid; //！！！！object.create 的 object 不能直接用 ...operation
+            file.jid = res.jid; //！！！！object.create 的 object 不能直接用 ...operation
             return file;
             
         }
@@ -499,7 +505,7 @@ const handleFilesSelected = evt => {
             return Promise.resolve({ errorMessage: "API BAD GATEWAY", error, file });
         } 
     }))
-    .then(async resultArray => {// resultArray is array of files with fid provided by backend
+    .then(async resultArray => {// resultArray is array of files with jid provided by backend
 
         // 3. 把資料存到 state 裡 =>state.fileObj.files
         state.fileObj.files = state.fileObj.files.concat(files); // FileList object.

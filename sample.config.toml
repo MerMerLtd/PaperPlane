@@ -21,12 +21,13 @@ user = "contact@mermer.cc"
 password = ""
 
 [api]
+url = "drophere.io"
 pathname = [
   "get | /,/version | Static.Utils.readPackageInfo",
-  "get | /meta/:hash | Bot.LFS.getMetadata",
-  "get | /file | Bot.LFS.initialUpload",
-  "post | /file | Bot.LFS.initialUpload",
-  "get | /file/:fid | Bot.LFS.getUploadJob",
-  "post | /file/:fid/:hash | Bot.LFS.uploadSlice",
-  "get | /slice/:fileHash/:sliceHash | Bot.LFS.getSlice"
+  "post | /upload | Bot.LFS.initialUpload",
+  "get | /upload/:jid | Bot.LFS.getMetadata",
+  "post | /upload/:jid/:hash | Bot.LFS.uploadSlice",
+  "get | /upload/:jid/:hash | Bot.LFS.getSlice",
+  "get | /file/:rootHash | Bot.LFS.getMetadata",
+  "get | /file/:rootHash/:hash | Bot.LFS.getSlice"
 ]

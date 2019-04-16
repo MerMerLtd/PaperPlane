@@ -108,11 +108,11 @@ const formatFileSize = size => {
 
 const renderFile = file => {
     const markup = `
-            <div class="file" data-fid="${file.fid}">
+            <div class="file" data-jid="${file.jid}">
                 <div class="delete-button"></div>
                 <div class="file-icon"></div>
                 <div class="progress">
-                    <div data-progressId="${file.fid}" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: ${(file.sliceIndex/file.sliceCount)*100}%"></div>
+                    <div data-progressId="${file.jid}" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: ${(file.sliceIndex/file.sliceCount)*100}%"></div>
                 </div>
                 <div class="file-name">${file.name}</div>
                 <div class="file-size">${formatFileSize(file.size)}</div>
@@ -174,7 +174,7 @@ const showTotalProgress = () => {
 
 const showFileProgress = file => {
     const progress = (file.sliceIndex/file.sliceCount).toFixed(2)*100;
-    document.querySelector(`[data-progressid='${file.fid}']`).style.width = `${progress}%`;
+    document.querySelector(`[data-progressid='${file.jid}']`).style.width = `${progress}%`;
     // ??之後我想要改這裡的樣式
 }
 
@@ -198,8 +198,8 @@ const handleOutFileList = () => {
 // UI Control
 const uploadFileControl = evt => {
     const element = evt.target.closest(".file");
-    const fid = element.dataset.fid; // UI onClickedFid
-    const index = uploadQueue.findIndex(file => file.fid === fid); 
+    const jid = element.dataset.jid; // UI onClickedJid
+    const index = uploadQueue.findIndex(file => file.jid === jid); 
     const file = uploadQueue[index];
 
     if(evt.target.matches(".delete-button, .delete-button *")){
@@ -212,7 +212,7 @@ const uploadFileControl = evt => {
         isSend = false;
         if(file.sliceIndex === file.sliceCount) return;
         file.isPaused = !file.isPaused; 
-        console.log("uploadFileControl/ isPaused: ", file.fid, file.isPaused);
+        console.log("uploadFileControl/ isPaused: ", file.jid, file.isPaused);
         if(!file.isPaused){
             uploadShard(file);
         }

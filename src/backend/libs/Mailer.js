@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 const dvalue = require('dvalue');
 const nodemailer = require('nodemailer');
 const smtpTransport = require('nodemailer-smtp-transport');
@@ -26,7 +27,24 @@ class Mailer extends Bot {
 
   }
 
-
+  sendWithTemplate({ email, subject, template, data }) {
+    return new Promise((resolve, reject) => {
+      fs.readFile(template, (e, d) => {
+        if(e) {
+          reject(e);
+        } else {
+          let content = d.toString();
+          Object.keys(data).map((k) => {
+            content = content.replace(new RegExp(`\\$\\{${k}\\}`, "g"), data[k]);
+          });
+          return resolve(content);
+        }
+      });
+    })
+    .then((content) => {
+      return this.send({ email, subject, content });
+    });
+  }
 
   /* host, secure, port, user, password */
   send({ email, subject, content }) {

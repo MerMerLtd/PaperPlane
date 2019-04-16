@@ -103,6 +103,12 @@ class Receptor extends Bot {
   }
 
   resultParse({ ctx, rs }) {
+    // file output
+    if(rs._contentType) {
+      ctx.set('Content-Type', rs._contentType);
+      return rs;
+    }
+
     // copy result
     let result = {};
     Object.keys(rs).map((k) => {
