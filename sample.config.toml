@@ -25,9 +25,9 @@ url = "drophere.io"
 pathname = [
   "get | /,/version | Static.Utils.readPackageInfo",
   "post | /upload | Bot.LFS.initialUpload",
-  "get | /upload/:jid | Bot.LFS.getMetadata",
-  "post | /upload/:jid/:hash | Bot.LFS.uploadSlice",
-  "get | /upload/:jid/:hash | Bot.LFS.getSlice",
+  "get | /upload/:fid | Bot.LFS.getMetadata",
+  "post | /upload/:fid/:hash | Bot.LFS.uploadSlice",
+  "get | /upload/:fid/:hash | Bot.LFS.getSlice",
   "get | /file/:rootHash | Bot.LFS.getMetadata",
   "get | /file/:rootHash/:hash | Bot.LFS.getSlice"
 ]

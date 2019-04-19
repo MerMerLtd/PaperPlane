@@ -37,6 +37,18 @@ class Bot {
       });
     });
   }
+  delete({ key }) {
+    const db = this.database.leveldb;
+    return new Promise((resolve, reject) => {
+      db.del(key, (e) => {
+        if(e) {
+          reject(e);
+        } else {
+          resolve(true);
+        }
+      });
+    });
+  }
   findOne({ key }) {
     const db = this.database.leveldb;
     return new Promise((resolve) => {

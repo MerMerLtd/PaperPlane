@@ -16031,11 +16031,6 @@ a:visited {
   font-size: 18px;
   border-bottom: 1px solid  #6d6d6d; }
 
-footer a,
-a:active,
-a:visited {
-  display: inline-block; }
-
 /**
  * Computes a CSS calc function that betweens a value from
  * A to B over viewport-width A to viewport-width B.

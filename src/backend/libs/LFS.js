@@ -9,7 +9,7 @@ const Utils = require(path.resolve(__dirname, 'Utils.js'));
 const MerkleTree = require(path.resolve(__dirname, 'MerkleTree.js'));
 
 /*
-  jid
+  fid
   rootHash
   totalSlice
   fileName
@@ -18,17 +18,17 @@ const MerkleTree = require(path.resolve(__dirname, 'MerkleTree.js'));
   waiting
 */
 class Job {
-  constructor({ jid, rootHash, totalSlice, fileName, fileSize, contentType, slices }) {
-    this._ = { jid, rootHash, fileName, fileSize, contentType, slices: [] };
+  constructor({ fid, rootHash, totalSlice, fileName, fileSize, contentType, slices }) {
+    this._ = { fid, rootHash, fileName, fileSize, contentType, slices: [] };
     this.totalSlice = totalSlice;
     this.slices = slices;
   }
 
-  set jid(value) {
-    this._.jid = value;
+  set fid(value) {
+    this._.fid = value;
   }
-  get jid() {
-    return this._.jid;
+  get fid() {
+    return this._.fid;
   }
   set rootHash(value) {
     this._.rootHash = value;
@@ -176,6 +176,30 @@ class LFS extends Bot {
   updateLetter({ session, lid, password }) {
     
   }
+  saveLetter({ letter }) {
+
+  }
+  findLetter({ lid }) {
+
+  }
+  deleteLetter({ lid }) {
+
+  }
+  sendLetter({ lid, email, sender }) {
+    const template = path.resolve(__dirname, '../../../templates/email_sendPaperPlane.html');
+    this.getBot("Mailer")
+    .then((Mailer) => {
+      return Mailer.sendWithTemplate({
+        email: email,
+        subject: `A letter from ${sender} on DropHere.io`,
+        template,
+        data: {
+          sender,
+          link: `https://${this.config.api.url}/?lid=${lid}`
+        }
+      });
+    })
+  }
 
   initialFileController() {
     const db = this.database.leveldb;
@@ -199,11 +223,11 @@ class LFS extends Bot {
     }
   }
 
-  findJOB({ jid, rootHash }) {
+  findJOB({ fid, rootHash }) {
     return this.JOBS.find((el) => {
       let result = true;
-      if(jid !== undefined ) {
-        result = result && el.jid == jid;
+      if(fid !== undefined ) {
+        result = result && el.fid == fid;
       }
       if(rootHash !== undefined) {
         result = result && el.rootHash == rootHash;
@@ -212,13 +236,17 @@ class LFS extends Bot {
     });
   }
   saveJOB({ job }) {
-    const key = `LFS.FILES.${job.jid}`;
+    const key = `LFS.FILES.${job.fid}`;
     const value = job.toStaticString();
     return this.write({ key, value });
   }
+  deleteJOB({ job }) {
+    const key = `LFS.FILES.${job.fid}`;
+    return this.delete({ key });
+  }
 
   /*
-    jid
+    fid
     rootHash
     totalSlice
     fileName
@@ -229,24 +257,23 @@ class LFS extends Bot {
   newOperation({ job }) {
     const myJob = new Job(job);
     this.JOBS.push(myJob);
-    console.log(myJob)
-    return Promise.resolve({ jid: job.jid });
+    return Promise.resolve({ fid: job.fid });
   }
 
-  updateOperation({ jid, totalSlice, sliceIndex, sliceHash }) {
-    const job = this.findJOB({ jid });
+  updateOperation({ fid, totalSlice, sliceIndex, sliceHash }) {
+    const job = this.findJOB({ fid });
     job.totalSlice = totalSlice;
     job.done({ sliceIndex, sliceHash });
 
     return job;
   }
 
-  getMetadata({ jid, rootHash }) {
-    const job = this.findJOB({ jid, rootHash });
+  getMetadata({ fid, rootHash }) {
+    const job = this.findJOB({ fid, rootHash });
     let result = {};
     if(job) {
-      const baseSlicePath = jid ?
-        `/upload/${jid}/` :
+      const baseSlicePath = fid ?
+        `/upload/${fid}/` :
         rootHash ? 
           `/file/${rootHash}/` :
           '';
@@ -263,9 +290,9 @@ class LFS extends Bot {
     return Promise.resolve(result);
   }
 
-  getSlice({ jid, rootHash, hash }) {
-    const job = this.findJOB({ jid, rootHash });
-    const sliceFolder = path.resolve(this.folder.file, job.jid);
+  getSlice({ fid, rootHash, hash }) {
+    const job = this.findJOB({ fid, rootHash });
+    const sliceFolder = path.resolve(this.folder.file, job.fid);
     const slicePath = path.resolve(sliceFolder, hash);
     return new Promise((resolve, reject) => {
       fs.readFile(slicePath, (e, d) => {
@@ -285,8 +312,8 @@ class LFS extends Bot {
     - create operation
   */
   initialUpload({ fileName, fileSize, contentType, totalSlice }) {
-    const jid = `JOB${dvalue.randomID(13)}`;
-    const folder = path.resolve(this.folder.file, jid);
+    const fid = `JOB${dvalue.randomID(13)}`;
+    const folder = path.resolve(this.folder.file, fid);
     return Utils.exists({ target: folder })
     .then((rs) => {
       if(rs) {
@@ -295,7 +322,7 @@ class LFS extends Bot {
         return Utils.initialFolder({ homeFolder: folder })
       }
     })
-    .then(() => this.newOperation({ job: { jid, folder, fileName, fileSize, contentType, totalSlice } }))
+    .then(() => this.newOperation({ job: { fid, folder, fileName, fileSize, contentType, totalSlice } }))
     .catch((e) => {
       return this.initialUpload();
     })
@@ -306,16 +333,16 @@ class LFS extends Bot {
     - save slice file
     - update job status
   */
-  uploadSlice({ jid, hash, files }) {
+  uploadSlice({ fid, hash, files }) {
     try {
-      const job = this.findJOB({ jid });
+      const job = this.findJOB({ fid });
       if(job.progress === 1) {
         return job.toJSON();
       }
       const sliceMeta = Object.values(files)[0];
       return new Promise((resolve, reject) => {
         fs.readFile(sliceMeta.path, (e, slice) => {
-          slice.jid = jid;
+          slice.fid = fid;
           slice.checkHash = hash;
           slice.temp = sliceMeta.path;
           if(e) {
@@ -326,15 +353,15 @@ class LFS extends Bot {
             sliceData.match = (sliceData.sha1 == hash);
             if(sliceData.match) {
               const job = this.updateOperation({
-                jid,
+                fid,
                 totalSlice: sliceData.total,
                 sliceIndex: sliceData.index,
                 sliceHash: sliceData.sha1
               });
-              return this.saveSlice({ jid, slice })
+              return this.saveSlice({ fid, slice })
               .then(() => {
-                return this.checkFile({ jid }) ?
-                  this.completeFile({ jid }) : 
+                return this.checkFile({ fid }) ?
+                  this.completeFile({ fid }) : 
                   Promise.resolve(true);
               })
               .then(() => this.saveJOB({ job }))
@@ -351,8 +378,8 @@ class LFS extends Bot {
     }
   }
 
-  saveSlice({ jid, slice }) {
-    const sliceFolder = path.resolve(this.folder.file, jid);
+  saveSlice({ fid, slice }) {
+    const sliceFolder = path.resolve(this.folder.file, fid);
     const slicePath = path.resolve(sliceFolder, slice.checkHash);
     return new Promise((resolve, reject) => {
       fs.writeFile(slicePath, slice, (e, d) => {
@@ -376,18 +403,22 @@ class LFS extends Bot {
     })
   }
 
-  deleteFile({ jid, rootHash }) {
+  deleteFile({ fid, rootHash }) {
+    // delete folder
 
+    // delete memory
+
+    // delete db
   }
 
-  checkFile({ jid }) {
-    const job = this.findJOB({ jid }) || {};
+  checkFile({ fid }) {
+    const job = this.findJOB({ fid }) || {};
     return job.progress == 1 && job.rootHash != undefined;
   }
 
-  completeFile({ jid }) {
+  completeFile({ fid }) {
     try {
-      const job = this.findJOB({ jid });
+      const job = this.findJOB({ fid });
       const merkleRoot = MerkleTree.caculateMerkleRoot(job.slices);
       job.rootHash = merkleRoot;
       return Promise.resolve(true);
@@ -407,7 +438,7 @@ class LFS extends Bot {
     return Promise.resolve({ _session: { a: null } });
   }
 
-  testNotice({ jid }) {
+  testNotice({ fid }) {
     const template = path.resolve(__dirname, '../../../templates/email_sendPaperPlane.html');
     this.getBot("Mailer")
     .then((Mailer) => {
@@ -417,7 +448,7 @@ class LFS extends Bot {
         template,
         data: {
           sender: "路人甲",
-          link: `https://www.google.com/?DropHere=${jid}`
+          link: `https://www.google.com/?DropHere=${fid}`
         }
       });
     })

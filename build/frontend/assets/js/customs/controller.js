@@ -218,7 +218,7 @@ const genShardInfo = (sliceCount, sliceIndex) => {
 // const info = genShardInfo(parseInt("ffffffff", 16), 234);
 
 const getMeta = file => {
-    let jid = file.jid;
+    let fid = file.fid;
     let name = file.name;
     let type = file.type;
     let size = file.size;
@@ -237,7 +237,7 @@ const getMeta = file => {
 
     return {
         file,
-        jid,
+        fid,
         name,
         type,
         size,
@@ -252,7 +252,7 @@ const getMeta = file => {
 // https://gist.github.com/shiawuen/1534477
 
 // 佇列 [{file: f, from: 'byte', to: 'byte'}, {...}, ...]
-// 產生佇列 👉[{jid: jid, fragment: blob}, {...}, ...]
+// 產生佇列 👉[{fid: fid, fragment: blob}, {...}, ...]
 
 // 需改良 類似maxConnection的做法
 
@@ -303,7 +303,7 @@ const SHA1 = target => {
                 });
                 reject(evt.message);
             }
-            worker.postMessage({id: target.jid, data: target.blob});   
+            worker.postMessage({id: target.fid, data: target.blob});   
         })
     }
 }
@@ -347,7 +347,7 @@ const readBlob = blob => {
 // 獲得某file的第 index 個加上 shardInfo 且 hash 的碎片，以及它要去的地方 👉 path
 const getHashShard = async parseFile => {
     const file = parseFile.file;
-    const jid = parseFile.jid;
+    const fid = parseFile.fid;
     const index = parseFile.sliceIndex;
     const count = parseFile.sliceCount;
     const size = parseFile.size;
@@ -366,16 +366,16 @@ const getHashShard = async parseFile => {
     const blobBuffer = await readBlob(blob);
     blob = new Uint8Array(blobBuffer);
     const shard = genMergeUi8A(shardInfo, blob);
-    const target = {jid, blob: new Blob([shard])};
+    const target = {fid, blob: new Blob([shard])};
 
     return new Promise((resolve, reject) => {
         SHA1(target)
         .then(
             res => {
-                console.log(shardInfo, jid);
+                console.log(shardInfo, fid);
                 parseFile.sliceIndex += 1 ; //紀錄進度
                 return resolve({
-                    path: `/upload/${jid}/${res.hash}`,
+                    path: `/upload/${fid}/${res.hash}`,
                     blob: new Blob([shard]),
                 })
             }
@@ -397,7 +397,7 @@ const addUploadQueue = target => {
 }
 
 const popUploadQueue = target => {
-    const index = uploadQueue.findIndex(file => file.jid === target.jid);
+    const index = uploadQueue.findIndex(file => file.fid === target.fid);
     uploadQueue.splice(index, 1);
     return uploadQueue;
 }
@@ -414,7 +414,7 @@ const emptyUploadQueue = () => {
 
 
 const uploadShard = async target => {
-    console.log("uploadShard/ isPaused",target.jid ,target.isPaused)
+    console.log("uploadShard/ isPaused",target.fid ,target.isPaused)
     if(target.isPaused || target.sliceIndex === target.sliceCount ) return;
 
     let err, data, hashShard;
@@ -481,7 +481,7 @@ const handleFilesSelected = evt => {
     // files is a FileList of File objects change it to Array.
     let files = Array.from(evt.target.files || evt.dataTransfer.files);
 
-    // 2. 提供 (fileName && contentType && fileSize ) => jid
+    // 2. 提供 (fileName && contentType && fileSize ) => fid
     Promise.all(files.map(async file => {
         const opts = {
             contentType: 'application/json',
@@ -496,7 +496,7 @@ const handleFilesSelected = evt => {
         // return each result make of new Array
         try {
             const res = await makeRequest(opts);
-            file.jid = res.jid; //！！！！object.create 的 object 不能直接用 ...operation
+            file.fid = res.fid; //！！！！object.create 的 object 不能直接用 ...operation
             return file;
             
         }
@@ -505,7 +505,7 @@ const handleFilesSelected = evt => {
             return Promise.resolve({ errorMessage: "API BAD GATEWAY", error, file });
         } 
     }))
-    .then(async resultArray => {// resultArray is array of files with jid provided by backend
+    .then(async resultArray => {// resultArray is array of files with fid provided by backend
 
         // 3. 把資料存到 state 裡 =>state.fileObj.files
         state.fileObj.files = state.fileObj.files.concat(files); // FileList object.
