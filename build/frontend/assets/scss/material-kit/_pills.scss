@@ -17,6 +17,7 @@
             font-size: $mdb-btn-font-size-base;
             font-weight: $font-weight-bold;
             min-width: 100px;
+            width: 100%; // custom
             text-align: center;
             color: $pills-color;
             transition: all .3s;

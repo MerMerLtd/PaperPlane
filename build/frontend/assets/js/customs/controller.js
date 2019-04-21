@@ -90,8 +90,6 @@ elements = {...elements,
    
     page: document.querySelector(".login-page"),
 
-    btnDownload: document.querySelector(".btn-download"),
-
 }
 
 
@@ -515,8 +513,6 @@ const handleFilesSelected = evt => {
         // 7. 上傳失敗 3s 後 重新傳送
     });  
 }
-
-
 
 const send = evt => {
     isSend = true;

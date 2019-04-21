@@ -84,19 +84,19 @@ let elements = {
 }
 
 // 判斷瀏覽器是否支持拖拉上傳
-let isAdvancedUpload = function() {
+let isAdvancedUpload = function () {
     let div = document.createElement('div');
     return (('draggable' in div) || ('ondragstart' in div && 'ondrop' in div));
 }();
-    
+
 const formatFileSize = size => {
     let formatted, power;
 
-    if(typeof size !== "number") return false;
+    if (typeof size !== "number") return false;
     const unit = ["byte", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 
     const check = (size, power = 0) => {
-        if(Math.ceil(size).toString().length > 3){
+        if (Math.ceil(size).toString().length > 3) {
             return check(size /= 1024, ++power);
         }
         return [Number.isInteger(size) ? size : size.toFixed(2), power || 1];
@@ -127,36 +127,36 @@ const renderFile = file => {
 const renderFiles = files => {
     files.forEach(file => renderFile(file));
 }
- 
+
 const calculator = () => {
     // ?? Or setInterval check
     let completeCount = 0,
-        totalCount = 0, 
-        totalSize = 0, 
+        totalCount = 0,
+        totalSize = 0,
         completeSize = 0,
-        fileCount = 0, 
+        fileCount = 0,
         marginLeft = 0;
 
     uploadQueue.forEach(file => {
-        completeCount += file.sliceIndex ;
+        completeCount += file.sliceIndex;
         totalCount += file.sliceCount;
         totalSize += file.size;
     })
 
-    totalProgress = (completeCount/totalCount).toFixed(2);  // 0.??;
+    totalProgress = (completeCount / totalCount).toFixed(2); // 0.??;
     completeSize = Math.round(totalProgress * totalSize);
     totalProgress *= 100; // ??
     marginLeft = Math.round(totalProgress * 0.85);
     fileCount = uploadQueue.length;
 
 
-    if(totalProgress === 100){
+    if (totalProgress === 100) {
         isDone = true;
         elements.btnOk.classList.remove("disable"); // ?? 不應該放這裡不過就先這樣吧
     }
     return {
-        totalProgress, 
-        totalSize, 
+        totalProgress,
+        totalSize,
         completeSize,
         fileCount,
         marginLeft,
@@ -173,7 +173,7 @@ const showTotalProgress = () => {
 }
 
 const showFileProgress = file => {
-    const progress = (file.sliceIndex/file.sliceCount).toFixed(2)*100;
+    const progress = (file.sliceIndex / file.sliceCount).toFixed(2) * 100;
     document.querySelector(`[data-progressid='${file.fid}']`).style.width = `${progress}%`;
     // ??之後我想要改這裡的樣式
 }
@@ -199,21 +199,21 @@ const handleOutFileList = () => {
 const uploadFileControl = evt => {
     const element = evt.target.closest(".file");
     const fid = element.dataset.fid; // UI onClickedFid
-    const index = uploadQueue.findIndex(file => file.fid === fid); 
+    const index = uploadQueue.findIndex(file => file.fid === fid);
     const file = uploadQueue[index];
 
-    if(evt.target.matches(".delete-button, .delete-button *")){
+    if (evt.target.matches(".delete-button, .delete-button *")) {
         isSend = false;
         element.parentElement.removeChild(element);
         uploadQueue.splice(index, 1);
-        if(!elements.fileList.childElementCount) handleOutFileList();
+        if (!elements.fileList.childElementCount) handleOutFileList();
 
-    }else if(evt.target.closest(".file")){
+    } else if (evt.target.closest(".file")) {
         isSend = false;
-        if(file.sliceIndex === file.sliceCount) return;
-        file.isPaused = !file.isPaused; 
+        if (file.sliceIndex === file.sliceCount) return;
+        file.isPaused = !file.isPaused;
         console.log("uploadFileControl/ isPaused: ", file.fid, file.isPaused);
-        if(!file.isPaused){
+        if (!file.isPaused) {
             uploadShard(file);
         }
     }
@@ -292,7 +292,8 @@ const renderDropView = files => {
     elements.dropOrdownload.innerHTML = "";
     elements.dropOrdownload.insertAdjacentHTML("afterbegin", markup);
 
-    elements = {...elements,
+    elements = {
+        ...elements,
         pageHeader: document.querySelector(".page-header"),
         addIcon: document.querySelector(".add__icon"),
         addText: document.querySelector(".add__text"),
@@ -305,17 +306,17 @@ const renderDropView = files => {
         btnSend: document.querySelector(".btn-send"),
     }
 
-    elements.boxFile.addEventListener("change",  evt => handleFilesSelected(evt), false);  
+    elements.boxFile.addEventListener("change", evt => handleFilesSelected(evt), false);
     elements.fileList.addEventListener("click", evt => uploadFileControl(evt), false);
     // elements.btnDownload.addEventListener("click", evt => downloadFiles(evt), false);
     elements.btnSend.addEventListener("click", evt => send(evt), false);
 
-    if(isAdvancedUpload){
+    if (isAdvancedUpload) {
         elements.cardHeader.classList.add("has-advanced-upload");
         addMultiListener(elements.pageHeader, "drag dragstart dragend dragover dragenter dragleave drop", evt => handleDefault(evt));
         addMultiListener(elements.pageHeader, "dragover dragenter", evt => handleDragInPageHeader(evt));
-        addMultiListener(elements.pageHeader, "dragleave dragend drop",  evt => handleDragoutPageHeader(evt));
-        addMultiListener(elements.pageHeader, "drop",  evt => handleFilesSelected(evt));
+        addMultiListener(elements.pageHeader, "dragleave dragend drop", evt => handleDragoutPageHeader(evt));
+        addMultiListener(elements.pageHeader, "drop", evt => handleFilesSelected(evt));
     }
 
     if (!files || !files.length) return;
@@ -329,20 +330,20 @@ let isCountdown = false;
 let timerTime = 0;
 
 const formatTime = time => {
-    const min = Math.trunc(time / 1000 / 60).toString().length === 2 
-                ? `${Math.trunc(time / 1000 / 60)}`
-                : `0${Math.trunc(time / 1000 / 60)}`;
-    const sec = ((time / 1000) % 60).toString().length === 2 
-                ? `${(time / 1000) % 60}`
-                : `0${(time / 1000) % 60}`;
+    const min = Math.trunc(time / 1000 / 60).toString().length === 2 ?
+        `${Math.trunc(time / 1000 / 60)}` :
+        `0${Math.trunc(time / 1000 / 60)}`;
+    const sec = ((time / 1000) % 60).toString().length === 2 ?
+        `${(time / 1000) % 60}` :
+        `0${(time / 1000) % 60}`;
     return [min, sec];
 }
 
 const countdown = time => {
     isCountdown = true
-    time *= 60*1000;
+    time *= 60 * 1000;
 
-    if(!time){
+    if (!time) {
         elements.countdown.innerText = `00:00`;
         isCountdown = false;
         timerTime = 0;
@@ -378,7 +379,8 @@ const renderTotalProgress = data => {
     </div>
     `;
     elements.display.insertAdjacentHTML("beforeend", markup);
-    elements = {...elements,
+    elements = {
+        ...elements,
         progressNum: document.querySelector(".progress-num"),
         fileNums: document.querySelector(".file-nums"),
         fileSize: document.querySelector(".file-size"),
@@ -388,13 +390,19 @@ const renderTotalProgress = data => {
 
 const renderSendingWays = data => {
     // ?? download link && Qrcode
-    elements.boxFile.removeEventListener("change",  evt => handleFilesSelected(evt));  
+    elements.boxFile.removeEventListener("change", evt => handleFilesSelected(evt));
     elements.fileList.removeEventListener("click", evt => uploadFileControl(evt));
     // elements.btnDownload.removeEventListener("click", evt => downloadFiles(evt));
     elements.btnSend.removeEventListener("click", evt => send(evt));
-    
+
     const direct = `
-    <p class="countdown">Expire in <span>${isCountdown? formatTime(timerTime) : countdown(10) || "10:00"}</span></p>
+    <p class="countdown">Expire in 
+        <span>
+            ${(isCountdown && data.type === "DIRECT")
+            ? formatTime(timerTime) 
+            : countdown(10) || "10:00"}
+        </span>
+    </p>
     <div class="display">
         <div class="display-digit">
             <span>1</span>
@@ -424,7 +432,7 @@ const renderSendingWays = data => {
         <!-- display progress -->
     </div>
     `;
-    const email =`
+    const email = `
     <div class="display">
         <div class="display-paperplane">
             <div class="loader">
@@ -437,7 +445,7 @@ const renderSendingWays = data => {
     `;
 
     let markup;
-    switch (data.type){
+    switch (data.type) {
         case "EMAIL":
             markup = email;
             break;
@@ -452,7 +460,8 @@ const renderSendingWays = data => {
     }
 
     elements.sendingWays.insertAdjacentHTML("afterbegin", markup);
-    elements = {...elements, 
+    elements = {
+        ...elements,
         display: document.querySelector(".display"),
         countdown: document.querySelector(".countdown > span"),
     }
@@ -481,11 +490,12 @@ const renderSendingView = data => {
         </div>
     </div>
     `;
-    
+
     elements.dropOrdownload.innerHTML = ""
     elements.dropOrdownload.insertAdjacentHTML("afterbegin", markup);
 
-    elements = {...elements, 
+    elements = {
+        ...elements,
         sendingCard: document.querySelector(".sending-card"),
         sendingWays: document.querySelector(".sending-ways"),
         btnBack: document.querySelector(".btn-back"),
@@ -502,14 +512,14 @@ const backSendingControl = () => {
 }
 
 const enableBtnOk = () => {
-    Array.from(btnOk.classList).findIndex(s => s === "disable") !== -1 
-    ? elements.btnOk.classList.remove("disable")
-    : null;   
+    Array.from(btnOk.classList).findIndex(s => s === "disable") !== -1 ?
+        elements.btnOk.classList.remove("disable") :
+        null;
 }
 
 // btn-cancel || btn-ok 
 const doneWithSending = () => {
-    if(!isDone && uploadQueue.length){
+    if (!isDone && uploadQueue.length) {
         // alert ?? 自己寫一個library；
         alert("Are you sure about canceling the sending?");
     }
@@ -522,34 +532,144 @@ const doneWithSending = () => {
 }
 
 const sendingViewControl = evt => {
-    if(evt.target.matches(".btn-back, .btn-back *")){
+    if (evt.target.matches(".btn-back, .btn-back *")) {
         // render dropZone with sending files;
         renderDropView(uploadQueue);
-    }else if(evt.target.matches(".btn-cancel")){
+    } else if (evt.target.matches(".btn-cancel")) {
         doneWithSending(isDone);
-    }else if(evt.target.matches(".btn-ok")){
-        if(!isDone) return;
+    } else if (evt.target.matches(".btn-ok")) {
+        if (!isDone) return;
         doneWithSending();
     }
 }
 
-
-
 //================================================
 //================ Download View =================
+let isFetching = false;
 
-const renderDownloadZone = files => {
-    const markup = `
-        <div class="card">
-            <div class="card-body">
-                ${"download"}
-            </div>
-        </div>
-        `;
+elements = {
+    ...elements,
+    btnDownload: document.querySelector(".btn-download"),
+    inputKey: document.querySelector(".input-key"),
+    downloadBody: document.querySelector(".download-card > .card-body"),
+    downloadCard: document.querySelector(".download-card "),
 }
 
+let testEl;
 
-renderDropView();
+const hiddenEls = parentEl => {
+    parentEl.children[0].style.display = "none";
+}
+
+const renderLoader = parentEl => {
+    console.log(parentEl)
+    const markup = `
+        <div class="lds-spinner">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    `;
+    //     console.log(parentEl)
+    //     testEl = parentEl;
+    hiddenEls(parentEl);
+    parentEl.insertAdjacentHTML("afterbegin", markup);
+}
+
+const cleanCard = el => {
+    el.innerHTML = "";
+    // parentEl.removeChild();
+}
+
+const disableBtn = (btnEl, event, func) => {
+    btnEl.removeEventListener(event, func);
+    btnEl.classList.add("disable");
+}
+
+const validity = () => {
+    // ?? later
+}
+
+const renderDownloadZone = async evt => {
+    // 1. if elements.inputKey.value is numbers (check by RegExp)
+    // 1.1 check elements.inputKey.value.length !== 6 return; 顯示input key is invalid
+    // 2.1 use elements.inputKey.value 跟backend要資料
+    // 2.2 replace input to loader 
+    // 2.1.1 resolve => clean loader & renderfiles
+    // 2.1.2 reject => 顯示input key is invalid
+    // 2. else // are string (之後再做)
+    // 2.1 open as our download key;
+    let err, files;
+
+    // const value = elements.inputKey.value;
+    // if(value.length !== 6) return;
+
+    // const regExp = new RegExp(/^\d+$/);
+    // if(!regExp.test(value)) return;
+
+    renderLoader(elements.downloadBody);
+    renderLoader(elements.downloadBody);
+
+    isFetching = true;
+    disableBtn(elements.btnDownload, "click", renderDownloadZone);
+
+    // [err, files] = await to(makeRequest({
+    //     method: "POST",
+    //     // url: "/test/upload",
+    //     url: "",
+    //     payload: "",
+    // }));
+
+    // if(err || !files){
+    //     console.log(err);
+    //     return;
+    // }
+
+    cleanCard(elements.downloadCard);
+
+
+
+    const markup = `
+    <div class="text-box">
+        <h3 class="tim-note">Files</h3>
+        <h3 class="tim-note exp-date">Exp. Apr 15 03:32 AM</h3>
+    </div>
+    <div class="card-header ">
+        <div class="file-list">
+        <!-- files -->
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="text-box">
+        <div class="togglebutton">
+            <label>
+            <input type="checkbox" checked="">
+            <span class="toggle"></span>
+            Select all
+            </label>
+        </div>
+        <p class="tim-note small-text">Total 1 files &middot; 34.45MB</p>
+        </div>
+        <div class="btn btn-primary btn-block btn-download">Download</div>
+    </div>
+    `;
+
+    elements.downloadCard.insertAdjacentHTML("afterbegin", markup);
+
+
+}
+
+if (!isFetching) elements.btnDownload.addEventListener("click", renderDownloadZone);
+
+// renderDropView();
 
 // })()
-
