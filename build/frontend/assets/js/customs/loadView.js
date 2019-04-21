@@ -344,13 +344,8 @@ const countdown = time => {
     isCountdown = true
     time *= 60 * 1000;
 
-<<<<<<< HEAD
     if (!time) {
         elements.countdown.innerText = `00:00`;
-=======
-    if(!time){
-        // elements.countdown.innerText = `00:00`;
->>>>>>> 4405b309d079354e914e6343c245dbc6c400881c
         isCountdown = false;
         timerTime = 0;
         clearInterval(interval);

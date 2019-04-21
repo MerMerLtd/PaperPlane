@@ -16031,7 +16031,6 @@ a:visited {
   font-size: 18px;
   border-bottom: 1px solid  #6d6d6d; }
 
-<<<<<<< HEAD
 footer a,
 a:active,
 a:visited {
@@ -16159,8 +16158,6 @@ a:visited {
   height: 20px;
   background-color: #fff; }
 
-=======
->>>>>>> 4405b309d079354e914e6343c245dbc6c400881c
 /**
  * Computes a CSS calc function that betweens a value from
  * A to B over viewport-width A to viewport-width B.
