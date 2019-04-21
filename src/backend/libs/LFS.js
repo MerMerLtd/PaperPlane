@@ -1,10 +1,12 @@
 const fs = require('fs');
 const path = require('path');
+const url = require('url');
 const crypto = require('crypto');
 const dvalue = require('dvalue');
 
 const Bot = require(path.resolve(__dirname, 'Bot.js'));
 const Utils = require(path.resolve(__dirname, 'Utils.js'));
+const MerkleTree = require(path.resolve(__dirname, 'MerkleTree.js'));
 
 /*
   fid
@@ -16,9 +18,10 @@ const Utils = require(path.resolve(__dirname, 'Utils.js'));
   waiting
 */
 class Job {
-  constructor({ fid, rootHash, totalSlice, fileName, fileSize, contentType }) {
-    this._ = { fid, rootHash, totalSlice, fileName, fileSize, contentType, hash: [] };
+  constructor({ fid, rootHash, totalSlice, fileName, fileSize, contentType, slices }) {
+    this._ = { fid, rootHash, fileName, fileSize, contentType, slices: [] };
     this.totalSlice = totalSlice;
+    this.slices = slices;
   }
 
   set fid(value) {
@@ -38,7 +41,7 @@ class Job {
       const currentTotal = this._.totalSlice > 0 ? this._.totalSlice : 0;
       if(currentTotal < value) {
         this._.totalSlice = value;
-        this._.hash = this._.hash.concat(
+        this._.slices = this._.slices.concat(
           new Array(value - currentTotal).fill(false)
         );
       }
@@ -67,11 +70,11 @@ class Job {
     return this._.contentType;
   }
   get waiting() {
-    return this._.hash.map((v, i) => !v ? i : false).filter((v) => v)
+    return this._.slices.map((v, i) => !v ? i : false).filter((v) => v)
   }
   get progress() {
     try {
-      const completeCount = this._.hash.reduce((prev, curr) => {
+      const completeCount = this._.slices.reduce((prev, curr) => {
         return curr ? prev + 1 : prev
       }, 0)
       return (completeCount / this.totalSlice);
@@ -79,8 +82,16 @@ class Job {
       return 0;
     }
   }
+  set slices(value) {
+    if(Array.isArray(value) && value.length == this.totalSlice) {
+      this._.slices = value;
+    }
+  }
+  get slices() {
+    return this._.slices;
+  }
   done({ sliceIndex, sliceHash }) {
-    this._.hash[sliceIndex] = sliceHash;
+    this._.slices[sliceIndex] = sliceHash;
   }
   toJSON() {
     const json = dvalue.clone(this._);
@@ -93,25 +104,20 @@ class Job {
   }
 }
 
-/*
-    post /file -> initial upload
-    post /file/:fid -> save slice
-    post /file/:fid -> save slice
-    post /file/:fid -> save slice -> complete file
-*/
+class Letter {
+  constructor({ lid }) {
+    this._ = { lid };
+  }
 
-/*
-    LFS.META.
-    LFS.JOBS.
-
-    /meta/
-    /tmpfiles/fID/sliceHash
-    /files/fileHash/sliceHash
-
-    [total][index][slice]
-
-    JOB: { fid, rootHash, totalSlice, fileName, fileSize, contentType }
- */
+  set lid(value) {
+    if(value != undefined) {
+      this._.lid = value;
+    }
+  }
+  get lid() {
+    return this._.lid;
+  }
+}
 
 class LFS extends Bot {
   constructor() {
@@ -157,9 +163,47 @@ class LFS extends Bot {
     .then(() => Utils.initialFolder({ homeFolder: this.folder.file }));
   }
 
+  /* for letter
+      initialLetter
+      updateLetter
+      findLetter
+      deleteLetter
+      sendLetter
+  */
+  initialLetter({ session, password }) {
+    const letterID = Utils.randomNumberString(6);
+  }
+  updateLetter({ session, lid, password }) {
+    
+  }
+  saveLetter({ letter }) {
+
+  }
+  findLetter({ lid }) {
+
+  }
+  deleteLetter({ lid }) {
+
+  }
+  sendLetter({ lid, email, sender }) {
+    const template = path.resolve(__dirname, '../../../templates/email_sendPaperPlane.html');
+    this.getBot("Mailer")
+    .then((Mailer) => {
+      return Mailer.sendWithTemplate({
+        email: email,
+        subject: `A letter from ${sender} on DropHere.io`,
+        template,
+        data: {
+          sender,
+          link: `https://${this.config.api.url}/?lid=${lid}`
+        }
+      });
+    })
+  }
+
   initialFileController() {
     const db = this.database.leveldb;
-    const key = 'LFS.JOBS.';
+    const key = 'LFS.FILES.';
     this.JOBS = [];
     return this.find({ key })
     .then((rs) => {
@@ -172,16 +216,33 @@ class LFS extends Bot {
   resumeOperation({ job }) {
     try {
       const operation = JSON.parse(job.value);
-      return this.newOperation({ job: operation, write: false });
+      return this.newOperation({ job: operation });
     } catch(e) {
+      console.log(e)
       return Promise.reject(new Error('Invalid Job Format'));
     }
   }
 
-  findJOB({ fid }) {
+  findJOB({ fid, rootHash }) {
     return this.JOBS.find((el) => {
-      return el.fid == fid;
+      let result = true;
+      if(fid !== undefined ) {
+        result = result && el.fid == fid;
+      }
+      if(rootHash !== undefined) {
+        result = result && el.rootHash == rootHash;
+      }
+      return result;
     });
+  }
+  saveJOB({ job }) {
+    const key = `LFS.FILES.${job.fid}`;
+    const value = job.toStaticString();
+    return this.write({ key, value });
+  }
+  deleteJOB({ job }) {
+    const key = `LFS.FILES.${job.fid}`;
+    return this.delete({ key });
   }
 
   /*
@@ -193,17 +254,10 @@ class LFS extends Bot {
     contentType
     waiting
   */
-  newOperation({ job, write }) {
-    const key = `LFS.JOBS.${job.merkleRoot}`;
+  newOperation({ job }) {
     const myJob = new Job(job);
-    const stringifyJOB = myJob.toStaticString();
     this.JOBS.push(myJob);
-    if(write) {
-      return this.write({ key, value: stringifyJOB })
-      .then(() => { return {fid: job.fid }; });
-    } else {
-      return Promise.resolve({ fid: job.fid });
-    }
+    return Promise.resolve({ fid: job.fid });
   }
 
   updateOperation({ fid, totalSlice, sliceIndex, sliceHash }) {
@@ -214,27 +268,42 @@ class LFS extends Bot {
     return job;
   }
 
-  getUploadJob({ fid }) {
-    const job = this.findJOB({ fid });
-    return Promise.resolve(job ? job.toJSON() : {});
-  }
-
-  getMetadata({ hash }) {
-    const job = this.findJOB({ fid });
-    return Promise.resolve(job ? job.toJSON() : {});
-  }
-
-  getSlice({ fid, index }) {
-    const slicePath = path.resolve(this);
-  }
-
-  initialLetter({ session }) {
-    const codeLength = 6;
-    const text = '0123456789';
-    let code = '';
-    while(code.length < 6) {
-      code = code.concat(text.charAt(parseInt(Math.random() * text.length)));
+  getMetadata({ fid, rootHash }) {
+    const job = this.findJOB({ fid, rootHash });
+    let result = {};
+    if(job) {
+      const baseSlicePath = fid ?
+        `/upload/${fid}/` :
+        rootHash ? 
+          `/file/${rootHash}/` :
+          '';
+      result = job.toJSON();
+      result.slices = result.slices.map((v) => {
+        return url.format({
+          protocol: ':',
+          slashes: true,
+          host: this.config.api.url,
+          pathname: `${baseSlicePath}${v}`
+        });
+      })
     }
+    return Promise.resolve(result);
+  }
+
+  getSlice({ fid, rootHash, hash }) {
+    const job = this.findJOB({ fid, rootHash });
+    const sliceFolder = path.resolve(this.folder.file, job.fid);
+    const slicePath = path.resolve(sliceFolder, hash);
+    return new Promise((resolve, reject) => {
+      fs.readFile(slicePath, (e, d) => {
+        if(e) {
+          reject(e);
+        } else {
+          d._contentType = 'application/octet-stream';
+          resolve(d);
+        }
+      })
+    });
   }
 
   /* 
@@ -242,8 +311,8 @@ class LFS extends Bot {
     - create tmp folder
     - create operation
   */
-  initialUpload({ name, size, type, total }) {
-    const fid = dvalue.randomID();
+  initialUpload({ fileName, fileSize, contentType, totalSlice }) {
+    const fid = `JOB${dvalue.randomID(13)}`;
     const folder = path.resolve(this.folder.file, fid);
     return Utils.exists({ target: folder })
     .then((rs) => {
@@ -253,7 +322,7 @@ class LFS extends Bot {
         return Utils.initialFolder({ homeFolder: folder })
       }
     })
-    .then(() => this.newOperation({ job: { fid, folder }, write: true }))
+    .then(() => this.newOperation({ job: { fid, folder, fileName, fileSize, contentType, totalSlice } }))
     .catch((e) => {
       return this.initialUpload();
     })
@@ -266,6 +335,10 @@ class LFS extends Bot {
   */
   uploadSlice({ fid, hash, files }) {
     try {
+      const job = this.findJOB({ fid });
+      if(job.progress === 1) {
+        return job.toJSON();
+      }
       const sliceMeta = Object.values(files)[0];
       return new Promise((resolve, reject) => {
         fs.readFile(sliceMeta.path, (e, slice) => {
@@ -287,10 +360,11 @@ class LFS extends Bot {
               });
               return this.saveSlice({ fid, slice })
               .then(() => {
-                return job.progress == 1 ?
+                return this.checkFile({ fid }) ?
                   this.completeFile({ fid }) : 
                   Promise.resolve(true);
               })
+              .then(() => this.saveJOB({ job }))
               .then(() => job.toJSON())
             } else {
               return Promise.reject(new Error(`Broken Shard: ${sliceData.sha1}`));
@@ -329,33 +403,55 @@ class LFS extends Bot {
     })
   }
 
-  deleteFile({ fid, hash }) {
+  deleteFile({ fid, rootHash }) {
+    // delete folder
 
+    // delete memory
+
+    // delete db
   }
 
-  deleteJob({ fid }) {
-
-  }
-
-  checkFile({  }) {
-    
+  checkFile({ fid }) {
+    const job = this.findJOB({ fid }) || {};
+    return job.progress == 1 && job.rootHash != undefined;
   }
 
   completeFile({ fid }) {
-    console.log(`complete ${fid}`);
-
+    try {
+      const job = this.findJOB({ fid });
+      const merkleRoot = MerkleTree.caculateMerkleRoot(job.slices);
+      job.rootHash = merkleRoot;
+      return Promise.resolve(true);
+    } catch(e) {
+      return Promise.reject(e);
+    }
   }
 
   testUpload({ files, session, sessionID }) {
     return Promise.resolve(files);
   }
 
-
   testSession1({}) {
     return Promise.resolve({ _session: { a: 111, b: 222, c: 333 } });
   }
   testSession2({}) {
     return Promise.resolve({ _session: { a: null } });
+  }
+
+  testNotice({ fid }) {
+    const template = path.resolve(__dirname, '../../../templates/email_sendPaperPlane.html');
+    this.getBot("Mailer")
+    .then((Mailer) => {
+      return Mailer.sendWithTemplate({
+        email: "ccw1984@hotmail.com",
+        subject: "A GIFT FROM SOMEBODY",
+        template,
+        data: {
+          sender: "路人甲",
+          link: `https://www.google.com/?DropHere=${fid}`
+        }
+      });
+    })
   }
 }
 

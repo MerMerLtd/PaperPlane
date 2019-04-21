@@ -70,11 +70,16 @@ const makeRequest = opts => {
             }
             // Setup HTTP request
             xhr.open(opts.method || "GET", opts.url, true);
-            if(opts.header){
+            if(opts.headers){
                 Object.keys(opts.headers).forEach(key => xhr.setRequestHeader(key, opts.headers[key]));
             }
             // Send the request
-            xhr.send(opts.payload);
+            if(opts.contentType == 'application/json') {
+                xhr.setRequestHeader('content-type', 'application/json');
+                xhr.send(JSON.stringify(opts.payload));
+            } else {
+                xhr.send(opts.payload);
+            }
         });
     }
 }
@@ -150,7 +155,7 @@ const File = {
 // Controller
 const state = {};
 
-const minSliceCount = 25;
+const minSliceCount = 4;
 const minSize = 512;
 const defaultSize = 4 * 1024 * 1024 // 4MB;
 
@@ -368,7 +373,7 @@ const getHashShard = async parseFile => {
                 console.log(shardInfo, fid);
                 parseFile.sliceIndex += 1 ; //紀錄進度
                 return resolve({
-                    path: `/file/${fid}/${res.hash}`,
+                    path: `/upload/${fid}/${res.hash}`,
                     blob: new Blob([shard]),
                 })
             }
@@ -425,19 +430,19 @@ const uploadShard = async target => {
     formData.append("file", hashShard.blob);
     [err, data] = await to(makeRequest({
         method: "POST",
-        // url: "/test/upload",
         url: hashShard.path,
         payload: formData,
     }));
    
 
     if(err){
+console.trace(err)
         target.retry = target.retry ? (target.retry + 1) : 1
         if(target.retry <= maxRetry) { 
             uploadShard(target);
             return false;
         }
-        else { 
+        else {
             throw new Error(`can not upload shard: ${({
                 file: target.file,
                 index: target.sliceIndex,
@@ -474,15 +479,16 @@ const handleFilesSelected = evt => {
     // files is a FileList of File objects change it to Array.
     let files = Array.from(evt.target.files || evt.dataTransfer.files);
 
-    // 2. 提供 (fileName && contenType && fileSize ) => fid
+    // 2. 提供 (fileName && contentType && fileSize ) => fid
     Promise.all(files.map(async file => {
         const opts = {
+            contentType: 'application/json',
             method: "POST",
-            url: "/file",
+            url: "/upload",
             payload: {
                 fileName: file.name,
                 fileSize: file.send,
-                contenType: file.type,
+                contentType: file.type,
             },
         }
         // return each result make of new Array

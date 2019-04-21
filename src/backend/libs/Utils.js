@@ -113,6 +113,16 @@ class Utils {
     return s;
   }
 
+  static randomNumberString(length) {
+    const s = '0123456789';
+    const total = length > 0 ? length : 6;
+    let result = '';
+    while (result.length < total) {
+      result = result.concat(s.substr(Math.floor(Math.random() * s.length), 1));
+    }
+    return result;
+  }
+
   static parseBoolean(bool) {
     return typeof(bool) == 'string' ?
       bool.toLowerCase() != 'false' :

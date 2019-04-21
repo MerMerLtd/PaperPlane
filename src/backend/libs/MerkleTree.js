@@ -48,7 +48,7 @@ class Node {
 }
 
 class MerkleTree {
-  static caculateMerkleRoot(data) {
+  static caculateMerkleTree(data) {
     if(!Array.isArray(data)) {
       return data;
     }
@@ -68,8 +68,13 @@ class MerkleTree {
         newNode.right = leafNodes[i + 1];
         parents.push(newNode);
       }
-      return this.caculateMerkleRoot(parents);
+      return this.caculateMerkleTree(parents);
     }
+  }
+
+  static caculateMerkleRoot(data) {
+    const merkleTree = this.caculateMerkleTree(data);
+    return merkleTree.value;
   }
 
   static checkMerkleRoot({ data, rootHash }) {

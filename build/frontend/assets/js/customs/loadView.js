@@ -269,8 +269,8 @@ const renderDropView = files => {
                                 </span>
                             </div>
                             <input type="email" value="" placeholder="Email to..." class="form-control">
-                        </div>
-                        <div class="input-group">
+                            </div>
+                            <div class="input-group">
                             <div class="input-group-prepend">
                             <span class="input-group-text">
                                 <i class="material-icons">label</i>
@@ -289,6 +289,7 @@ const renderDropView = files => {
 
         </div>
     `;
+
     elements.dropOrdownload.innerHTML = "";
     elements.dropOrdownload.insertAdjacentHTML("afterbegin", markup);
 
@@ -343,8 +344,13 @@ const countdown = time => {
     isCountdown = true
     time *= 60 * 1000;
 
+<<<<<<< HEAD
     if (!time) {
         elements.countdown.innerText = `00:00`;
+=======
+    if(!time){
+        // elements.countdown.innerText = `00:00`;
+>>>>>>> 4405b309d079354e914e6343c245dbc6c400881c
         isCountdown = false;
         timerTime = 0;
         clearInterval(interval);
@@ -355,7 +361,7 @@ const countdown = time => {
         let min, sec;
         time -= 1000;
         [min, sec] = formatTime(time);
-        elements.countdown.innerText = `${min}:${sec}`;
+        // elements.countdown.innerText = `${min}:${sec}`;
         timerTime = time;
         return;
         // return `${min}:${sec}`;
