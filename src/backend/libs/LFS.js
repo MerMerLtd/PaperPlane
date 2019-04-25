@@ -105,8 +105,9 @@ class Job {
 }
 
 class Letter {
-  constructor({ lid }) {
-    this._ = { lid };
+  constructor({ lid, files, owner }) {
+    this._ = { lid, owner };
+    this._.files = Array.isArray(files) ? files : [];
   }
 
   set lid(value) {
@@ -116,6 +117,40 @@ class Letter {
   }
   get lid() {
     return this._.lid;
+  }
+
+  set owner(value) {
+    if(value != undefined) {
+      this._.owner = value;
+    }
+  }
+  get owner() {
+    return this._.owner;
+  }
+
+  addFile({ fid }) {
+    if(typeof(fid) === 'string' && this._.files.indexOf(fid) === -1) {
+      this._.files.push(fid);
+      return true;
+    }
+  }
+  deleteFile({ fid }) {
+    const index = this._.files.indexOf(fid);
+    if(index > -1) {
+      this._.files.splice(index, 1);
+      return true;
+    }
+  }
+  toJSON({ link }) {
+    const json = dvalue.clone(this._);
+    const baseURL = link || '';
+    json.files = json.files.map((v) => {
+      return url.resolve(baseURL, v);
+    });
+    return json;
+  }
+  toStaticString() {
+    return Utils.jsonStableStringify(this._);
   }
 }
 
@@ -129,10 +164,10 @@ class LFS extends Bot {
     if(!Buffer.isBuffer(slice) || slice.length < 16) {
       return Promise.reject(new Error('Invalid Slice Format'));
     }
-    const total = slice.slice(0, 8).readIntBE(2, 6);
-    const index = slice.slice(8, 16).readIntBE(2, 6);
+    // const total = slice.slice(0, 8).readIntBE(2, 6);
+    // const index = slice.slice(8, 16).readIntBE(2, 6);
     const sha1 = crypto.createHash('sha1').update(slice).digest('hex');
-    const result = { total, index, sha1 };
+    const result = { sha1 };
     return Promise.resolve(result);
   }
 
@@ -165,36 +200,77 @@ class LFS extends Bot {
 
   /* for letter
       initialLetter
-      updateLetter
       findLetter
+      letterAddFile
+      letterDeleteFile
       deleteLetter
       sendLetter
   */
   initialLetter({ session, password }) {
-    const letterID = Utils.randomNumberString(6);
+    const lid = Utils.randomNumberString(6);
+    const letter = new Letter({ lid });
+    return this.saveLetter({ letter })
+    .then(() => this.outputLetter({ letter }));
   }
-  updateLetter({ session, lid, password }) {
-    
+  outputLetter({ letter }) {
+    const link = url.resolve(this.config.api.url, 'letter');
+    return letter.toJSON({ link });
+  }
+  async getLetter({ lid }) {
+    const letter = await this.findLetter({ lid });
+    return this.outputLetter({ letter });
+  }
+  async findLetter({ lid }) {
+    const key = `LFS.LETTERS.${lid}`;
+    const result = await this.find({ key });
+    if(result.length > 0) {
+      const json = JSON.parse(result[0].value);
+      const letter = new Letter(json);
+      return letter;
+    } else {
+      return undefined;
+    }
+  }
+  async letterAddFile({ lid, fid }) {
+    const letter = await this.findLetter({ lid });
+    if(letter != undefined) {
+      letter.addFile({ fid });
+      await this.saveLetter({ letter });
+      return this.outputLetter({ letter });
+    } else {
+      throw new Error(`Letter Not Found: ${lid}`);
+    }
+  }
+  async letterDeleteFile({ lid, fid }) {
+    const letter = await this.findLetter({ lid });
+    if(letter != undefined) {
+      letter.deleteFile({ fid });
+      await this.saveLetter({ letter });
+      return this.outputLetter({ letter });
+    } else {
+      throw new Error(`Letter Not Found: ${lid}`);
+    }
   }
   saveLetter({ letter }) {
-
-  }
-  findLetter({ lid }) {
-
+    const lid = letter.lid;
+    const key = `LFS.LETTERS.${lid}`;
+    const value = letter.toStaticString();
+    return this.write({ key, value });
   }
   deleteLetter({ lid }) {
-
+    const key = `LFS.LETTERS.${lid}`;
+    return this.delete({ key });
   }
-  sendLetter({ lid, email, sender }) {
+  sendLetter({ lid, email, subject, content }) {
     const template = path.resolve(__dirname, '../../../templates/email_sendPaperPlane.html');
-    this.getBot("Mailer")
+    return this.getBot("Mailer")
     .then((Mailer) => {
       return Mailer.sendWithTemplate({
         email: email,
-        subject: `A letter from ${sender} on DropHere.io`,
+        subject,
         template,
         data: {
-          sender,
+          sender: 'someone',
           link: `https://${this.config.api.url}/?lid=${lid}`
         }
       });
@@ -218,7 +294,6 @@ class LFS extends Bot {
       const operation = JSON.parse(job.value);
       return this.newOperation({ job: operation });
     } catch(e) {
-      console.log(e)
       return Promise.reject(new Error('Invalid Job Format'));
     }
   }
@@ -226,7 +301,7 @@ class LFS extends Bot {
   findJOB({ fid, rootHash }) {
     return this.JOBS.find((el) => {
       let result = true;
-      if(fid !== undefined ) {
+      if(fid !== undefined) {
         result = result && el.fid == fid;
       }
       if(rootHash !== undefined) {
@@ -241,6 +316,9 @@ class LFS extends Bot {
     return this.write({ key, value });
   }
   deleteJOB({ job }) {
+    this.JOBS = this.JOBS.filter((el) => {
+      return el.fid != job.fid;
+    });
     const key = `LFS.FILES.${job.fid}`;
     return this.delete({ key });
   }
@@ -311,21 +389,55 @@ class LFS extends Bot {
     - create tmp folder
     - create operation
   */
-  initialUpload({ fileName, fileSize, contentType, totalSlice }) {
-    const fid = `JOB${dvalue.randomID(13)}`;
-    const folder = path.resolve(this.folder.file, fid);
-    return Utils.exists({ target: folder })
-    .then((rs) => {
-      if(rs) {
-        return Promise.reject();
+  async initialUpload({ lid, fileName, fileSize, contentType, totalSlice }) {
+    try {
+      const fid = `JOB${dvalue.randomID(13)}`;
+      const folder = path.resolve(this.folder.file, fid);
+      const checkEmpty = await Utils.exists({ target: folder });
+      if(checkEmpty) {
+        throw new Error(`Fid Exists: ${fid}`);
       } else {
-        return Utils.initialFolder({ homeFolder: folder })
+        await Utils.initialFolder({ homeFolder: folder });
       }
-    })
-    .then(() => this.newOperation({ job: { fid, folder, fileName, fileSize, contentType, totalSlice } }))
-    .catch((e) => {
-      return this.initialUpload();
-    })
+      await this.letterAddFile( { lid, fid } );
+      return this.newOperation({ job: { fid, folder, fileName, fileSize, contentType, totalSlice } })
+    } catch(e) {
+      return this.initialUpload({ lid, fileName, fileSize, contentType, totalSlice });
+    }
+  }
+  async deleteFile({ fid }) {
+    const folder = path.resolve(this.folder.file, fid);
+    const deleteFolderRecursive = async (filePath) => {
+      const exists = await Utils.fileExists({ filePath });
+      if(exists) {
+        fs.readdirSync(filePath).forEach((file, index) => {
+          const curPath = filePath + "/" + file;
+          if (fs.lstatSync(curPath).isDirectory()) {
+            deleteFolderRecursive(curPath);
+          } else {
+            fs.unlinkSync(curPath);
+          }
+        });
+        fs.rmdirSync(filePath);
+      }
+    };
+    await deleteFolderRecursive(folder);
+    return true;
+  }
+  async deleteUpload({ lid, fid }) {
+    // delete folder
+    await this.deleteFile({ fid });
+
+    // delete db & memory
+    const job = { fid };
+    await this.deleteJOB({ job });
+
+    // delete from letter
+    await this.letterDeleteFile({ lid, fid });
+
+    const letter = await this.findLetter({ lid })
+
+    return Promise.resolve(this.outputLetter({ letter }));
   }
 
   /*
@@ -333,7 +445,7 @@ class LFS extends Bot {
     - save slice file
     - update job status
   */
-  uploadSlice({ fid, hash, files }) {
+  uploadSlice({ fid, hash, files, totalSlice, sliceIndex }) {
     try {
       const job = this.findJOB({ fid });
       if(job.progress === 1) {
@@ -354,8 +466,8 @@ class LFS extends Bot {
             if(sliceData.match) {
               const job = this.updateOperation({
                 fid,
-                totalSlice: sliceData.total,
-                sliceIndex: sliceData.index,
+                totalSlice,
+                sliceIndex,
                 sliceHash: sliceData.sha1
               });
               return this.saveSlice({ fid, slice })
@@ -401,14 +513,6 @@ class LFS extends Bot {
         });
       });
     })
-  }
-
-  deleteFile({ fid, rootHash }) {
-    // delete folder
-
-    // delete memory
-
-    // delete db
   }
 
   checkFile({ fid }) {

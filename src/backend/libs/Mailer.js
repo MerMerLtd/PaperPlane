@@ -76,7 +76,7 @@ class Mailer extends Bot {
         if(e) {
           reject(e);
         } else {
-          resolve(true);
+          resolve({});
         }
       });
     });

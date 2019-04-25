@@ -24,10 +24,14 @@ password = ""
 url = "drophere.io"
 pathname = [
   "get | /,/version | Static.Utils.readPackageInfo",
-  "post | /upload | Bot.LFS.initialUpload",
-  "get | /upload/:fid | Bot.LFS.getMetadata",
-  "post | /upload/:fid/:hash | Bot.LFS.uploadSlice",
-  "get | /upload/:fid/:hash | Bot.LFS.getSlice",
+  "post | /letter | Bot.LFS.initialLetter",
+  "get | /letter/:lid | Bot.LFS.getLetter",
+  "post | /letter/:lid/send | Bot.LFS.sendLetter",
+  "post | /letter/:lid/upload | Bot.LFS.initialUpload",
+  "delete | /letter/:lid/upload/:fid | Bot.LFS.deleteUpload",
+  "get | /letter/:lid/upload/:fid | Bot.LFS.getMetadata",
+  "post | /letter/:lid/upload/:fid/:hash | Bot.LFS.uploadSlice",
+  "get | /letter/:lid/upload/:fid/:hash | Bot.LFS.getSlice",
   "get | /file/:rootHash | Bot.LFS.getMetadata",
   "get | /file/:rootHash/:hash | Bot.LFS.getSlice"
 ]

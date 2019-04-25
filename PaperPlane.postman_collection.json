@@ -1,0 +1,201 @@
+{
+	"info": {
+		"_postman_id": "6fac0bcb-6456-4922-9d48-d3bcd0f54efb",
+		"name": "PaperPlane",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "new letter",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost/letter",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"letter"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get letter",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost/letter/951133",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"letter",
+						"951133"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "new upload",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"fileName\": \"ABC\",\n\t\"fileSize\": 1024000,\n\t\"contentType\": \"application/json\",\n\t\"totalSlice\": 4\n}"
+				},
+				"url": {
+					"raw": "localhost/letter/908412/upload",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"letter",
+						"908412",
+						"upload"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "upload slice",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": ""
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost/letter/951133/upload/JOBrWfv41DqZAWtB/afd166bd569791f5058ffafad3d67f4e79d3482d?totalSlice=4&sliceIndex=1",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"letter",
+						"951133",
+						"upload",
+						"JOBrWfv41DqZAWtB",
+						"afd166bd569791f5058ffafad3d67f4e79d3482d"
+					],
+					"query": [
+						{
+							"key": "totalSlice",
+							"value": "4"
+						},
+						{
+							"key": "sliceIndex",
+							"value": "1"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get upload",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost/letter/723390/upload/JOBhxYX1hf4st3kh",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"letter",
+						"723390",
+						"upload",
+						"JOBhxYX1hf4st3kh"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "delete upload",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost/letter/951133/upload/JOB7bdDlucC82J5Z",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"letter",
+						"951133",
+						"upload",
+						"JOB7bdDlucC82J5Z"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "send letter",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"email\": \"hazelliang@mermer.cc\",\n\t\"subject\": \"Here is something for you\",\n\t\"content\": \"Guten Tag!\"\n}"
+				},
+				"url": {
+					"raw": "localhost/letter/788037/send",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"letter",
+						"788037",
+						"send"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
