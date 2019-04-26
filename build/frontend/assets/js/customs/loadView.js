@@ -1,3 +1,14 @@
+// // https://davidwalsh.name/add-rules-stylesheets
+// const addCSSRule = (sheet, selector, rules, index = 0) => {
+// 	if("insertRule" in sheet) {
+
+// 		sheet.insertRule(`${selector}{ ${rules} }`, index);
+// 	}
+// 	else if("addRule" in sheet) {
+// 		sheet.addRule(selector, rules, index);
+// 	}
+// }
+
 // (() => {
 const addMultiListener = (element, events, func) => {
     events.split(" ").forEach(event => element.addEventListener(event, func, false));
@@ -566,20 +577,29 @@ let isFetching = false;
 
 elements = {
     ...elements,
+    inputCard: document.querySelector(".input-card "),
     btnDownload: document.querySelector(".btn-download"),
     inputKey: document.querySelector(".input-key"),
-    downloadBody: document.querySelector(".download-card > .card-body"),
     downloadCard: document.querySelector(".download-card "),
+    btnRecieve:document.querySelector(".btn-recieve"),
+    downloadBody: document.querySelector(".download-card .file-list"),
+    downloadList: document.querySelector(".download-card > .card-body"),
+    expDate: document.querySelector(".download-card .exp-date "),
+    filesInfo: document.querySelector(".download-card .files-info "),
 }
 
-let testEl;
-
+// let testEl;
 const hiddenEls = parentEl => {
-    parentEl.children[0].style.display = "none";
+    // testEl = parentEl;
+    Array.from(parentEl.children).forEach(el => el.classList.add("u-hidden"));
+}
+
+const unHiddenEls = parentEl => {
+    Array.from(parentEl.children).forEach(el => el.classList.remove("u-hidden"));
 }
 
 const renderLoader = parentEl => {
-    console.log(parentEl)
+    // console.log(parentEl)
     const markup = `
         <div class="lds-spinner">
             <div></div>
@@ -596,53 +616,57 @@ const renderLoader = parentEl => {
             <div></div>
         </div>
     `;
-    //     console.log(parentEl)
-    //     testEl = parentEl;
-    hiddenEls(parentEl);
     parentEl.insertAdjacentHTML("afterbegin", markup);
+    elements = {...elements,
+        loader: document.querySelector(".lds-spinner"),
+    }
 }
 
-// // https://davidwalsh.name/add-rules-stylesheets
-// const addCSSRule = (sheet, selector, rules, index = 0) => {
-// 	if("insertRule" in sheet) {
+const reRenderInputKey = err => {
+    console.log({ errorMessage: "INVALID CODE", err});
+    elements.inputCard.classList.remove("u-hidden");
+    elements.downloadCard.classList.add("u-hidden");
+    elements.btnDownload.addEventListener("click", renderDownloadZone, false);
+}
 
-// 		sheet.insertRule(`${selector}{ ${rules} }`, index);
-// 	}
-// 	else if("addRule" in sheet) {
-// 		sheet.addRule(selector, rules, index);
-// 	}
-// }
+// ？？ 之後補
+const checkValidity = code => {
+    // 2. else // are string (之後再做)
+    // 2.1 open as our download key;
+   
+    // const value = elements.inputKey.value;
+    // if(value.length !== 6) return;
 
-// deg: 0 ~ 360;
-// progress: 0 ~ 1;
-const renderProgress = progress => { //?
-    let deg = progress*360;
-    
-    if(deg >= 180){
-        elements.sectorAfter.style.zIndex = 1;
-        elements.sectorBefore.style.transform = `rotate(90deg)`;
-        elements.sectorAfter.style.transform = `rotate(${deg + 90}deg)`;
+    // const regExp = new RegExp(/^\d+$/);
+    // if(!regExp.test(value)) return;
+    let err;
+    // is numbers (check by RegExp) ? && code.length === 6 ?
+    if(true){
+        return code; // valid
     }else{
-        elements.sectorBefore.style.transform = `rotate(${deg - 90}deg)`;
-        elements.sectorAfter.style.transform = `rotate(${deg + 90}deg)`;
+        // 自定義一個err obj
+        reRenderInputKey(err);
+        return false; // invalid
     }
-    // elements.sectorBefore.style.transform = `rotate(${deg-90}deg)`;
-
-    // if(deg >= 180){
-    //     elements.sectorAfter.style.opacity = 1;
-    //     elements.sector.style.overflow = "visible";
-    // }
-
-    if(deg === 360){
-        elements.cover.parentNode.removeChild(elements.cover);
-        return;
-    }
-    return;
 }
-const toggleProgressIcon = target => { // ?
-  
-    elements.coverContinue.classList.toggle("u-hidden");
-    elements.coverPause.classList.toggle("u-hidden");
+
+const fetchAvailableFid = async code => {
+    let err, res;
+
+    [err, res] = await to(makeRequest({
+        method: "GET",
+        url: `/letter/${letter}/`,
+    }));
+
+    if(err){
+        //1.1.3 if code is invalid, 要重新顯示input
+        reRenderInputKey(err);
+        return false;
+    }
+
+    if(res){
+        return res.files;
+    }
 }
 
 const renderDownloadFile = file => {
@@ -676,101 +700,99 @@ const renderDownloadFile = file => {
     <!-- <p class="file-name">螢幕快照 ...04.16.png</p> -->
     `;
 
-    elements = {...elements,
-        cover: document.querySelector(".cover"),
-        coverContinue: document.querySelector(".cover__continue"),
-        coverPause: document.querySelector(".cover__pause"),
-        sector: document.querySelector(".cover__sector"),
-        sectorBefore: document.querySelector(".cover__sector--before"),
-        sectorAfter: document.querySelector(".cover__sector--after"),
+    elements.downloadList.insertAdjacentHTML("beforeend", markup)
+}
+
+// deg: 0 ~ 360;
+// progress: 0 ~ 1;
+const renderProgress = progress => { //?
+    let deg = progress*360;
+    
+    if(deg >= 180){
+        elements.sectorAfter.style.zIndex = 1;
+        elements.sectorBefore.style.transform = `rotate(90deg)`;
+        elements.sectorAfter.style.transform = `rotate(${deg + 90}deg)`;
+    }else{
+        elements.sectorBefore.style.transform = `rotate(${deg - 90}deg)`;
+        elements.sectorAfter.style.transform = `rotate(${deg + 90}deg)`;
+    }
+    // elements.sectorBefore.style.transform = `rotate(${deg-90}deg)`;
+
+    // if(deg >= 180){
+    //     elements.sectorAfter.style.opacity = 1;
+    //     elements.sector.style.overflow = "visible";
+    // }
+    if(deg === 360){
+        elements.cover.parentNode.removeChild(elements.cover);
+        return;
+    }
+    return;
+}
+
+const toggleProgressIcon = target => { // ?
+    elements.coverContinue.classList.toggle("u-hidden");
+    elements.coverPause.classList.toggle("u-hidden");
+}
+
+const showDownloadView = () => {
+    elements.loader.remove();
+    elements.downloadCard.classList.remove("u-hidden");
+    unHiddenEls(elements.downloadCard);
+}
+
+const renderDownloadFiles = async availibleFiles => {
+    if(!availibleFiles.length){
+        console.log("目前沒有檔案哦！")
+        showDownloadView();
+    }else{
+        Promise.all(availibleFiles.map(async file => {
+            const opts = {
+                method: "GET",
+                //  url: `/letter/${inputKey}/`
+                url: `/letter/${letter}/upload/${file}`,
+            }
+            try{
+                return res = await makeRequest(opts);
+            }catch(err){
+                return Promise.resolve({ errorMessage: "API BAD GATEWAY", error, file });
+            }
+        }))
+        .then(resultArray => {
+            // resolve => clean loader & renderfiles
+            showDownloadView();
+            // renderAvailableFiles
+            resultArray.forEach(result => renderDownloadFile(result));
+        })
     }
 }
 
-const cleanCard = el => {
-    el.innerHTML = "";
-    // parentEl.removeChild();
-}
 
-const disableBtn = (btnEl, event, func) => {
-    btnEl.removeEventListener(event, func);
-    btnEl.classList.add("disable");
-}
+const renderDownloadZone = () => {
+    // 1. if elements.inputKey.value is numbers || 1.2.1 if elements.inputKey.value is string (can be link)
+    // 1.1.1 check elements.inputKey.value.length !== 6 return; 顯示input key is invalid
+    const inputKey = checkValidity(elements.inputKey.value);
 
-const validity = () => {
-    // ?? later
-}
-
-const renderDownloadZone = async evt => {
     console.log("renderDownloadZone");
-    // 1. if elements.inputKey.value is numbers (check by RegExp)
-    // 1.1 check elements.inputKey.value.length !== 6 return; 顯示input key is invalid
-    // 2.1 use elements.inputKey.value 跟backend要資料
-    // 2.2 replace input to loader 
-    // 2.1.1 resolve => clean loader & renderfiles
-    // 2.1.2 reject => 顯示input key is invalid
-    // 2. else // are string (之後再做)
-    // 2.1 open as our download key;
-    let err, files;
+    
+    if(!inputKey) return;
 
-    // const value = elements.inputKey.value;
-    // if(value.length !== 6) return;
+    // 2 if code is valid, 
+    // 2.1 replace input to loader
+    elements.inputCard.classList.add("u-hidden");
+    elements.btnDownload.removeEventListener("click", renderDownloadZone); // remove eventListener
+    hiddenEls(elements.downloadCard);
+    renderLoader(elements.downloadCard);
 
-    // const regExp = new RegExp(/^\d+$/);
-    // if(!regExp.test(value)) return;
+    // 2.2 use elements.inputKey.value 跟backend要資料
+    const availibleFiles = fetchAvailableFid(inputKey);
 
-    renderLoader(elements.downloadBody);
-    renderLoader(elements.downloadBody);
+    if(!availibleFiles) return;
 
-    isFetching = true;
-    disableBtn(elements.btnDownload, "click", renderDownloadZone);
-
-    // [err, files] = await to(makeRequest({
-    //     method: "POST",
-    //     // url: "/test/upload",
-    //     url: "",
-    //     payload: "",
-    // }));
-
-    // if(err || !files){
-    //     console.log(err);
-    //     return;
-    // }
-
-    cleanCard(elements.downloadCard);
-
-
-
-    const markup = `
-    <div class="text-box">
-        <h3 class="tim-note">Files</h3>
-        <h3 class="tim-note exp-date">Exp. Apr 15 03:32 AM</h3>
-    </div>
-    <div class="card-header ">
-        <div class="file-list">
-        <!-- files -->
-        </div>
-    </div>
-    <div class="card-body">
-        <div class="text-box">
-        <div class="togglebutton">
-            <label>
-            <input type="checkbox" checked="">
-            <span class="toggle"></span>
-            Select all
-            </label>
-        </div>
-        <p class="tim-note small-text">Total 1 files &middot; 34.45MB</p>
-        </div>
-        <div class="btn btn-primary btn-block btn-recieve">Recieve</div>
-    </div>
-    `;
-
-    elements.downloadCard.insertAdjacentHTML("afterbegin", markup);
-
-
+    // 3 renderDownloadFiles
+    renderDownloadFiles(availibleFiles);
 }
 
-if (!isFetching) elements.btnDownload.addEventListener("click", renderDownloadZone);
+elements.btnDownload.addEventListener("click", renderDownloadZone, false);
 
 renderDropView();
 

@@ -15628,7 +15628,7 @@ select.selectpicker {
   opacity: 0; }
 
 .u-hidden {
-  display: none; }
+  display: none !important; }
 
 .add__icon {
   position: absolute;
@@ -16124,7 +16124,7 @@ a:visited {
   position: relative;
   width: 64px;
   height: 64px;
-  margin: 20px auto; }
+  margin: 60px auto; }
 
 .lds-spinner div {
   -webkit-transform-origin: 32px 32px;
