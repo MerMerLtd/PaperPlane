@@ -571,6 +571,8 @@ const sendingViewControl = evt => {
     }
 }
 
+renderDropView();
+
 //================================================
 //================ Download View =================
 let isFetching = false;
@@ -582,8 +584,8 @@ elements = {
     inputKey: document.querySelector(".input-key"),
     downloadCard: document.querySelector(".download-card "),
     btnRecieve:document.querySelector(".btn-recieve"),
-    downloadBody: document.querySelector(".download-card .file-list"),
-    downloadList: document.querySelector(".download-card > .card-body"),
+    downloadList: document.querySelector(".download-card .file-list"),
+    downloadBody: document.querySelector(".download-card > .card-body"),
     expDate: document.querySelector(".download-card .exp-date "),
     filesInfo: document.querySelector(".download-card .files-info "),
 }
@@ -669,7 +671,14 @@ const fetchAvailableFid = async code => {
     }
 }
 
+const showDownloadView = () => {
+    elements.loader.remove();
+    elements.downloadCard.classList.remove("u-hidden");
+    unHiddenEls(elements.downloadCard);
+}
+
 const renderDownloadFile = file => {
+    console.log(file);
     const markup = `
     <div class="file" data-fid="${file.fid}">
         <div class="file-icon">
@@ -703,6 +712,66 @@ const renderDownloadFile = file => {
     elements.downloadList.insertAdjacentHTML("beforeend", markup)
 }
 
+const renderDownloadFiles = async availibleFiles => {
+    if(!availibleFiles.length){
+        console.log("目前沒有檔案哦！")
+        showDownloadView();
+    }else{
+        Promise.all(availibleFiles.map(async file => {
+            const opts = {
+                method: "GET",
+                //  url: `/letter/${inputKey}/`
+                url: `/letter/${letter}/upload/${file}`,
+            }
+            try{
+                return res = await makeRequest(opts);
+            }catch(err){
+                return Promise.resolve({ errorMessage: "API BAD GATEWAY", error, file });
+            }
+        }))
+        .then(resultArray => {
+            // resolve => clean loader & renderfiles
+            showDownloadView();
+            // renderAvailableFiles
+            resultArray.forEach(result => renderDownloadFile(result));
+        })
+    }
+}
+
+
+const renderDownloadZone = async () => {
+    // 1. if elements.inputKey.value is numbers || 1.2.1 if elements.inputKey.value is string (can be link)
+    // 1.1.1 check elements.inputKey.value.length !== 6 return; 顯示input key is invalid
+    const inputKey = checkValidity(elements.inputKey.value); // 這裡的需要await嗎？ 不是那麼有必要
+    
+    if(!inputKey) return;
+
+    // 2 if code is valid, 
+    // 2.1 replace input to loader
+    elements.inputCard.classList.add("u-hidden");
+    elements.btnDownload.removeEventListener("click", renderDownloadZone); // remove eventListener
+    hiddenEls(elements.downloadCard);
+    renderLoader(elements.downloadCard);
+
+    // 2.2 use elements.inputKey.value 跟backend要資料
+    const availibleFiles = await fetchAvailableFid(inputKey);
+
+    if(!availibleFiles) return;
+
+    console.log("renderDownloadFiles", availibleFiles);
+    // 3 renderDownloadFiles
+    renderDownloadFiles(availibleFiles);
+}
+
+elements.btnDownload.addEventListener("click", renderDownloadZone, false);
+
+
+
+// })()
+
+
+
+
 // deg: 0 ~ 360;
 // progress: 0 ~ 1;
 const renderProgress = progress => { //?
@@ -733,67 +802,3 @@ const toggleProgressIcon = target => { // ?
     elements.coverContinue.classList.toggle("u-hidden");
     elements.coverPause.classList.toggle("u-hidden");
 }
-
-const showDownloadView = () => {
-    elements.loader.remove();
-    elements.downloadCard.classList.remove("u-hidden");
-    unHiddenEls(elements.downloadCard);
-}
-
-const renderDownloadFiles = async availibleFiles => {
-    if(!availibleFiles.length){
-        console.log("目前沒有檔案哦！")
-        showDownloadView();
-    }else{
-        Promise.all(availibleFiles.map(async file => {
-            const opts = {
-                method: "GET",
-                //  url: `/letter/${inputKey}/`
-                url: `/letter/${letter}/upload/${file}`,
-            }
-            try{
-                return res = await makeRequest(opts);
-            }catch(err){
-                return Promise.resolve({ errorMessage: "API BAD GATEWAY", error, file });
-            }
-        }))
-        .then(resultArray => {
-            // resolve => clean loader & renderfiles
-            showDownloadView();
-            // renderAvailableFiles
-            resultArray.forEach(result => renderDownloadFile(result));
-        })
-    }
-}
-
-
-const renderDownloadZone = () => {
-    // 1. if elements.inputKey.value is numbers || 1.2.1 if elements.inputKey.value is string (can be link)
-    // 1.1.1 check elements.inputKey.value.length !== 6 return; 顯示input key is invalid
-    const inputKey = checkValidity(elements.inputKey.value);
-
-    console.log("renderDownloadZone");
-    
-    if(!inputKey) return;
-
-    // 2 if code is valid, 
-    // 2.1 replace input to loader
-    elements.inputCard.classList.add("u-hidden");
-    elements.btnDownload.removeEventListener("click", renderDownloadZone); // remove eventListener
-    hiddenEls(elements.downloadCard);
-    renderLoader(elements.downloadCard);
-
-    // 2.2 use elements.inputKey.value 跟backend要資料
-    const availibleFiles = fetchAvailableFid(inputKey);
-
-    if(!availibleFiles) return;
-
-    // 3 renderDownloadFiles
-    renderDownloadFiles(availibleFiles);
-}
-
-elements.btnDownload.addEventListener("click", renderDownloadZone, false);
-
-renderDropView();
-
-// })()
