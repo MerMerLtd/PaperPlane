@@ -80,7 +80,8 @@ const renderLoginView = () => {
 //=================== Drop View ==================
 
 let elements = {
-    dropOrdownload: document.querySelector(".dropOrdownload"),
+    dropCard: document.querySelector(".drop-card"),
+    downloadCard: document.querySelector(".download-card"),
 }
 
 // 判斷瀏覽器是否支持拖拉上傳
@@ -290,8 +291,8 @@ const renderDropView = files => {
         </div>
     `;
 
-    elements.dropOrdownload.innerHTML = "";
-    elements.dropOrdownload.insertAdjacentHTML("afterbegin", markup);
+    elements.dropCard.innerHTML = "";
+    elements.dropCard.insertAdjacentHTML("afterbegin", markup);
 
     elements = {
         ...elements,
@@ -492,8 +493,8 @@ const renderSendingView = data => {
     </div>
     `;
 
-    elements.dropOrdownload.innerHTML = ""
-    elements.dropOrdownload.insertAdjacentHTML("afterbegin", markup);
+    elements.dropCard.innerHTML = ""
+    elements.dropCard.insertAdjacentHTML("afterbegin", markup);
 
     elements = {
         ...elements,
@@ -685,6 +686,7 @@ const validity = () => {
 }
 
 const renderDownloadZone = async evt => {
+    console.log("renderDownloadZone");
     // 1. if elements.inputKey.value is numbers (check by RegExp)
     // 1.1 check elements.inputKey.value.length !== 6 return; 顯示input key is invalid
     // 2.1 use elements.inputKey.value 跟backend要資料
@@ -744,7 +746,7 @@ const renderDownloadZone = async evt => {
         </div>
         <p class="tim-note small-text">Total 1 files &middot; 34.45MB</p>
         </div>
-        <div class="btn btn-primary btn-block btn-download">Download</div>
+        <div class="btn btn-primary btn-block btn-recieve">Recieve</div>
     </div>
     `;
 
