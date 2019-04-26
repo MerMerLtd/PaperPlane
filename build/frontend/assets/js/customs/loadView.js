@@ -586,6 +586,90 @@ const renderLoader = parentEl => {
     parentEl.insertAdjacentHTML("afterbegin", markup);
 }
 
+// // https://davidwalsh.name/add-rules-stylesheets
+// const addCSSRule = (sheet, selector, rules, index = 0) => {
+// 	if("insertRule" in sheet) {
+
+// 		sheet.insertRule(`${selector}{ ${rules} }`, index);
+// 	}
+// 	else if("addRule" in sheet) {
+// 		sheet.addRule(selector, rules, index);
+// 	}
+// }
+
+// deg: 0 ~ 360;
+// progress: 0 ~ 1;
+const renderProgress = progress => { //?
+    let deg = progress*360;
+    
+    if(deg >= 180){
+        elements.sectorAfter.style.zIndex = 1;
+        elements.sectorBefore.style.transform = `rotate(90deg)`;
+        elements.sectorAfter.style.transform = `rotate(${deg + 90}deg)`;
+    }else{
+        elements.sectorBefore.style.transform = `rotate(${deg - 90}deg)`;
+        elements.sectorAfter.style.transform = `rotate(${deg + 90}deg)`;
+    }
+    // elements.sectorBefore.style.transform = `rotate(${deg-90}deg)`;
+
+    // if(deg >= 180){
+    //     elements.sectorAfter.style.opacity = 1;
+    //     elements.sector.style.overflow = "visible";
+    // }
+
+    if(deg === 360){
+        elements.cover.parentNode.removeChild(elements.cover);
+        return;
+    }
+    return;
+}
+const toggleProgressIcon = target => { // ?
+  
+    elements.coverContinue.classList.toggle("u-hidden");
+    elements.coverPause.classList.toggle("u-hidden");
+}
+
+const renderDownloadFile = file => {
+    const markup = `
+    <div class="file" data-fid="${file.fid}">
+        <div class="file-icon">
+
+        <div class="cover">
+            <div class="cover__border"></div>
+            <div class="cover__continue ">
+                <div class="cover__sector--before"></div>
+                <div class="cover__sector">
+                    <!-- <div class="cover__sector--before"></div>
+                    <div class="cover__sector--after"></div> -->
+                </div>
+                <div class="cover__sector--after"></div>
+            </div>
+            <div class="cover__pause u-hidden">
+                <div class="cover__pause--p1"></div>
+                <div class="cover__pause--p2"></div>
+            </div>  
+        </div>  
+        
+        </div>
+    
+        <div class="file-name">${file.name}</div>
+        <div class="file-size">${formatFileSize(file.size)}</div>
+    </div>
+
+    <!-- <p class="file-name">螢幕快照 2019-03-19 上午9.04.16.png</p> -->
+    <!-- <p class="file-name">螢幕快照 ...04.16.png</p> -->
+    `;
+
+    elements = {...elements,
+        cover: document.querySelector(".cover"),
+        coverContinue: document.querySelector(".cover__continue"),
+        coverPause: document.querySelector(".cover__pause"),
+        sector: document.querySelector(".cover__sector"),
+        sectorBefore: document.querySelector(".cover__sector--before"),
+        sectorAfter: document.querySelector(".cover__sector--after"),
+    }
+}
+
 const cleanCard = el => {
     el.innerHTML = "";
     // parentEl.removeChild();
@@ -671,6 +755,6 @@ const renderDownloadZone = async evt => {
 
 if (!isFetching) elements.btnDownload.addEventListener("click", renderDownloadZone);
 
-// renderDropView();
+renderDropView();
 
 // })()

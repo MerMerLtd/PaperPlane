@@ -5,6 +5,17 @@
 .u-invisible{
     opacity: 0;
 }
+.u-hidden{
+    display: none;
+}
+
+
+@mixin absCenter {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
 
 
 .add{
@@ -172,22 +183,174 @@
     }
 }
 
+.cover{
+    @include absCenter;
+  
+    width: 60px;
+    height: 60px;
+    overflow: hidden;
+    // background-color: gold;
+    &::after{
+        content:'';
+        @include absCenter;
+        width: 45px;
+        height: 45px;
+        border-radius: 100%;
+        // background-color: #ff2d55;
+        box-shadow: 10px 10px 10px 100px #00000033 ;
+    
+    }
+
+    &__border{
+        @include absCenter;
+
+        border-radius: 50px;
+        border: 3px solid transparent;//#ff2d55;
+        width: 45px;
+        height: 45px;
+        background-color: transparent;
+    }
+
+    &__sector{
+        // @include absCenter;
+        // transform: translate(0%, -50%);
+        &,
+        &--before,
+        &--after{
+            position:absolute;
+            top: 10px;
+            left: 10px;
+            margin-left: 20px;
+        }
+        z-index:2;
+
+        width: 20px;
+        height: 40px;
+        overflow: hidden;
+        border-radius:0  20px 20px 0;
+        // background-color: transparent;  
+        // background-color: #ff2d55;
+        background: #42a8d1;//到時換成image
+
+       &--before,
+       &--after{
+        //    position:absolute;
+        //    top: 0;
+        //    right: 0; 
+            margin-left: 0px;
+            width: 40px;
+            height: 20px;
+            border-radius: 20px 20px 0 0;
+            transform-origin: 20px 20px;
+       }
+       &--before{
+            // opacity:0;
+           z-index: 1;
+           transform: rotate(-90deg); // -90deg ~ 90 deg _270
+           background-color: #00000033;  
+        //    background-color: #a62dca;  
+       }
+       &--after{
+           // opacity:0; //  .before > 90deg opacity: 1;
+           z-index: 3;
+           transform:rotate(90deg);
+           background-color: #00000033;  
+
+        //    background-color: #acd427;  
+       }
+   }
+   &__pause{
+        position:absolute;
+        top: 10px;
+        left: 10px;
+        width: 40px;
+        height: 40px;
+        border-radius: 100%;
+        background-color: #00000033;
+
+        &--p1,
+        &--p2{
+            position: absolute;
+            top: 10px;
+            width: 3px;
+            height: 20px;
+            background: #42a8d1; // 到時換成image
+            border-radius: 3px;
+        }
+        &--p1{
+            left: 13.5px;
+        }
+        &--p2{
+            right: 13.5px;
+        }
+   }
+}
+    
+//     &__sector{
+//          // @include absCenter;
+//         // transform: translate(0%, -50%);
+//         position:absolute;
+//         top: 11px;
+//         left: 11px;
+//         margin-left: 19px;
+
+//         width: 19px;
+//         height: 38px;
+//         // overflow: hidden;
+//         border-radius: 0 19px 19px 0;
+//         background-color: transparent;  
+
+//         &--before,
+//         &--after{
+//             position:absolute;
+//             top: 0;
+//             right: 0; 
+//             width: 38px;
+//             height: 19px;
+//             border-radius: 19px 19px 0 0;
+//             transform-origin: 19px 19px;
+//         }
+//         &--before{
+//             z-index: 1;
+//             transform: rotate(-90deg); // -90deg ~ 90 deg _270
+//             background-color: #00000033;  
+//         }
+//         &--after{
+//             // opacity:0; //  .before > 90deg opacity: 1;
+//             z-index:2;
+//             transform:rotate(90deg);
+//             background-color: #00000033;  
+//         }
+//     }
+//     & .change-side{
+//         margin-left: 0px;  
+//         border-radius: 19px 0 0 19px;
+//         & > *{
+//             left: 0;
+//         }
+//     }
+// }
+
 
 .file{
     position: relative;
     width: 113px;
     height: 100px;
+
     & .file-icon{
+        position: relative;
         margin: 0 auto;
         width: 60px;
         height: 60px;
-        background-color: #42a8d1;
-        border-radius: 3px;
+        background: #42a8d1;//到時換成image, no-repeat fixed center;
+        border-radius: 3px;   
     }
+
     & .progress{
         margin: 2px auto;
         width: 60%;
     }
+   
     & .delete-button{
         position: absolute;
         width: 20px;
@@ -468,7 +631,7 @@
       margin: 10px 0;
       padding: 5px;
       font-size: 18px;
-      border-bottom: 1px solid  #6d6d6d;
+    //   border-bottom: 1px solid  #6d6d6d;
   }
 
 footer a,
@@ -562,13 +725,9 @@ a:visited{
  } 
 
  .exp-date{
-     padding-top: 10px;
+     padding-top: 12px;
      color: #ff2d55;
-     font-size: 16px;
+     font-size: 12px;
  }
 
- .select-button {
-    width: 20px;
-    height: 20px;
-    background-color: #fff;
- }
+ 

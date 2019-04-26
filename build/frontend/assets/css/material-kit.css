@@ -15627,6 +15627,9 @@ select.selectpicker {
 .u-invisible {
   opacity: 0; }
 
+.u-hidden {
+  display: none; }
+
 .add__icon {
   position: absolute;
   width: 52px;
@@ -15749,15 +15752,96 @@ select.selectpicker {
 .has-advanced-upload .add__text--small > .box__dragndrop {
   display: none; }
 
+.cover {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  overflow: hidden; }
+  .cover::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+    width: 45px;
+    height: 45px;
+    border-radius: 100%;
+    box-shadow: 10px 10px 10px 100px #00000033; }
+  .cover__border {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+    border-radius: 50px;
+    border: 3px solid transparent;
+    width: 45px;
+    height: 45px;
+    background-color: transparent; }
+  .cover__sector {
+    z-index: 2;
+    width: 20px;
+    height: 40px;
+    overflow: hidden;
+    border-radius: 0  20px 20px 0;
+    background: #42a8d1; }
+    .cover__sector, .cover__sector--before, .cover__sector--after {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      margin-left: 20px; }
+    .cover__sector--before, .cover__sector--after {
+      margin-left: 0px;
+      width: 40px;
+      height: 20px;
+      border-radius: 20px 20px 0 0;
+      -webkit-transform-origin: 20px 20px;
+              transform-origin: 20px 20px; }
+    .cover__sector--before {
+      z-index: 1;
+      -webkit-transform: rotate(-90deg);
+              transform: rotate(-90deg);
+      background-color: #00000033; }
+    .cover__sector--after {
+      z-index: 3;
+      -webkit-transform: rotate(90deg);
+              transform: rotate(90deg);
+      background-color: #00000033; }
+  .cover__pause {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 40px;
+    height: 40px;
+    border-radius: 100%;
+    background-color: #00000033; }
+    .cover__pause--p1, .cover__pause--p2 {
+      position: absolute;
+      top: 10px;
+      width: 3px;
+      height: 20px;
+      background: #42a8d1;
+      border-radius: 3px; }
+    .cover__pause--p1 {
+      left: 13.5px; }
+    .cover__pause--p2 {
+      right: 13.5px; }
+
 .file {
   position: relative;
   width: 113px;
   height: 100px; }
   .file .file-icon {
+    position: relative;
     margin: 0 auto;
     width: 60px;
     height: 60px;
-    background-color: #42a8d1;
+    background: #42a8d1;
     border-radius: 3px; }
   .file .progress {
     margin: 2px auto;
@@ -16028,8 +16112,7 @@ a:visited {
   color: #6d6d6d;
   margin: 10px 0;
   padding: 5px;
-  font-size: 18px;
-  border-bottom: 1px solid  #6d6d6d; }
+  font-size: 18px; }
 
 footer a,
 a:active,
@@ -16149,14 +16232,9 @@ a:visited {
   padding: 0 15px; }
 
 .exp-date {
-  padding-top: 10px;
+  padding-top: 12px;
   color: #ff2d55;
-  font-size: 16px; }
-
-.select-button {
-  width: 20px;
-  height: 20px;
-  background-color: #fff; }
+  font-size: 12px; }
 
 /**
  * Computes a CSS calc function that betweens a value from
