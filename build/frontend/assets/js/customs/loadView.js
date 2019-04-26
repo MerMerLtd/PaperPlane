@@ -357,7 +357,8 @@ const countdown = time => {
         let min, sec;
         time -= 1000;
         [min, sec] = formatTime(time);
-        // elements.countdown.innerText = `${min}:${sec}`;
+        if( elements.countdown)
+            elements.countdown.innerText = `${min}:${sec}`;
         timerTime = time;
         return;
         // return `${min}:${sec}`;
@@ -390,6 +391,18 @@ const renderTotalProgress = data => {
     }
 }
 
+const genQRCode = letter => {
+    let qrcode = new QRCode(document.querySelector(".display-code"), {
+        text: ``,
+        width: 100,
+        height: 100,
+        colorDark : "#ff2d55",
+        colorLight : "#ffffff",
+        correctLevel : QRCode.CorrectLevel.H
+    });
+    qrcode.makeCode(`http://localhost/letter/${letter}`);
+}
+
 const renderSendingWays = data => {
     // ?? download link && Qrcode
     elements.boxFile.removeEventListener("change", evt => handleFilesSelected(evt));
@@ -407,12 +420,12 @@ const renderSendingWays = data => {
     </p>
     <div class="display">
         <div class="display-digit">
-            <span>1</span>
-            <span>3</span>
-            <span>3</span>
-            <span>4</span>
-            <span>7</span>
-            <span>2</span>
+            <span>${letter[0]}</span>
+            <span>${letter[1]}</span>
+            <span>${letter[2]}</span>
+            <span>${letter[3]}</span>
+            <span>${letter[4]}</span>
+            <span>${letter[5]}</span>
         </div> 
         <div class="display-code"></div>
 
@@ -426,9 +439,9 @@ const renderSendingWays = data => {
     <div class="display">
         <div class="display-code"></div>
         <div class="display-link">
-            <a href="https://drophere.io${/*data*/null}" class="link"> 
+            <a href="http://localhost/letter/${letter}" class="link"> 
             <span><i class="material-icons">file_copy</i></span>
-            https://drophere.io
+            https://drophere.io/download
             </a>
         </div>
         <!-- display progress -->
@@ -467,6 +480,8 @@ const renderSendingWays = data => {
         display: document.querySelector(".display"),
         countdown: document.querySelector(".countdown > span"),
     }
+
+    if(document.querySelector(".display-code")) genQRCode();
 
     const progressData = calculator();
     renderTotalProgress(progressData);

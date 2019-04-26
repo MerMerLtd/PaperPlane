@@ -159,6 +159,26 @@ const minSliceCount = 4;
 const minSize = 512;
 const defaultSize = 4 * 1024 * 1024 // 4MB;
 
+let letter;
+
+const initialLetter = async () => {
+    let err, data;
+
+    [err, data] = await to(makeRequest({
+        method: "POST",
+        url: "/letter",
+    }));
+
+    if(err){
+        console.trace(err)
+    }else{
+        letter = data.lid;
+    }
+}
+
+initialLetter();
+
+
 const handleDefault = evt => {
     evt.stopPropagation();
     evt.preventDefault();
@@ -373,7 +393,7 @@ const getHashShard = async parseFile => {
                 console.log(shardInfo, fid);
                 parseFile.sliceIndex += 1 ; //紀錄進度
                 return resolve({
-                    path: `/upload/${fid}/${res.hash}`,
+                    path: `/letter/${letter}/upload/${fid}/${res.hash}?totalSlice=${count}&sliceIndex=${index}`,
                     blob: new Blob([shard]),
                 })
             }
@@ -484,7 +504,7 @@ const handleFilesSelected = evt => {
         const opts = {
             contentType: 'application/json',
             method: "POST",
-            url: "/upload",
+            url: `/letter/${letter}/upload`,
             payload: {
                 fileName: file.name,
                 fileSize: file.send,
