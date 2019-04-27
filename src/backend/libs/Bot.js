@@ -67,7 +67,7 @@ class Bot {
       const rs = [];
       db.createReadStream({
         gte: key,
-        lte: String.fromCharCode(key.charCodeAt(0) + 1)
+        lte: `${key}${String.fromCharCode(key.charCodeAt(0) + 1)}`
       }).on('data', ({ key, value }) => {
         rs.push({ key, value });
       }).on('end', () => {

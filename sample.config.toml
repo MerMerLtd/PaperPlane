@@ -21,7 +21,7 @@ user = "contact@mermer.cc"
 password = ""
 
 [api]
-url = "drophere.io"
+url = "localhost"
 pathname = [
   "get | /,/version | Static.Utils.readPackageInfo",
   "post | /letter | Bot.LFS.initialLetter",

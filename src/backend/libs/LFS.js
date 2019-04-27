@@ -70,7 +70,7 @@ class Job {
     return this._.contentType;
   }
   get waiting() {
-    return this._.slices.map((v, i) => !v ? i : false).filter((v) => v)
+    return this._.slices.map((v, i) => !v ? i : false).filter((v) => v === undefined)
   }
   get progress() {
     try {
@@ -186,6 +186,7 @@ class LFS extends Bot {
 
   initialAll() {
     return this.initialFileController()
+    .then(() => this.loadLetters())
     .then(() => this.initialFolder());
   }
 
@@ -209,30 +210,41 @@ class LFS extends Bot {
   initialLetter({ session, password }) {
     const lid = Utils.randomNumberString(6);
     const letter = new Letter({ lid });
+    this.LETTERS.push(letter);
     return this.saveLetter({ letter })
     .then(() => this.outputLetter({ letter }));
   }
   outputLetter({ letter }) {
-    const link = url.resolve(this.config.api.url, 'letter');
+    const link = url.format({
+      protocol: ':',
+      slashes: true,
+      host: this.config.api.url,
+      pathname: `/letter/${letter.lid}/upload/`
+    });
     return letter.toJSON({ link });
   }
   async getLetter({ lid }) {
-    const letter = await this.findLetter({ lid });
+    const letter = this.findLetter({ lid });
     return this.outputLetter({ letter });
   }
-  async findLetter({ lid }) {
-    const key = `LFS.LETTERS.${lid}`;
+  async loadLetters() {
+    const key = `LFS.LETTERS.`;
     const result = await this.find({ key });
     if(result.length > 0) {
-      const json = JSON.parse(result[0].value);
-      const letter = new Letter(json);
-      return letter;
-    } else {
-      return undefined;
+      this.LETTERS = result.map((v) => {
+        const json = JSON.parse(v.value);
+        const letter = new Letter(json);
+        return letter;
+      });
     }
   }
+  findLetter({ lid }) {
+    return this.LETTERS.find((letter) => {
+      return letter.lid == lid;
+    })
+  }
   async letterAddFile({ lid, fid }) {
-    const letter = await this.findLetter({ lid });
+    const letter = this.findLetter({ lid });
     if(letter != undefined) {
       letter.addFile({ fid });
       await this.saveLetter({ letter });
@@ -242,7 +254,7 @@ class LFS extends Bot {
     }
   }
   async letterDeleteFile({ lid, fid }) {
-    const letter = await this.findLetter({ lid });
+    const letter = this.findLetter({ lid });
     if(letter != undefined) {
       letter.deleteFile({ fid });
       await this.saveLetter({ letter });
@@ -258,6 +270,9 @@ class LFS extends Bot {
     return this.write({ key, value });
   }
   deleteLetter({ lid }) {
+    this.LETTERS = this.LETTERS.filter((letter) => {
+      return letter.lid != lid;
+    });
     const key = `LFS.LETTERS.${lid}`;
     return this.delete({ key });
   }
@@ -278,9 +293,9 @@ class LFS extends Bot {
   }
 
   initialFileController() {
-    const db = this.database.leveldb;
     const key = 'LFS.FILES.';
     this.JOBS = [];
+    this.LETTERS = [];
     return this.find({ key })
     .then((rs) => {
       return Promise.all(rs.map((job) => {
@@ -332,9 +347,15 @@ class LFS extends Bot {
     contentType
     waiting
   */
-  newOperation({ job }) {
+  newOperation({ job, save }) {
     const myJob = new Job(job);
     this.JOBS.push(myJob);
+    if(save) {
+      return this.saveJOB({ job: myJob })
+      .then(() => {
+        return Promise.resolve({ fid: job.fid });
+      });
+    }
     return Promise.resolve({ fid: job.fid });
   }
 
@@ -346,12 +367,12 @@ class LFS extends Bot {
     return job;
   }
 
-  getMetadata({ fid, rootHash }) {
+  getMetadata({ lid, fid, rootHash }) {
     const job = this.findJOB({ fid, rootHash });
     let result = {};
     if(job) {
       const baseSlicePath = fid ?
-        `/upload/${fid}/` :
+        `letter/${lid}/upload/${fid}/` :
         rootHash ? 
           `/file/${rootHash}/` :
           '';
@@ -400,9 +421,10 @@ class LFS extends Bot {
         await Utils.initialFolder({ homeFolder: folder });
       }
       await this.letterAddFile( { lid, fid } );
-      return this.newOperation({ job: { fid, folder, fileName, fileSize, contentType, totalSlice } })
+      return this.newOperation({ job: { fid, folder, fileName, fileSize, contentType, totalSlice }, save: true })
     } catch(e) {
-      return this.initialUpload({ lid, fileName, fileSize, contentType, totalSlice });
+      console.trace(e)
+//      return this.initialUpload({ lid, fileName, fileSize, contentType, totalSlice });
     }
   }
   async deleteFile({ fid }) {
@@ -435,7 +457,7 @@ class LFS extends Bot {
     // delete from letter
     await this.letterDeleteFile({ lid, fid });
 
-    const letter = await this.findLetter({ lid })
+    const letter = this.findLetter({ lid })
 
     return Promise.resolve(this.outputLetter({ letter }));
   }
