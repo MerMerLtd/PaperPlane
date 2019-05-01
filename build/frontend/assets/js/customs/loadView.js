@@ -1,13 +1,32 @@
-// // https://davidwalsh.name/add-rules-stylesheets
-// const addCSSRule = (sheet, selector, rules, index = 0) => {
-// 	if("insertRule" in sheet) {
+let elements = {
+    tab1: document.querySelector("a[href$='tab1']"),
+    tab2: document.querySelector("a[href$='tab2']"),
+    tabPane1: document.querySelector("#tab1"), // same div 👉 dropCard: document.querySelector(".drop-card"),
+    tabPane2: document.querySelector("#tab2"),
+    // dropCard: document.querySelector(".drop-card"),
+    downloadCard: document.querySelector(".download-card"),
+}
 
-// 		sheet.insertRule(`${selector}{ ${rules} }`, index);
-// 	}
-// 	else if("addRule" in sheet) {
-// 		sheet.addRule(selector, rules, index);
-// 	}
-// }
+const renderTabView1 = () => {
+    elements.tab1.classList.add("active");
+    elements.tab1.classList.add("show");
+    elements.tabPane1.classList.add("active");
+    elements.tabPane1.classList.add("show");
+    elements.tab2.classList.remove("active");
+    elements.tab2.classList.remove("show");
+    elements.tabPane2.classList.remove("active");
+    elements.tabPane2.classList.remove("show");
+}
+const renderTabView2 = () => {
+    elements.tab1.classList.remove("active");
+    elements.tab1.classList.remove("show");
+    elements.tabPane1.classList.remove("active");
+    elements.tabPane1.classList.remove("show");
+    elements.tab2.classList.add("active");
+    elements.tab2.classList.add("show");
+    elements.tabPane2.classList.add("active");
+    elements.tabPane2.classList.add("show");
+}
 
 // (() => {
 const addMultiListener = (element, events, func) => {
@@ -90,10 +109,10 @@ const renderLoginView = () => {
 //================================================
 //=================== Drop View ==================
 
-let elements = {
-    dropCard: document.querySelector(".drop-card"),
-    downloadCard: document.querySelector(".download-card"),
-}
+// let elements = {
+//     dropCard: document.querySelector(".drop-card"),
+//     downloadCard: document.querySelector(".download-card"),
+// }
 
 // 判斷瀏覽器是否支持拖拉上傳
 let isAdvancedUpload = function () {
@@ -302,8 +321,8 @@ const renderDropView = files => {
         </div>
     `;
 
-    elements.dropCard.innerHTML = "";
-    elements.dropCard.insertAdjacentHTML("afterbegin", markup);
+    elements.tabPane1.innerHTML = "";
+    elements.tabPane1.insertAdjacentHTML("afterbegin", markup);
 
     elements = {
         ...elements,
@@ -519,8 +538,8 @@ const renderSendingView = data => {
     </div>
     `;
 
-    elements.dropCard.innerHTML = ""
-    elements.dropCard.insertAdjacentHTML("afterbegin", markup);
+    elements.tabPane1.innerHTML = ""
+    elements.tabPane1.insertAdjacentHTML("afterbegin", markup);
 
     elements = {
         ...elements,
@@ -572,7 +591,6 @@ const sendingViewControl = evt => {
 }
 
 renderDropView();
-
 //================================================
 //================ Download View =================
 let isFetching = false;
@@ -590,18 +608,37 @@ elements = {
     filesInfo: document.querySelector(".download-card .files-info "),
 }
 
+const renderInputCard = () => {
+    console.log(letter); // ?? for testing
+    if(window.location.hash){ // ??
+        renderDownloadCard();
+        return;
+    }
+    elements.inputCard.classList.add("active");
+    elements.downloadCard.classList.remove("active");
+}
+const renderDownloadCard = () => {
+    elements.inputCard.classList.remove("active");
+    elements.downloadCard.classList.add("active");
+}
+// const toggleInputOrDownloadCard = () => {
+//     elements.inputCard.classList.toggle("active");
+//     elements.downloadCard.classList.toggle("active");
+// }
+
 // let testEl;
-const hiddenEls = parentEl => {
+const hiddenChildEls = parentEl => {
     // testEl = parentEl;
     Array.from(parentEl.children).forEach(el => el.classList.add("u-hidden"));
 }
 
-const unHiddenEls = parentEl => {
+const unHiddenChildEls = parentEl => {
     Array.from(parentEl.children).forEach(el => el.classList.remove("u-hidden"));
 }
 
-const renderLoader = parentEl => {
-    // console.log(parentEl)
+const renderLoader = parentEl => { 
+    // console.log(parentEl)  // elements.downloadCard
+    hiddenChildEls(parentEl);
     const markup = `
         <div class="lds-spinner">
             <div></div>
@@ -624,57 +661,52 @@ const renderLoader = parentEl => {
     }
 }
 
-const reRenderInputKey = err => {
-    console.log({ errorMessage: "INVALID CODE", err});
-    elements.inputCard.classList.remove("u-hidden");
-    elements.downloadCard.classList.add("u-hidden");
-    elements.btnDownload.addEventListener("click", renderDownloadZone, false);
+const removeLoader = parentEl => {
+    elements.loader.remove();
+    unHiddenChildEls(parentEl);
 }
 
-// ？？ 之後補
-const checkValidity = code => {
-    // 2. else // are string (之後再做)
-    // 2.1 open as our download key;
-   
-    // const value = elements.inputKey.value;
-    // if(value.length !== 6) return;
+const checkValidity = inputKey => {
+    // 1. if elements.inputKey.value is numbers || 1.2.1 if elements.inputKey.value is string (can be link)
+    elements.inputKey.value = "";
 
-    // const regExp = new RegExp(/^\d+$/);
-    // if(!regExp.test(value)) return;
-    let err;
-    // is numbers (check by RegExp) ? && code.length === 6 ?
-    if(true){
-        return code; // valid
-    }else{
-        // 自定義一個err obj
-        reRenderInputKey(err);
-        return false; // invalid
-    }
+    const regExp = new RegExp(/^\d+$/);
+
+    if(!regExp.test(inputKey)){
+        // 如果不是數字
+        // case1: 作為網址打開 www.drophere.io/#123456
+        // case2: 直接返回
+        // return false;
+    };
+    if(!regExp.test(inputKey) || inputKey.length !== 6){
+        elements.inputCard.classList.add("shake");
+        setTimeout(() => elements.inputCard.classList.remove("shake"), 1000);
+        return false;
+    };
+
+    renderDownloadZone(parseInt(inputKey));
+    return false;
+    // return parseInt(inputKey);
 }
 
-const fetchAvailableFid = async code => {
+const fetchAvailableFid = async letter => {
     let err, res;
 
     [err, res] = await to(makeRequest({
         method: "GET",
-        url: `/letter/${letter}/`,
+        url: `/letter/${letter}/`, // 絕對正確的 url: `/letter/${letter}/`
     }));
 
-    if(err){
-        //1.1.3 if code is invalid, 要重新顯示input
-        reRenderInputKey(err);
+    if(err || parseInt(res.lid) !== letter){
+        //1.1.3 if letter is invalid, 要重新顯示input 👈 不是寫在這裡
+        console.log(err || letter);
+        // renderInputCard();
         return false;
     }
 
     if(res){
         return res.files;
     }
-}
-
-const showDownloadView = () => {
-    elements.loader.remove();
-    elements.downloadCard.classList.remove("u-hidden");
-    unHiddenEls(elements.downloadCard);
 }
 
 const renderDownloadFile = file => {
@@ -701,7 +733,7 @@ const renderDownloadFile = file => {
         
         </div>
     
-        <div class="file-name">${file.name}</div>
+        <div class="file-name">${file.fileName}</div>
         <div class="file-size">${formatFileSize(file.size)}</div>
     </div>
 
@@ -714,8 +746,34 @@ const renderDownloadFile = file => {
 
 const renderDownloadFiles = async availibleFiles => {
     if(!availibleFiles.length){
-        console.log("目前沒有檔案哦！")
-        showDownloadView();
+        // ?? test
+        elements.downloadList.insertAdjacentHTML("afterbegin", `
+        <div style="text-align: center;">
+            <p>
+                <span class="arrow_back">&larr;</span>
+                目前沒有檔案哦！
+            </p>
+            <div>
+                <i class="material-icons refresh" style="color: #ff2d55">
+                    refresh
+                </i>
+            </div>
+        </div>
+        `);
+        document.querySelector(".arrow_back").addEventListener("click", () => {
+            elements.downloadList.innerText = "";
+            window.location.hash = ""; 
+            renderInputCard();
+        });
+        document.querySelector(".refresh").addEventListener("click", () => {
+            elements.downloadList.innerText = "";
+            checkUrl();
+        })
+        // or setInterval to fetch
+        // setTimeout(() => {
+        //         window.location.href = window.location.origin; // trim hash
+        //         renderInputCard();
+        //     }, 3000);
     }else{
         Promise.all(availibleFiles.map(async file => {
             const opts = {
@@ -730,41 +788,45 @@ const renderDownloadFiles = async availibleFiles => {
             }
         }))
         .then(resultArray => {
-            // resolve => clean loader & renderfiles
-            showDownloadView();
-            // renderAvailableFiles
+    
             resultArray.forEach(result => renderDownloadFile(result));
         })
     }
 }
 
 
-const renderDownloadZone = async () => {
-    // 1. if elements.inputKey.value is numbers || 1.2.1 if elements.inputKey.value is string (can be link)
-    // 1.1.1 check elements.inputKey.value.length !== 6 return; 顯示input key is invalid
-    const inputKey = checkValidity(elements.inputKey.value); // 這裡的需要await嗎？ 不是那麼有必要
-    
-    if(!inputKey) return;
+const renderDownloadZone = async letter => {
 
-    // 2 if code is valid, 
-    // 2.1 replace input to loader
-    elements.inputCard.classList.add("u-hidden");
-    elements.btnDownload.removeEventListener("click", renderDownloadZone); // remove eventListener
-    hiddenEls(elements.downloadCard);
+    renderDownloadCard();
+    // 2.2 render loader 
     renderLoader(elements.downloadCard);
+  
+    // 2.3 fetch data 👉 use elements.inputKey.value 跟backend要資料
+    const filesId = await fetchAvailableFid(letter);
 
-    // 2.2 use elements.inputKey.value 跟backend要資料
-    const availibleFiles = await fetchAvailableFid(inputKey);
+    // 2.3.1 如果沒有要到，重新輸入inputKey
+    if(!filesId){
+        // ?? render custom alert downloadKey || inputKey is invalid
+        removeLoader(elements.downloadCard);
+        window.location.hash = ""; //// window.location = window.location.origin;
+        renderInputCard();
+        return false;
+    };
 
-    if(!availibleFiles) return;
+    console.log("renderDownloadFiles", filesId);
 
-    console.log("renderDownloadFiles", availibleFiles);
+    // 2.3.2 如果有要到，cleanLoader 
+    removeLoader(elements.downloadCard);
     // 3 renderDownloadFiles
-    renderDownloadFiles(availibleFiles);
+    window.location.hash = letter;
+
+    renderDownloadFiles(filesId);
 }
 
-elements.btnDownload.addEventListener("click", renderDownloadZone, false);
+elements.btnDownload.addEventListener("click", () => checkValidity(elements.inputKey.value), false);
 
+
+elements.tab2.addEventListener("click",renderInputCard , false); // 要判斷url 決定render inputCard or downloadCard
 
 
 // })()
@@ -802,3 +864,14 @@ const toggleProgressIcon = target => { // ?
     elements.coverContinue.classList.toggle("u-hidden");
     elements.coverPause.classList.toggle("u-hidden");
 }
+
+// // https://davidwalsh.name/add-rules-stylesheets
+// const addCSSRule = (sheet, selector, rules, index = 0) => {
+// 	if("insertRule" in sheet) {
+
+// 		sheet.insertRule(`${selector}{ ${rules} }`, index);
+// 	}
+// 	else if("addRule" in sheet) {
+// 		sheet.addRule(selector, rules, index);
+// 	}
+// }

@@ -173,10 +173,21 @@ const initialLetter = async () => {
         console.trace(err)
     }else{
         letter = data.lid;
+        console.log("letter", letter);
     }
 }
-
 initialLetter();
+
+const checkUrl = () => {
+    const l = window.location;
+    if(!l.hash || checkValidity(l.href.slice(l.href.indexOf("#")+1))) return false;
+    
+    renderTabView2();
+    return false;
+}
+
+checkUrl();
+
 
 
 const handleDefault = evt => {
@@ -456,7 +467,6 @@ const uploadShard = async target => {
    
 
     if(err){
-console.trace(err)
         target.retry = target.retry ? (target.retry + 1) : 1
         if(target.retry <= maxRetry) { 
             uploadShard(target);
@@ -501,26 +511,29 @@ const handleFilesSelected = evt => {
 
     // 2. 提供 (fileName && contentType && fileSize ) => fid
     Promise.all(files.map(async file => {
+        const f = getMeta(file);
         const opts = {
             contentType: 'application/json',
             method: "POST",
             url: `/letter/${letter}/upload`,
             payload: {
-                fileName: file.name,
-                fileSize: file.send,
-                contentType: file.type,
+                fileName: f.name,
+                fileSize: f.size,
+                totalSlice: f.sliceCount,
+                contentType: f.type,
             },
         }
+        console.log(file);
         // return each result make of new Array
         try {
             const res = await makeRequest(opts);
-            file.fid = res.fid; //！！！！object.create 的 object 不能直接用 ...operation
-            return file;
+            f.fid = res.fid; //！！！！object.create 的 object 不能直接用 ...operation
+            return f;
             
         }
         catch (error) {
             // 失敗： 錯誤訊息 及 file obj
-            return Promise.resolve({ errorMessage: "API BAD GATEWAY", error, file });
+            return Promise.resolve({ errorMessage: "API BAD GATEWAY", error, f });
         } 
     }))
     .then(async resultArray => {// resultArray is array of files with fid provided by backend
@@ -532,7 +545,7 @@ const handleFilesSelected = evt => {
 
         if (resultArray.length){
             // add ParsedFiles into the uploadQueue
-            resultArray.forEach(file => addUploadQueue(getMeta(file)));
+            resultArray.forEach(file => addUploadQueue(file));
             uploadFiles();
         }
         
