@@ -60,7 +60,8 @@ const makeRequest = opts => {
                     closeConnection();
                     resolve(JSON.parse(xhr.responseText));
                 } else {
-                    // If false                    
+                    // If false  
+                    console.log(xhr.response); // 👈 是 Buffer
                     closeConnection();
                     reject({
                         error: JSON.parse(xhr.response).error.message,
@@ -156,37 +157,6 @@ const state = {};
 const minSliceCount = 4;
 const minSize = 512;
 const defaultSize = 4 * 1024 * 1024 // 4MB;
-
-let letter;
-
-const initialLetter = async () => {
-    let err, data;
-
-    [err, data] = await to(makeRequest({
-        method: "POST",
-        url: "/letter",
-    }));
-
-    if (err) {
-        console.trace(err)
-    } else {
-        letter = data.lid;
-        console.log("letter", letter);
-    }
-}
-initialLetter();
-
-const checkUrl = () => {
-    const l = window.location;
-    if (!l.hash || checkValidity(l.href.slice(l.href.indexOf("#") + 1))) return false;
-
-    renderTabView2();
-    return false;
-}
-
-checkUrl();
-
-
 
 const handleDefault = evt => {
     evt.stopPropagation();
@@ -403,12 +373,12 @@ const getHashShard = async parseFile => {
         blob,
         // blob: new Blob([shard])
     };
-    console.log(blob, target.blob);
+    // console.log(blob, target.blob);
     return new Promise((resolve, reject) => {
         SHA1(target)
             .then(
                 res => {
-                    console.log(shardInfo, fid);
+                    // console.log(shardInfo, fid);
                     parseFile.sliceIndex += 1; //紀錄進度
                     return resolve({
                         path: `/letter/${letter}/upload/${fid}/${res.hash}?totalSlice=${count}&sliceIndex=${index}`,
@@ -449,7 +419,7 @@ const emptyUploadQueue = () => {
 }
 
 const uploadShard = async target => {
-    console.log("uploadShard/ isPaused", target.fid, target.isPaused)
+    // console.log("uploadShard/ isPaused", target.fid, target.isPaused)
     if (target.isPaused || target.sliceIndex === target.sliceCount) return;
 
     let err, data, hashShard;
@@ -575,4 +545,262 @@ if (window.File && window.FileReader && window.FileList && window.Blob) {
 } else {
     alert('The File APIs are not fully supported in this browser.');
 }
+
+const checkValidity = inputKey => {
+    // 1. if elements.inputKey.value is numbers || 1.2.1 if elements.inputKey.value is string (can be link)
+    elements.inputKey.value = "";
+
+    const regExp = new RegExp(/^\d+$/);
+
+    if(!regExp.test(inputKey)){
+        // 如果不是數字
+        // case1: 作為網址打開 www.drophere.io/#123456
+        // case2: 直接返回
+        // return false;
+    };
+    if(!regExp.test(inputKey) || inputKey.length !== 6){
+        elements.inputCard.classList.add("shake");
+        setTimeout(() => elements.inputCard.classList.remove("shake"), 1000);
+        return false;
+    };
+
+    renderDownloadZone(inputKey);
+    return false;
+    // return inputKey;
+}
+
+const fetchAvailableFid = async letter => {
+    let err, res;
+
+    [err, res] = await to(makeRequest({
+        method: "GET",
+        url: `/letter/${letter}/`, // 絕對正確的 url: `/letter/${letter}/`
+    }));
+
+    if(err || res.lid !== letter){
+        //1.1.3 if letter is invalid, 要重新顯示input 👈 不是寫在這裡
+        console.log(err || letter);
+        // renderInputCard();
+        return false;
+    }
+
+    if(res){
+        return res.files;
+    }
+}
+
+const renderDownloadFile = file => {
+    // console.log(file);
+    const markup = `
+    <div class="file" data-fid="${file.fid}">
+        <div class="file-icon">
+
+        <div class="cover">
+            <div class="cover__border"></div>
+            <div class="cover__continue ">
+                <div class="cover__sector--before"></div>
+                <div class="cover__sector">
+                    <!-- <div class="cover__sector--before"></div>
+                    <div class="cover__sector--after"></div> -->
+                </div>
+                <div class="cover__sector--after"></div>
+            </div>
+            <div class="cover__pause u-hidden">
+                <div class="cover__pause--p1"></div>
+                <div class="cover__pause--p2"></div>
+            </div>  
+        </div>  
+        
+        </div>
+    
+        <div class="file-name">${file.fileName}</div>
+        <div class="file-size">${formatFileSize(file.fileSize)}</div>
+    </div>
+
+    <!-- <p class="file-name">螢幕快照 2019-03-19 上午9.04.16.png</p> -->
+    <!-- <p class="file-name">螢幕快照 ...04.16.png</p> -->
+    `;
+
+    elements.downloadList.insertAdjacentHTML("beforeend", markup)
+}
+
+const renderDownloadFiles = async availibleFiles => {
+    if(!availibleFiles.length){
+        // ?? test
+        elements.downloadList.insertAdjacentHTML("afterbegin", `
+        <div style="text-align: center;">
+            <p>
+                <span class="arrow_back">&larr;</span>
+                目前沒有檔案哦！
+            </p>
+            <div>
+                <i class="material-icons refresh" style="color: #ff2d55">
+                    refresh
+                </i>
+            </div>
+        </div>
+        `);
+        document.querySelector(".arrow_back").addEventListener("click", () => {
+            elements.downloadList.innerText = "";
+            window.location.hash = ""; 
+            renderInputCard();
+        });
+        document.querySelector(".refresh").addEventListener("click", () => {
+            elements.downloadList.innerText = "";
+            checkUrl();
+        })
+        // or setInterval to fetch
+        // setTimeout(() => {
+        //         window.location.href = window.location.origin; // trim hash
+        //         renderInputCard();
+        //     }, 3000);
+    }else{
+        Promise.all(availibleFiles.map(async fid => {
+            const opts = {
+                method: "GET",
+                //  url: `/letter/${inputKey}/`
+                url: `${fid}`,
+            }
+            try{
+                return res = await makeRequest(opts);
+            }catch(err){
+                return Promise.resolve({ errorMessage: "API BAD GATEWAY", error, file });
+            }
+        }))
+        .then(resultArray => {
+    
+            resultArray.forEach(result => renderDownloadFile(result));
+        })
+    }
+}
+
+// deg: 0 ~ 360;
+// progress: 0 ~ 1;
+const renderProgress = progress => { //?
+    let deg = progress*360;
+    
+    if(deg >= 180){
+        elements.sectorAfter.style.zIndex = 1;
+        elements.sectorBefore.style.transform = `rotate(90deg)`;
+        elements.sectorAfter.style.transform = `rotate(${deg + 90}deg)`;
+    }else{
+        elements.sectorBefore.style.transform = `rotate(${deg - 90}deg)`;
+        elements.sectorAfter.style.transform = `rotate(${deg + 90}deg)`;
+    }
+    // elements.sectorBefore.style.transform = `rotate(${deg-90}deg)`;
+
+    // if(deg >= 180){
+    //     elements.sectorAfter.style.opacity = 1;
+    //     elements.sector.style.overflow = "visible";
+    // }
+    if(deg === 360){
+        elements.cover.parentNode.removeChild(elements.cover);
+        return;
+    }
+    return;
+}
+
+const toggleProgressIcon = target => { // ?
+    elements.coverContinue.classList.toggle("u-hidden");
+    elements.coverPause.classList.toggle("u-hidden");
+}
+
+const downloadQueue = [];
+
+const downloadFiles = async filesId => {
+    Promise.all(filesId.map(async fid => {
+        const opts = {
+            method: "GET",
+            // url: `${window.location.href}/upload/${fid}`,
+            url: `${fid}`,
+        }
+        let err, data;
+        [err, data] = await to(makeRequest(opts));
+        if(err) throw {err, fid}; //http://www.javascriptkit.com/javatutors/trycatch2.shtml 還沒細看
+        if(data){
+            // const 
+            console.log(data)
+        }
+    }))
+    .then(res => {
+        console.log(res);
+    });
+}
+
+const renderDownloadZone = async letter => {
+
+    renderDownloadCard();
+    // 2.2 render loader 
+    renderLoader(elements.downloadCard);
+  
+    // 2.3 fetch data 👉 use elements.inputKey.value 跟backend要資料
+    const filesId = await fetchAvailableFid(letter);
+
+    // 2.3.1 如果沒有要到，重新輸入inputKey
+    if(!filesId){
+        // ?? render custom alert downloadKey || inputKey is invalid
+        removeLoader(elements.downloadCard);
+        window.location.hash = ""; //// window.location = window.location.origin;
+        renderInputCard();
+        return false;
+    };
+
+    console.log("renderDownloadFiles", filesId);
+
+    // 2.3.2 如果有要到，cleanLoader 
+    removeLoader(elements.downloadCard);
+    // 3 renderDownloadFiles
+    window.location.hash = letter;
+
+    renderDownloadFiles(filesId);
+
+    downloadFiles(filesId);
+}
+
+elements.tab2.addEventListener("click",renderInputCard , false); // 要判斷url 決定render inputCard or downloadCard
+
+elements.btnDownload.addEventListener("click", () => checkValidity(elements.inputKey.value), false);
+
+let letter;
+
+const initialLetter = async () => {
+    let err, data;
+
+    [err, data] = await to(makeRequest({
+        method: "POST",
+        url: "/letter",
+    }));
+
+    if (err) {
+        console.trace(err)
+    } else {
+        letter = data.lid;
+        console.log("letter", letter);
+    }
+}
+initialLetter();
+
+const checkUrl = () => {
+    const l = window.location;
+    if (!l.hash || checkValidity(l.href.slice(l.href.indexOf("#") + 1))) return false;
+
+    renderTabView2();
+    return false;
+}
+
+checkUrl();
+
+// })()
+
+// // https://davidwalsh.name/add-rules-stylesheets
+// const addCSSRule = (sheet, selector, rules, index = 0) => {
+// 	if("insertRule" in sheet) {
+
+// 		sheet.insertRule(`${selector}{ ${rules} }`, index);
+// 	}
+// 	else if("addRule" in sheet) {
+// 		sheet.addRule(selector, rules, index);
+// 	}
+// }
+
 
