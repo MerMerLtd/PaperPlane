@@ -372,7 +372,7 @@ class LFS extends Bot {
     let result = {};
     if(job) {
       const baseSlicePath = fid ?
-        `letter/${lid}/upload/${fid}/` :
+        `/letter/${lid}/upload/${fid}/` :
         rootHash ? 
           `/file/${rootHash}/` :
           '';
