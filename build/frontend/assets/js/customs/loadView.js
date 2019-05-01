@@ -779,7 +779,7 @@ const renderDownloadFiles = async availibleFiles => {
             const opts = {
                 method: "GET",
                 //  url: `/letter/${inputKey}/`
-                url: `/letter/${letter}/upload/${file}`,
+                url: `${file}`,
             }
             try{
                 return res = await makeRequest(opts);

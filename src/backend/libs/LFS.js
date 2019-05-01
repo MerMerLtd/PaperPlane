@@ -221,7 +221,7 @@ class LFS extends Bot {
       host: this.config.api.url,
       pathname: `/letter/${letter.lid}/upload/`
     });
-    return letter.toJSON({ link });
+    return letter.toJSON({ link: `/letter/${letter.lid}/upload/` });
   }
   async getLetter({ lid }) {
     const letter = this.findLetter({ lid });
@@ -378,6 +378,7 @@ class LFS extends Bot {
           '';
       result = job.toJSON();
       result.slices = result.slices.map((v) => {
+        return `${baseSlicePath}${v}`;
         return url.format({
           protocol: ':',
           slashes: true,
