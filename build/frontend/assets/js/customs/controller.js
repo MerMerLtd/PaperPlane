@@ -546,28 +546,24 @@ if (window.File && window.FileReader && window.FileList && window.Blob) {
     alert('The File APIs are not fully supported in this browser.');
 }
 
-const checkValidity = inputKey => {
-    // 1. if elements.inputKey.value is numbers || 1.2.1 if elements.inputKey.value is string (can be link)
-    elements.inputKey.value = "";
+let letter;
 
-    const regExp = new RegExp(/^\d+$/);
+const initialLetter = async () => {
+    let err, data;
 
-    if(!regExp.test(inputKey)){
-        // 如果不是數字
-        // case1: 作為網址打開 www.drophere.io/#123456
-        // case2: 直接返回
-        // return false;
-    };
-    if(!regExp.test(inputKey) || inputKey.length !== 6){
-        elements.inputCard.classList.add("shake");
-        setTimeout(() => elements.inputCard.classList.remove("shake"), 1000);
-        return false;
-    };
+    [err, data] = await to(makeRequest({
+        method: "POST",
+        url: "/letter",
+    }));
 
-    renderDownloadZone(inputKey);
-    return false;
-    // return inputKey;
+    if (err) {
+        console.trace(err)
+    } else {
+        letter = data.lid;
+        console.log("letter", letter);
+    }
 }
+initialLetter();
 
 const fetchAvailableFid = async letter => {
     let err, res;
@@ -707,8 +703,25 @@ const toggleProgressIcon = target => { // ?
 
 const downloadQueue = [];
 
+const addDownloadQueue = data => {
+    const i = downloadQueue.findIndex(file => {
+        return file.fid === data.slices[0].split("/")[4]
+    });
+    const prevIndex = downloadQueue[i].slices.length;
+    const currIndex = data.slices.findIndex((path, index) => {
+        // console.log(path, index);
+        if(path.includes("false")) return index;
+        // console.log(downloadQueue, i);
+        downloadQueue[i].slices.push({path, index: prevIndex + index});
+    });
+    console.log(currIndex)
+    if (currIndex !== -1) addDownloadQueue(data);
+    return;
+}
+
 const downloadFiles = async filesId => {
     Promise.all(filesId.map(async fid => {
+        downloadQueue.push({fid: fid.split("/")[4], slices: []});
         const opts = {
             method: "GET",
             // url: `${window.location.href}/upload/${fid}`,
@@ -718,8 +731,7 @@ const downloadFiles = async filesId => {
         [err, data] = await to(makeRequest(opts));
         if(err) throw {err, fid}; //http://www.javascriptkit.com/javatutors/trycatch2.shtml 還沒細看
         if(data){
-            // const 
-            console.log(data)
+            addDownloadQueue(data);
         }
     }))
     .then(res => {
@@ -757,28 +769,28 @@ const renderDownloadZone = async letter => {
     downloadFiles(filesId);
 }
 
-elements.tab2.addEventListener("click",renderInputCard , false); // 要判斷url 決定render inputCard or downloadCard
+const checkValidity = inputKey => {
+    // 1. if elements.inputKey.value is numbers || 1.2.1 if elements.inputKey.value is string (can be link)
+    elements.inputKey.value = "";
 
-elements.btnDownload.addEventListener("click", () => checkValidity(elements.inputKey.value), false);
+    const regExp = new RegExp(/^\d+$/);
 
-let letter;
+    if(!regExp.test(inputKey)){
+        // 如果不是數字
+        // case1: 作為網址打開 www.drophere.io/#123456
+        // case2: 直接返回
+        // return false;
+    };
+    if(!regExp.test(inputKey) || inputKey.length !== 6){
+        elements.inputCard.classList.add("shake");
+        setTimeout(() => elements.inputCard.classList.remove("shake"), 1000);
+        return false;
+    };
 
-const initialLetter = async () => {
-    let err, data;
-
-    [err, data] = await to(makeRequest({
-        method: "POST",
-        url: "/letter",
-    }));
-
-    if (err) {
-        console.trace(err)
-    } else {
-        letter = data.lid;
-        console.log("letter", letter);
-    }
+    renderDownloadZone(inputKey);
+    return false;
+    // return inputKey;
 }
-initialLetter();
 
 const checkUrl = () => {
     const l = window.location;
@@ -789,6 +801,14 @@ const checkUrl = () => {
 }
 
 checkUrl();
+
+
+
+elements.tab2.addEventListener("click",renderInputCard , false); // 要判斷url 決定render inputCard or downloadCard
+
+elements.btnDownload.addEventListener("click", () => checkValidity(elements.inputKey.value), false);
+
+
 
 // })()
 
