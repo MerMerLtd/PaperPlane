@@ -609,9 +609,10 @@ elements = {
 }
 
 const renderInputCard = () => {
-    console.log(letter); // ?? for testing
+    // console.log(letter); // ?? for testing
     if(window.location.hash){ // ??
-        renderDownloadCard();
+        elements.downloadList.innerText = "";
+        checkUrl();
         return;
     }
     elements.inputCard.classList.add("active");
@@ -710,7 +711,7 @@ const fetchAvailableFid = async letter => {
 }
 
 const renderDownloadFile = file => {
-    console.log(file);
+    // console.log(file);
     const markup = `
     <div class="file" data-fid="${file.fid}">
         <div class="file-icon">
@@ -734,7 +735,7 @@ const renderDownloadFile = file => {
         </div>
     
         <div class="file-name">${file.fileName}</div>
-        <div class="file-size">${formatFileSize(file.size)}</div>
+        <div class="file-size">${formatFileSize(file.fileSize)}</div>
     </div>
 
     <!-- <p class="file-name">螢幕快照 2019-03-19 上午9.04.16.png</p> -->
@@ -775,11 +776,11 @@ const renderDownloadFiles = async availibleFiles => {
         //         renderInputCard();
         //     }, 3000);
     }else{
-        Promise.all(availibleFiles.map(async file => {
+        Promise.all(availibleFiles.map(async fid => {
             const opts = {
                 method: "GET",
                 //  url: `/letter/${inputKey}/`
-                url: `/letter/${letter}/upload/${file}`,
+                url: `${fid}`,
             }
             try{
                 return res = await makeRequest(opts);
@@ -793,46 +794,6 @@ const renderDownloadFiles = async availibleFiles => {
         })
     }
 }
-
-
-const renderDownloadZone = async letter => {
-
-    renderDownloadCard();
-    // 2.2 render loader 
-    renderLoader(elements.downloadCard);
-  
-    // 2.3 fetch data 👉 use elements.inputKey.value 跟backend要資料
-    const filesId = await fetchAvailableFid(letter);
-
-    // 2.3.1 如果沒有要到，重新輸入inputKey
-    if(!filesId){
-        // ?? render custom alert downloadKey || inputKey is invalid
-        removeLoader(elements.downloadCard);
-        window.location.hash = ""; //// window.location = window.location.origin;
-        renderInputCard();
-        return false;
-    };
-
-    console.log("renderDownloadFiles", filesId);
-
-    // 2.3.2 如果有要到，cleanLoader 
-    removeLoader(elements.downloadCard);
-    // 3 renderDownloadFiles
-    window.location.hash = letter;
-
-    renderDownloadFiles(filesId);
-}
-
-elements.btnDownload.addEventListener("click", () => checkValidity(elements.inputKey.value), false);
-
-
-elements.tab2.addEventListener("click",renderInputCard , false); // 要判斷url 決定render inputCard or downloadCard
-
-
-// })()
-
-
-
 
 // deg: 0 ~ 360;
 // progress: 0 ~ 1;
@@ -864,6 +825,62 @@ const toggleProgressIcon = target => { // ?
     elements.coverContinue.classList.toggle("u-hidden");
     elements.coverPause.classList.toggle("u-hidden");
 }
+const downloadQueue = []
+const downloadFiles = async filesId => {
+    Promise.all(filesId.map(async fid => {
+        const opts = {
+            method: "GET",
+            // url: `${window.location.href}/upload/${fid}`,
+            url: `/letter/${letter}/upload/${fid}`,
+        }
+        let err, data;
+        [err, data] = to(makeRequest(opts));
+        if(err) throw {err, fid}; //http://www.javascriptkit.com/javatutors/trycatch2.shtml 還沒細看
+        if(data){
+            // const 
+        }
+    }))
+    .then(res => res.map(file => {
+
+    }));
+}
+
+
+const renderDownloadZone = async letter => {
+
+    renderDownloadCard();
+    // 2.2 render loader 
+    renderLoader(elements.downloadCard);
+  
+    // 2.3 fetch data 👉 use elements.inputKey.value 跟backend要資料
+    const filesId = await fetchAvailableFid(letter);
+
+    // 2.3.1 如果沒有要到，重新輸入inputKey
+    if(!filesId){
+        // ?? render custom alert downloadKey || inputKey is invalid
+        removeLoader(elements.downloadCard);
+        window.location.hash = ""; //// window.location = window.location.origin;
+        renderInputCard();
+        return false;
+    };
+
+    console.log("renderDownloadFiles", filesId);
+
+    // 2.3.2 如果有要到，cleanLoader 
+    removeLoader(elements.downloadCard);
+    // 3 renderDownloadFiles
+    window.location.hash = letter;
+
+    renderDownloadFiles(filesId);
+    downloadFiles(filesId);
+}
+
+elements.tab2.addEventListener("click",renderInputCard , false); // 要判斷url 決定render inputCard or downloadCard
+
+elements.btnDownload.addEventListener("click", () => checkValidity(elements.inputKey.value), false);
+
+
+// })()
 
 // // https://davidwalsh.name/add-rules-stylesheets
 // const addCSSRule = (sheet, selector, rules, index = 0) => {

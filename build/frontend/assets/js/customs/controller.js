@@ -1,43 +1,42 @@
-
 // https://blog.grossman.io/how-to-write-async-await-without-try-catch-blocks-in-javascript/
 const to = promise => {
     return promise.then(data => {
-       return [null, data];
-    })
-    .catch(err => [err, null]);
- }
+            return [null, data];
+        })
+        .catch(err => [err, null]);
+}
 
- // polyfill for Element.closest from MDN
+// polyfill for Element.closest from MDN
 if (!Element.prototype.matches)
-Element.prototype.matches = Element.prototype.msMatchesSelector ||
-                            Element.prototype.webkitMatchesSelector;
+    Element.prototype.matches = Element.prototype.msMatchesSelector ||
+    Element.prototype.webkitMatchesSelector;
 
 if (!Element.prototype.closest)
-Element.prototype.closest = function(s) {
-    var el = this;
-    if (!document.documentElement.contains(el)) return null;
-    do {
-        if (el.matches(s)) return el;
-        el = el.parentElement;
-    } while (el !== null);
-    return null;
-};
+    Element.prototype.closest = function (s) {
+        var el = this;
+        if (!document.documentElement.contains(el)) return null;
+        do {
+            if (el.matches(s)) return el;
+            el = el.parentElement;
+        } while (el !== null);
+        return null;
+    };
 
 // =============================================================
 // base
 // XHR
-const maxConnection = Infinity; 
+const maxConnection = Infinity;
 const maxRetry = 3;
 let connection = 0;
 let queue = [];
 
 
-const closeConnection = ()  => {
+const closeConnection = () => {
     connection--;
 
-    if(queue.length > 0 && connection < maxConnection){
+    if (queue.length > 0 && connection < maxConnection) {
         let next = queue.pop();
-        if(typeof next === "function"){
+        if (typeof next === "function") {
             next();
         }
     }
@@ -47,20 +46,20 @@ const closeConnection = ()  => {
 
 const makeRequest = opts => {
     // 工作排程 && 重傳
-    if(connection >= maxConnection){
+    if (connection >= maxConnection) {
         queue.push(opts); // ??
-    }else{
+    } else {
         connection++;
         const xhr = new XMLHttpRequest();
         return new Promise((resolve, reject) => {
             xhr.onreadystatechange = () => {
                 // only run if the request is complete
-                if(xhr.readyState !== 4) return;
-                if(xhr.status >=200 && xhr.status < 300){
+                if (xhr.readyState !== 4) return;
+                if (xhr.status >= 200 && xhr.status < 300) {
                     // If successful
                     closeConnection();
                     resolve(JSON.parse(xhr.responseText));
-                }else{
+                } else {
                     // If false                    
                     closeConnection();
                     reject({
@@ -70,11 +69,11 @@ const makeRequest = opts => {
             }
             // Setup HTTP request
             xhr.open(opts.method || "GET", opts.url, true);
-            if(opts.headers){
+            if (opts.headers) {
                 Object.keys(opts.headers).forEach(key => xhr.setRequestHeader(key, opts.headers[key]));
             }
             // Send the request
-            if(opts.contentType == 'application/json') {
+            if (opts.contentType == 'application/json') {
                 xhr.setRequestHeader('content-type', 'application/json');
                 xhr.send(JSON.stringify(opts.payload));
             } else {
@@ -88,11 +87,12 @@ const makeRequest = opts => {
 // Views
 let isCurrentIn = false;
 
-elements = {...elements,
+elements = {
+    ...elements,
     alertSuccess: document.querySelector(".alert"),
-    
+
     body: document.querySelector("body"),
-   
+
     page: document.querySelector(".login-page"),
 
 }
@@ -121,24 +121,22 @@ const removeHintLocation = () => {
     // elements.fileList.classList.remove("invisible");
 }
 
-
-
 // drag file in the pageHeader
 const handleDragInPageHeader = evt => {
-    if(!isCurrentIn){
+    if (!isCurrentIn) {
         isCurrentIn = true;
         hintLocation();
     }
-    if(evt.target.matches(".box__dropzone, .box__dropzone * " || state.fileObj.files.length)){
+    if (evt.target.matches(".box__dropzone, .box__dropzone * " || state.fileObj.files.length)) {
         removeHintLocation();
         handleInFileList();
-    }else{
+    } else {
         hintLocation();
         handleOutFileList();
     }
 }
 const handleDragoutPageHeader = evt => {
-    if(isCurrentIn){
+    if (isCurrentIn) {
         isCurrentIn = false;
         removeHintLocation();
     }
@@ -169,9 +167,9 @@ const initialLetter = async () => {
         url: "/letter",
     }));
 
-    if(err){
+    if (err) {
         console.trace(err)
-    }else{
+    } else {
         letter = data.lid;
         console.log("letter", letter);
     }
@@ -180,8 +178,8 @@ initialLetter();
 
 const checkUrl = () => {
     const l = window.location;
-    if(!l.hash || checkValidity(l.href.slice(l.href.indexOf("#")+1))) return false;
-    
+    if (!l.hash || checkValidity(l.href.slice(l.href.indexOf("#") + 1))) return false;
+
     renderTabView2();
     return false;
 }
@@ -201,8 +199,8 @@ const noop = () => {}
 
 const slice = (file, start, end) => {
     let slice = file.mozSlice ? file.mozSlice :
-                file.webkitSlice ? file.webkitSlice :
-                file.slice ? file.slice : noop;
+        file.webkitSlice ? file.webkitSlice :
+        file.slice ? file.slice : noop;
 
     return slice.bind(file)(start, end);
 }
@@ -212,11 +210,11 @@ const genUi8A = num => {
     s = s.length % 2 === 1 ? "0".concat(s) : s; // 變成偶數長度
 
     const genArray = (s, i = 0, a = []) => {
-        if(i < s.length){
-            a.push(parseInt(s.slice(i, i+2), 16));
+        if (i < s.length) {
+            a.push(parseInt(s.slice(i, i + 2), 16));
             i += 2;
             return genArray(s, i, a);
-        }else{
+        } else {
             return a;
         }
     }
@@ -224,11 +222,11 @@ const genUi8A = num => {
 
     const arr = genArray(s);
 
-    if(arr.length <= 8){
+    if (arr.length <= 8) {
         let ui8a = new Uint8Array(8);
         ui8a.set(arr, 8 - arr.length); //  ui8a.set(new Uint8Array(arr), 8 - arr.length)
-        return ui8a; 
-    }else{
+        return ui8a;
+    } else {
         return false;
     }
 }
@@ -253,13 +251,13 @@ const getMeta = file => {
     let size = file.size;
     let sliceCount, sliceSize;
 
-    if(size > defaultSize * minSliceCount){
-        sliceCount = Math.ceil(size/defaultSize);
+    if (size > defaultSize * minSliceCount) {
+        sliceCount = Math.ceil(size / defaultSize);
         sliceSize = defaultSize;
-    }else if (size > minSize * minSliceCount){
+    } else if (size > minSize * minSliceCount) {
         sliceCount = minSliceCount;
-        sliceSize = Math.ceil(size/sliceCount);
-    }else{
+        sliceSize = Math.ceil(size / sliceCount);
+    } else {
         sliceCount = 1;
         sliceSize = size;
     }
@@ -289,11 +287,11 @@ const releaseSlave = slave => {
     slave.type === "Worker" ? slave.theSlave.terminate() : slave.theSlave.abort();
     slave.slaves--;
 
-    if(slave.workload.length > 0 && slave.slaves < slave.maxSlave){
+    if (slave.workload.length > 0 && slave.slaves < slave.maxSlave) {
         let next = slave.workload.pop();
 
-        if(typeof next === "function"){
-            next(); 
+        if (typeof next === "function") {
+            next();
         }
     }
     return true;
@@ -304,19 +302,19 @@ const sha1Queue = [];
 let workers = 0;
 
 const SHA1 = target => {
-    
-    if(workers >= maxWorker){
+
+    if (workers >= maxWorker) {
         sha1Queue.push(SHA1.bind(this, target)); // 其實沒有用到多個worker 因為 await 每個hashshard？
-    }else{
-        const worker = new Worker("../assets/js/plugins/rusha.min.js"); 
+    } else {
+        const worker = new Worker("../assets/js/plugins/rusha.min.js");
         workers++;
         return new Promise((resolve, reject) => {
             worker.onmessage = evt => {
                 releaseSlave({
-                    type: "Worker", 
-                    theSlave: worker, 
-                    slaves: workers, 
-                    maxSlave: maxWorker, 
+                    type: "Worker",
+                    theSlave: worker,
+                    slaves: workers,
+                    maxSlave: maxWorker,
                     workload: sha1Queue
                 });
                 resolve(evt.data);
@@ -324,15 +322,18 @@ const SHA1 = target => {
             worker.onerror = evt => {
                 // console.log(evt)
                 releaseSlave({
-                    type: "Worker", 
-                    theSlave: worker, 
-                    slaves: workers, 
-                    maxSlave: maxWorker, 
+                    type: "Worker",
+                    theSlave: worker,
+                    slaves: workers,
+                    maxSlave: maxWorker,
                     workload: sha1Queue
                 });
                 reject(evt.message);
             }
-            worker.postMessage({id: target.fid, data: target.blob});   
+            worker.postMessage({
+                id: target.fid,
+                data: target.blob
+            });
         })
     }
 }
@@ -342,31 +343,33 @@ const blobQueue = [];
 let fileReaders = 0;
 
 const readBlob = blob => {
-    if(fileReaders >= maxFileReader){
-        blobQueue.push(readBlob.bind(this, blob)); 
-    }else{
+    if (fileReaders >= maxFileReader) {
+        blobQueue.push(readBlob.bind(this, blob));
+    } else {
         const fileReader = new FileReader();
         fileReaders++;
         return new Promise((resolve, reject) => {
-            fileReader.onload = evt =>  {
+            fileReader.onload = evt => {
                 releaseSlave({
-                    type: "FileReader", 
-                    theSlave: fileReader, 
-                    slaves: fileReaders, 
-                    maxSlave: maxFileReader, 
+                    type: "FileReader",
+                    theSlave: fileReader,
+                    slaves: fileReaders,
+                    maxSlave: maxFileReader,
                     workload: blobQueue,
                 });
                 resolve(evt.target.result);
             };
             fileReader.onerror = err => {
                 releaseSlave({
-                    type: "FileReader", 
-                    theSlave: fileReader, 
-                    slaves: fileReaders, 
-                    maxSlave: maxFileReader, 
+                    type: "FileReader",
+                    theSlave: fileReader,
+                    slaves: fileReaders,
+                    maxSlave: maxFileReader,
                     workload: blobQueue,
                 });
-                reject({err});
+                reject({
+                    err
+                });
             }
             fileReader.readAsArrayBuffer(blob);
         });
@@ -384,34 +387,40 @@ const getHashShard = async parseFile => {
     const start = index * sliceSize;
 
     let end;
-    if((index + 1) * sliceSize > size){
+    if ((index + 1) * sliceSize > size) {
         end = size;
-    }else{
+    } else {
         end = (index + 1) * sliceSize;
     }
 
-    const shardInfo = genShardInfo(count, index);  // get shardInfo
+    const shardInfo = genShardInfo(count, index); // get shardInfo
     let blob = slice(file, start, end); // 取得file第i個blob
     const blobBuffer = await readBlob(blob);
-    blob = new Uint8Array(blobBuffer);
-    const shard = genMergeUi8A(shardInfo, blob);
-    const target = {fid, blob: new Blob([shard])};
-
+    modifiedBlob = new Uint8Array(blobBuffer);
+    const shard = genMergeUi8A(shardInfo, modifiedBlob);
+    const target = {
+        fid,
+        blob,
+        // blob: new Blob([shard])
+    };
+    console.log(blob, target.blob);
     return new Promise((resolve, reject) => {
         SHA1(target)
-        .then(
-            res => {
-                console.log(shardInfo, fid);
-                parseFile.sliceIndex += 1 ; //紀錄進度
-                return resolve({
-                    path: `/letter/${letter}/upload/${fid}/${res.hash}?totalSlice=${count}&sliceIndex=${index}`,
-                    blob: new Blob([shard]),
+            .then(
+                res => {
+                    console.log(shardInfo, fid);
+                    parseFile.sliceIndex += 1; //紀錄進度
+                    return resolve({
+                        path: `/letter/${letter}/upload/${fid}/${res.hash}?totalSlice=${count}&sliceIndex=${index}`,
+                        blob, // blob: new Blob([shard]),
+                    })
+                }
+            )
+            .catch(
+                err => reject({
+                    err
                 })
-            }
-        )
-        .catch(
-            err => reject({err})
-        )
+            )
     });
 }
 
@@ -432,19 +441,16 @@ const popUploadQueue = target => {
 }
 
 const emptyUploadQueue = () => {
-    if(uploadQueue.length){
+    if (uploadQueue.length) {
         uploadQueue.pop();
-        return  emptyUploadQueue();
+        return emptyUploadQueue();
     }
     return uploadQueue;
 }
 
-
-
-
 const uploadShard = async target => {
-    console.log("uploadShard/ isPaused",target.fid ,target.isPaused)
-    if(target.isPaused || target.sliceIndex === target.sliceCount ) return;
+    console.log("uploadShard/ isPaused", target.fid, target.isPaused)
+    if (target.isPaused || target.sliceIndex === target.sliceCount) return;
 
     let err, data, hashShard;
 
@@ -452,8 +458,8 @@ const uploadShard = async target => {
     [err, hashShard] = await to(getHashShard(target)); // target.sliceIndex will plus 1 
     //hashShard = {path: String, blob: Blob}
 
-    if(!hashShard){
-        throw err;  // ?? 寫個方法呈現 err 到畫面上
+    if (!hashShard) {
+        throw err; // ?? 寫個方法呈現 err 到畫面上
     }
 
     // 2. send it to backend
@@ -464,39 +470,36 @@ const uploadShard = async target => {
         url: hashShard.path,
         payload: formData,
     }));
-   
 
-    if(err){
+
+    if (err) {
         target.retry = target.retry ? (target.retry + 1) : 1
-        if(target.retry <= maxRetry) { 
+        if (target.retry <= maxRetry) {
             uploadShard(target);
             return false;
-        }
-        else {
+        } else {
             throw new Error(`can not upload shard: ${({
                 file: target.file,
                 index: target.sliceIndex,
             })}`);
         }
-    }else{
+    } else {
         target.sliceIndex < target.sliceCount ? uploadShard(target) : null; // ?? popUploadQueue(target); 需要嗎？
         isSend ? showTotalProgress() : showFileProgress(target);
     }
 }
 
 const uploadFiles = () => {
-    if(!uploadQueue || uploadQueue.length === 0) return;
+    if (!uploadQueue || uploadQueue.length === 0) return;
 
-    uploadQueue.forEach(target =>{
-        if(connection >= maxConnection) {  
+    uploadQueue.forEach(target => {
+        if (connection >= maxConnection) {
             queue.push(uploadShard.bind(this, target));
-            return false; 
+            return false;
         }
         uploadShard(target)
     });
 }
-
-
 
 const handleFilesSelected = evt => {
     // （view: 提示訊息們）
@@ -505,52 +508,56 @@ const handleFilesSelected = evt => {
 
     // 1. 解析檔案
     // create file object
-    if(!state.fileObj) state.fileObj = Object.create(File);
+    if (!state.fileObj) state.fileObj = Object.create(File);
     // files is a FileList of File objects change it to Array.
     let files = Array.from(evt.target.files || evt.dataTransfer.files);
 
     // 2. 提供 (fileName && contentType && fileSize ) => fid
     Promise.all(files.map(async file => {
-        const f = getMeta(file);
-        const opts = {
-            contentType: 'application/json',
-            method: "POST",
-            url: `/letter/${letter}/upload`,
-            payload: {
-                fileName: f.name,
-                fileSize: f.size,
-                totalSlice: f.sliceCount,
-                contentType: f.type,
-            },
-        }
-        console.log(file);
-        // return each result make of new Array
-        try {
-            const res = await makeRequest(opts);
-            f.fid = res.fid; //！！！！object.create 的 object 不能直接用 ...operation
-            return f;
-            
-        }
-        catch (error) {
-            // 失敗： 錯誤訊息 及 file obj
-            return Promise.resolve({ errorMessage: "API BAD GATEWAY", error, f });
-        } 
-    }))
-    .then(async resultArray => {// resultArray is array of files with fid provided by backend
+        // console.log(file)
+            const f = getMeta(file);
+            const opts = {
+                contentType: 'application/json',
+                method: "POST",
+                url: `/letter/${letter}/upload`,
+                payload: {
+                    fileName: f.name,
+                    fileSize: f.size,
+                    totalSlice: f.sliceCount,
+                    contentType: f.type,
+                },
+            }
+            console.log(file);
+            // return each result make of new Array
+            try {
+                const res = await makeRequest(opts);
+                f.fid = res.fid; //！！！！object.create 的 object 不能直接用 ...operation
+                return f;
 
-        // 3. 把資料存到 state 裡 =>state.fileObj.files
-        state.fileObj.files = state.fileObj.files.concat(files); // FileList object.
-        // 4. render 畫面
-        renderFiles(resultArray);
+            } catch (error) {
+                // 失敗： 錯誤訊息 及 file obj
+                return Promise.resolve({
+                    errorMessage: "API BAD GATEWAY",
+                    error,
+                    f
+                });
+            }
+        }))
+        .then(async resultArray => { // resultArray is array of files with fid provided by backend
 
-        if (resultArray.length){
-            // add ParsedFiles into the uploadQueue
-            resultArray.forEach(file => addUploadQueue(file));
-            uploadFiles();
-        }
-        
-        // 7. 上傳失敗 3s 後 重新傳送
-    });  
+            // 3. 把資料存到 state 裡 =>state.fileObj.files
+            state.fileObj.files = state.fileObj.files.concat(files); // FileList object.
+            // 4. render 畫面
+            renderFiles(resultArray);
+
+            if (resultArray.length) {
+                // add ParsedFiles into the uploadQueue
+                resultArray.forEach(file => addUploadQueue(file));
+                uploadFiles();
+            }
+
+            // 7. 上傳失敗 3s 後 重新傳送
+        });
 }
 
 const send = evt => {
@@ -562,18 +569,10 @@ const send = evt => {
     elements.sendingCard.addEventListener("click", evt => sendingViewControl(evt));
 
 }
-
-const downloadFiles = evt => {
-    // ??
-}
-
 // Check for the various File API support.
 if (window.File && window.FileReader && window.FileList && window.Blob) {
     // Great success! All the File APIs are supported.
 } else {
     alert('The File APIs are not fully supported in this browser.');
 }
-
-
-
 
