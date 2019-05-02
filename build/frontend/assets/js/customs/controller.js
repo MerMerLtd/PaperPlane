@@ -626,7 +626,9 @@ const fetchFile = async (filePath, pointer = 0) => {
 
         if(data.progress === 1 || newPointer === -1) return data;
 
-        setTimeout(fetchFile(filePath, newPointer), delay);
+        setTimeout(() => {
+          fetchFile(filePath, newPointer);
+        }, delay);
 
         return data;
     }
