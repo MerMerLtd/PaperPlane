@@ -152,6 +152,23 @@ const File = {
 }
 // =============================================================
 // Controller
+let letter;
+
+const initialLetter = async () => {
+    let err, data;
+    [err, data] = await to(makeRequest({
+        method: "POST",
+        url: "/letter",
+    }));
+    if (err) {
+        console.trace(err)
+    } else {
+        letter = data.lid;
+        console.log("letter", letter);
+    }
+}
+initialLetter();
+
 const state = {};
 
 const minSliceCount = 4;
@@ -266,6 +283,7 @@ const releaseSlave = slave => {
     }
     return true;
 }
+
 
 const maxWorker = Infinity;
 const sha1Queue = [];
@@ -546,44 +564,94 @@ if (window.File && window.FileReader && window.FileList && window.Blob) {
     alert('The File APIs are not fully supported in this browser.');
 }
 
-let letter;
+// download
+const downloadQueue = [];
 
-const initialLetter = async () => {
+const fetchFilePath = async letter => {
     let err, data;
-
     [err, data] = await to(makeRequest({
-        method: "POST",
-        url: "/letter",
-    }));
-
-    if (err) {
-        console.trace(err)
-    } else {
-        letter = data.lid;
-        console.log("letter", letter);
-    }
-}
-initialLetter();
-
-const fetchAvailableFid = async letter => {
-    let err, res;
-
-    [err, res] = await to(makeRequest({
         method: "GET",
         url: `/letter/${letter}/`, // 絕對正確的 url: `/letter/${letter}/`
     }));
 
-    if(err || res.lid !== letter){
+    if(err || data.lid !== letter){
         //1.1.3 if letter is invalid, 要重新顯示input 👈 不是寫在這裡
         console.log(err || letter);
         // renderInputCard();
         return false;
     }
-
-    if(res){
-        return res.files;
+    if(data){
+        // console.log(data) 
+        // {lid: "859070", files: Array(1)}
+        // files: ["/letter/859070/upload/JOB0R2BJ3ggcRpRG"]
+        // lid: "859070"
+        return data.files;
     }
 }
+
+const addDownloadQueue = (data, index) => {
+    return currIndex = data.slices(index).findIndex((shardPath, i) => {
+        if(shardPath.includes("false")) {console.log(`downloadQueue: ${downloadQueue}, index:${index}, i:${i}, index+i: ${index+i}`); return index+i;}
+            // return index+i;
+        // if(i >= index)
+        downloadQueue.push({shardPath, i})
+    });
+    
+    // {{fid: "/letter/260459/upload/JOBILzcHQMzhAAxL", slices:[...]},}
+    // const i = downloadQueue.findIndex(file => {
+    //     return data.includes(`${file.fid}`);
+    // });
+    // const prevIndex = downloadQueue[i].slices.length;
+    // const currIndex = data.slices.slice(prevIndex).findIndex((path, index) => {
+    //     // console.log(path, index);
+    //     if(path.includes("false")) 
+    //         return index;
+    //     // console.log(downloadQueue, i);
+    //     downloadQueue[i].slices.push({path, index: prevIndex + index});
+    // });
+    // if (currIndex !== -1) addDownloadQueue(data);
+    // return;
+}
+
+let i = 1;// ?? test
+let delay = 5000;
+
+const fetchFile = async (filePath, index = 0) => {
+    // console.log("fetchFile", filePath, index, i++); ///letter/505404/upload/JOB75mvKpyhcTerX 0 1
+    const opts = {
+        method: "GET",
+        url: `${filePath}`,
+    }
+    let err, data;
+    [err, data] = await to(makeRequest(opts));
+    if(err) throw {err, filePath}; //http://www.javascriptkit.com/javatutors/trycatch2.shtml 還沒細看
+    if(data){
+        let currIndex = addDownloadQueue(data, index);
+        if(data.progress !== 1){
+            let timerId = setTimeout(fetchFile(filePath, currIndex), delay);
+        }
+
+        return data;
+
+        // console.log(data) 
+        // {fid: "JOBSZn7dzir21Iys", fileName: "test_lg.mov", fileSize: 2704039688, contentType: "video/quicktime", slices: Array(645), …}
+        // contentType: "video/quicktime"
+        // fid: "JOBSZn7dzir21Iys"
+        // fileName: "test_lg.mov"
+        // fileSize: 2704039688
+        // progress: 0.262015503875969
+        // slices: (645) ["/letter/628379/upload/JOBSZn7dzir21Iys/b00557b19172b883ca2a85470d88744543a011d3", "/letter/628379/upload/JOBSZn7dzir21Iys/04f6ee6e6bab53d775f804093bfd264a72781d0c", ...]
+        // totalSlice: 645
+        // waiting: []
+    }
+}
+
+
+//        
+// const downloadFiles = async filesId => {
+//    
+// }
+
 
 const renderDownloadFile = file => {
     // console.log(file);
@@ -620,8 +688,8 @@ const renderDownloadFile = file => {
     elements.downloadList.insertAdjacentHTML("beforeend", markup)
 }
 
-const renderDownloadFiles = async availibleFiles => {
-    if(!availibleFiles.length){
+const renderDownloadFiles = async filePaths => {
+    if(!filePaths.length){
         // ?? test
         elements.downloadList.insertAdjacentHTML("afterbegin", `
         <div style="text-align: center;">
@@ -651,24 +719,14 @@ const renderDownloadFiles = async availibleFiles => {
         //         renderInputCard();
         //     }, 3000);
     }else{
-        Promise.all(availibleFiles.map(async fid => {
-            const opts = {
-                method: "GET",
-                //  url: `/letter/${inputKey}/`
-                url: `${fid}`,
-            }
-            try{
-                return res = await makeRequest(opts);
-            }catch(err){
-                return Promise.resolve({ errorMessage: "API BAD GATEWAY", error, file });
-            }
-        }))
-        .then(resultArray => {
-    
-            resultArray.forEach(result => renderDownloadFile(result));
+        Promise.all(filePaths.map(async filePath => fetchFile(filePath)))
+        .then(files => {
+            console.log(files);
+            files.forEach(file => renderDownloadFile(file));
         })
     }
 }
+
 
 // deg: 0 ~ 360;
 // progress: 0 ~ 1;
@@ -701,44 +759,6 @@ const toggleProgressIcon = target => { // ?
     elements.coverPause.classList.toggle("u-hidden");
 }
 
-const downloadQueue = [];
-
-const addDownloadQueue = data => {
-    const i = downloadQueue.findIndex(file => {
-        return file.fid === data.slices[0].split("/")[4]
-    });
-    const prevIndex = downloadQueue[i].slices.length;
-    const currIndex = data.slices.findIndex((path, index) => {
-        // console.log(path, index);
-        if(path.includes("false")) return index;
-        // console.log(downloadQueue, i);
-        downloadQueue[i].slices.push({path, index: prevIndex + index});
-    });
-    console.log(currIndex)
-    if (currIndex !== -1) addDownloadQueue(data);
-    return;
-}
-
-const downloadFiles = async filesId => {
-    Promise.all(filesId.map(async fid => {
-        downloadQueue.push({fid: fid.split("/")[4], slices: []});
-        const opts = {
-            method: "GET",
-            // url: `${window.location.href}/upload/${fid}`,
-            url: `${fid}`,
-        }
-        let err, data;
-        [err, data] = await to(makeRequest(opts));
-        if(err) throw {err, fid}; //http://www.javascriptkit.com/javatutors/trycatch2.shtml 還沒細看
-        if(data){
-            addDownloadQueue(data);
-        }
-    }))
-    .then(res => {
-        console.log(res);
-    });
-}
-
 const renderDownloadZone = async letter => {
 
     renderDownloadCard();
@@ -746,10 +766,10 @@ const renderDownloadZone = async letter => {
     renderLoader(elements.downloadCard);
   
     // 2.3 fetch data 👉 use elements.inputKey.value 跟backend要資料
-    const filesId = await fetchAvailableFid(letter);
+    const filePaths = await fetchFilePath(letter);
 
     // 2.3.1 如果沒有要到，重新輸入inputKey
-    if(!filesId){
+    if(!filePaths){
         // ?? render custom alert downloadKey || inputKey is invalid
         removeLoader(elements.downloadCard);
         window.location.hash = ""; //// window.location = window.location.origin;
@@ -757,16 +777,14 @@ const renderDownloadZone = async letter => {
         return false;
     };
 
-    console.log("renderDownloadFiles", filesId);
-
-    // 2.3.2 如果有要到，cleanLoader 
+    // 2.3.2 如果有要到filePaths，cleanLoader 
+    // console.log(filePaths); //["/letter/505404/upload/JOB75mvKpyhcTerX", ...]
     removeLoader(elements.downloadCard);
     // 3 renderDownloadFiles
     window.location.hash = letter;
+    renderDownloadFiles(filePaths);
 
-    renderDownloadFiles(filesId);
-
-    downloadFiles(filesId);
+    // downloadFiles(filesId);
 }
 
 const checkValidity = inputKey => {
