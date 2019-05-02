@@ -729,12 +729,10 @@ const ecFiles = {}; //++ 待處理檔案清單
 // 基礎下載功能
 const ecRequest = ({ path, method, responseType, data }) => {
   const XMLReq = new XMLHttpRequest();
-  if(responseType) {
-    XMLReq.responseType = responseType;
-  }
+  XMLReq.responseType = "arraybuffer";
   return new Promise((resolve, reject) => {
     XMLReq.onload = () => {
-      resolve(XMLReq.response);
+      resolve(new Uint8Array(XMLReq.response));
     };
     XMLReq.onreadystatechange = (oEvent) => {
       if (XMLReq.readyState === 4) {
