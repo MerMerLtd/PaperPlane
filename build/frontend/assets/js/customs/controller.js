@@ -613,12 +613,13 @@ const fetchFile = async (filePath, pointer = 0) => {
     [err, data] = await to(makeRequest(opts));
     if(err) throw {err, filePath}; //http://www.javascriptkit.com/javatutors/trycatch2.shtml 還沒細看
     if(data){
-        console.log("fetchFile called: "+ i++ + " time", "data.progress: ",data.progress); 
+        ecFiles[data.fid] = new ecFile(data); //++ 把資料塞進 ecFiles
 
+        console.log("fetchFile called: "+ i++ + " time", "data.progress: ",data.progress);
         const list = data.slices.slice(pointer);
         const newPointer = pointer + list.findIndex((shardPath, i) => {
             if(shardPath.includes("false")) return true;
-            downloadQueue.push({shardPath, index: pointer+i})
+            downloadQueue.push({shardPath, index: pointer+i, fid: data.fid})
             console.log(pointer+i, "0~644");
         });
 
@@ -626,7 +627,9 @@ const fetchFile = async (filePath, pointer = 0) => {
 
         if(data.progress === 1 || newPointer === -1) return data;
 
-        setTimeout(fetchFile(filePath, newPointer), delay);
+        setTimeout(() => {
+          fetchFile(filePath, newPointer, data);
+        }, delay);
 
         return data;
     }
@@ -714,9 +717,120 @@ const renderDownloadFiles = async filePaths => {
             console.log(files);
             files.forEach(file => renderDownloadFile(file));
         })
+        .then(() => {
+          startDownload(); //++ 開始下載囉
+        })
     }
 }
 
+/* 下載與合併檔案示範版本 */
+const ecFiles = {}; //++ 待處理檔案清單
+
+// 基礎下載功能
+const ecRequest = ({ path, method, responseType, data }) => {
+  const XMLReq = new XMLHttpRequest();
+  if(responseType) {
+    XMLReq.responseType = responseType;
+  }
+  return new Promise((resolve, reject) => {
+    XMLReq.onload = () => {
+      resolve(XMLReq.response);
+    };
+    XMLReq.onreadystatechange = (oEvent) => {
+      if (XMLReq.readyState === 4) {
+        if(XMLReq.status != 200) {
+          reject(new Error(XMLReq.statusText));
+        }
+      }
+    };
+    XMLReq.open(method, path);
+    XMLReq.send(data);
+  });
+};
+
+// 下載物件
+class ecFile {
+  constructor({ fid, fileName, totalSlice, contentType }) {
+    this.fid = fid;
+    this.fileName = fileName;
+    this.totalSlice = totalSlice;
+    this.contentType = contentType;
+    this.slices = [];
+    this.downloaded = false;
+  }
+  get progress() {
+    // 計算下載進度
+    return this.slices.filter((v) => v != undefined).length / this.totalSlice;
+  }
+  addSlice(slice, index) {
+    this.slices[index] = slice;
+    console.log(this.progress);
+    // 如果下載進度 100% 則觸發下載事件
+    if(this.progress == 1 && !this.downloaded) {
+      this.download();
+    }
+  }
+  download() {
+    // 合併檔案並賦予檔案型別
+    const blob = new Blob(this.slices, { type: this.contentType });
+
+    // 建立檔案物件
+    const url = window.URL.createObjectURL(blob);
+
+    // 建立下載 a Tag 以觸發下載事件
+	const a = document.createElement("a");
+	document.body.appendChild(a);
+	//a.style = "display: none";
+	a.href = url;
+    a.download = this.fileName;
+
+    // 觸發下載
+    a.click();
+    window.URL.revokeObjectURL(url);
+
+    // 移除物件與 a Tag
+    //window.URL.revokeObjectURL(url);
+    //document.body.removeChild(a);
+    //delete a;
+
+    // 標注檔案已下載
+    this.downloaded = true;
+  }
+}
+const downloadJob = (job) => {
+  // 下載碎片
+  return ecRequest({ path: job.shardPath, method: 'GET' })
+  .then((slice) => {
+    // 把碎片放到對應的檔案位置
+    return ecFiles[job.fid].addSlice(slice, job.index);
+  });
+}
+const startDownload = () => {
+  if(downloadQueue.length > 0) {
+    // 取出一個下載任務進行下載
+    const job = downloadQueue.pop();
+    downloadJob(job)
+    .then(
+      () => {
+        // 下載成功了，再下載下一個
+        startDownload();
+      },
+      (e) => {
+        return console.log(e);
+        // 下載失敗了，失敗任務重新排到最尾端，再下載下一個
+        downloadQueue.reverse().push(job);
+        downloadQueue.reverse();
+        startDownload();
+      }
+    )
+  } else {
+    // 沒事做，十秒後再回來看看
+    setTimeout(() => {
+      startDownload();
+    }, 10000);
+  }
+}
+/* 下載與合併檔案示範版本 END */
 
 // deg: 0 ~ 360;
 // progress: 0 ~ 1;
