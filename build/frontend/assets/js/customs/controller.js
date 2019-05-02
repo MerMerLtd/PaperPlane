@@ -589,51 +589,49 @@ const fetchFilePath = async letter => {
     }
 }
 
-const addDownloadQueue = (data, index) => {
-    return currIndex = data.slices(index).findIndex((shardPath, i) => {
-        if(shardPath.includes("false")) {console.log(`downloadQueue: ${downloadQueue}, index:${index}, i:${i}, index+i: ${index+i}`); return index+i;}
-            // return index+i;
-        // if(i >= index)
-        downloadQueue.push({shardPath, i})
-    });
-    
-    // {{fid: "/letter/260459/upload/JOBILzcHQMzhAAxL", slices:[...]},}
-    // const i = downloadQueue.findIndex(file => {
-    //     return data.includes(`${file.fid}`);
-    // });
-    // const prevIndex = downloadQueue[i].slices.length;
-    // const currIndex = data.slices.slice(prevIndex).findIndex((path, index) => {
-    //     // console.log(path, index);
-    //     if(path.includes("false")) 
-    //         return index;
-    //     // console.log(downloadQueue, i);
-    //     downloadQueue[i].slices.push({path, index: prevIndex + index});
-    // });
-    // if (currIndex !== -1) addDownloadQueue(data);
-    // return;
-}
+// const addDownloadQueue = (data, pointer) => {
+//     console.log("addDownloadQueue: ", "pointer: ",pointer, `data.slices[${pointer}]為起點`);
+//     const list = data.slices.slice(pointer);
+//     if(pointer > 0) console.log(data.slices, list);
+//     const newPointer = pointer + list.findIndex((shardPath, i) => {
+//         if(shardPath.includes("false")) {console.log("addDownloadQueue: ", i, pointer, i+pointer); return i}//return (i+pointer);
+//         downloadQueue.push({shardPath, index: pointer+i})
+//     });
+//     console.log("addDownloadQueue: ", "newPointer: ", newPointer, `data.slices[${newPointer}]為下一次起點`);
+//     return newPointer;
+// }
 
 let i = 1;// ?? test
-let delay = 5000;
+let delay = 10000;
 
-const fetchFile = async (filePath, index = 0) => {
-    // console.log("fetchFile", filePath, index, i++); ///letter/505404/upload/JOB75mvKpyhcTerX 0 1
+const fetchFile = async (filePath, pointer = 0) => {
     const opts = {
         method: "GET",
         url: `${filePath}`,
-    }
+    };
     let err, data;
     [err, data] = await to(makeRequest(opts));
     if(err) throw {err, filePath}; //http://www.javascriptkit.com/javatutors/trycatch2.shtml 還沒細看
     if(data){
-        let currIndex = addDownloadQueue(data, index);
-        if(data.progress !== 1){
-            let timerId = setTimeout(fetchFile(filePath, currIndex), delay);
-        }
+        console.log("fetchFile called: "+ i++ + " time", "data.progress: ",data.progress); 
+
+        const list = data.slices.slice(pointer);
+        const newPointer = pointer + list.findIndex((shardPath, i) => {
+            if(shardPath.includes("false")) return true;
+            downloadQueue.push({shardPath, index: pointer+i})
+            console.log(pointer+i, "0~644");
+        });
+
+        console.log(`data.slices[${newPointer}]為下一次起點`);
+
+        if(data.progress === 1 || newPointer === -1) return data;
+
+        setTimeout(fetchFile(filePath, newPointer), delay);
 
         return data;
-
-        // console.log(data) 
+    }
+}
+    // console.log(data) 
         // {fid: "JOBSZn7dzir21Iys", fileName: "test_lg.mov", fileSize: 2704039688, contentType: "video/quicktime", slices: Array(645), …}
         // contentType: "video/quicktime"
         // fid: "JOBSZn7dzir21Iys"
@@ -643,15 +641,7 @@ const fetchFile = async (filePath, index = 0) => {
         // slices: (645) ["/letter/628379/upload/JOBSZn7dzir21Iys/b00557b19172b883ca2a85470d88744543a011d3", "/letter/628379/upload/JOBSZn7dzir21Iys/04f6ee6e6bab53d775f804093bfd264a72781d0c", ...]
         // totalSlice: 645
         // waiting: []
-    }
-}
-
-
-//        
-// const downloadFiles = async filesId => {
-//    
 // }
-
 
 const renderDownloadFile = file => {
     // console.log(file);
