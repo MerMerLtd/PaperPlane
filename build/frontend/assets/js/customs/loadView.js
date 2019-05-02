@@ -9,6 +9,11 @@ let elements = {
     signupCard: document.querySelector(".sign-up"),
     switchSignin: document.querySelector(".switch-signin > span"),
     switchSignup: document.querySelector(".switch-signup > span"),
+    navLoginBtn: document.querySelector("li[data-toggle='modal'] > .btn"),
+    navbarToggle: document.querySelector(".navbar-toggler"),
+    html: document.querySelector("html"),
+    modal: document.querySelector(".modal"),
+    container: document.querySelector(".page-header > .container"),
 }
 
 const switchInOrUp = () => {
@@ -16,8 +21,17 @@ const switchInOrUp = () => {
     elements.signinCard.classList.toggle("u-hidden");
     elements.signupCard.classList.toggle("u-hidden");
 }
+const closeNav = () => {
+    elements.html.classList.remove("nav-open");
+    elements.navbarToggle.classList.remove("toggled");
+    elements.container.classList.add("u-hidden");
+}
+
+elements.modal.addEventListener("click", () => elements.container.classList.remove("u-hidden"), false);
 elements.switchSignup.addEventListener("click", switchInOrUp, false);
 elements.switchSignin.addEventListener("click", switchInOrUp, false);
+elements.navLoginBtn.addEventListener("click", closeNav, false);
+
 
 const renderTabView1 = () => {
     elements.tab1.classList.add("active");

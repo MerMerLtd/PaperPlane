@@ -15258,7 +15258,8 @@ select.selectpicker {
     .dropdown-menu.show .dropdown-item.open + .dropdown-menu.show .dropdown-item.open + .dropdown-menu.show {
       left: -165px !important; }
   .navbar .navbar-collapse .navbar-nav > li.button-container {
-    padding: 15px; }
+    padding: 15px;
+    margin: 30px 0; }
   .carousel .card .card-body {
     max-width: 340px;
     margin: 0 auto;
@@ -16310,7 +16311,8 @@ a:visited {
   .modal .card > .btn-box span {
     color: #7b1fa2;
     font-weight: 500;
-    text-decoration: underline; }
+    text-decoration: underline;
+    cursor: pointer; }
 
 /**
  * Computes a CSS calc function that betweens a value from
