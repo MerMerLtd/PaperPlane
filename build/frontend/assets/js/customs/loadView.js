@@ -27,7 +27,9 @@ const closeNav = () => {
     elements.container.classList.add("u-hidden");
 }
 
-elements.modal.addEventListener("click", () => elements.container.classList.remove("u-hidden"), false);
+elements.modal.addEventListener("click", evt => {
+   if(evt.target.matches(".modal")) elements.container.classList.remove("u-hidden");
+}, false);
 elements.switchSignup.addEventListener("click", switchInOrUp, false);
 elements.switchSignin.addEventListener("click", switchInOrUp, false);
 elements.navLoginBtn.addEventListener("click", closeNav, false);
@@ -495,7 +497,7 @@ const renderSendingWays = data => {
     <div class="display">
         <div class="display-code"></div>
         <div class="display-link">
-            <a href="http://localhost/letter/${letter}" class="link"> 
+            <a href="http://localhost/#${letter}" target="_blank" class="link"> 
             <span><i class="material-icons">file_copy</i></span>
             https://drophere.io/download
             </a>
