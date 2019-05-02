@@ -8318,7 +8318,7 @@ label {
     display: block;
     position: absolute;
     left: -1px;
-    top: -1px;
+    top: 6px;
     transition-duration: 0.2s; }
   .form-check .form-check-label .circle {
     border: 1px solid rgba(0,0,0, .54);
@@ -12939,7 +12939,8 @@ thead.thead-inverse th,
   margin-right: 20px;
   margin-top: -40px;
   padding: 20px 0;
-  margin-bottom: 15px; }
+  margin-bottom: 15px;
+  height: 160px; }
 
 .card-login .text-divider {
   margin-top: 30px;
@@ -12949,12 +12950,11 @@ thead.thead-inverse th,
 .card-login .card-body {
   padding: 0px 30px 0px 10px; }
 
-.card-login .form-check {
-  padding-top: 27px; }
-  .card-login .form-check label {
-    margin-left: 18px; }
-  .card-login .form-check .form-check-sign {
-    padding-right: 27px; }
+.card-login .form-check label {
+  margin-left: 18px; }
+
+.card-login .form-check .form-check-sign {
+  padding-right: 27px; }
 
 .card-login .input-group {
   padding-bottom: 7px;
@@ -16285,6 +16285,32 @@ a:visited {
 .shake {
   -webkit-animation: shake .5s ease-in-out;
           animation: shake .5s ease-in-out; }
+
+.login-page #login {
+  padding-top: 23vh;
+  position: absolute;
+  z-index: 3;
+  background-color: #00000099;
+  max-width: 100%;
+  height: 100vh; }
+
+.modal-body > .card-body > .form-check a {
+  font-size: 14px;
+  display: inline-block; }
+
+.modal-body > .card-body > .form-check input[type=checkbox]:checked ~ a {
+  color: #7b1fa2;
+  font-weight: 500;
+  text-decoration: underline; }
+
+.modal .card > .btn-box {
+  padding: 20px 24px; }
+  .modal .card > .btn-box p {
+    margin: 0 0 4px; }
+  .modal .card > .btn-box span {
+    color: #7b1fa2;
+    font-weight: 500;
+    text-decoration: underline; }
 
 /**
  * Computes a CSS calc function that betweens a value from

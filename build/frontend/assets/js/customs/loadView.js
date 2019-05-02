@@ -5,7 +5,19 @@ let elements = {
     tabPane2: document.querySelector("#tab2"),
     // dropCard: document.querySelector(".drop-card"),
     downloadCard: document.querySelector(".download-card"),
+    signinCard: document.querySelector(".sign-in"),
+    signupCard: document.querySelector(".sign-up"),
+    switchSignin: document.querySelector(".switch-signin > span"),
+    switchSignup: document.querySelector(".switch-signup > span"),
 }
+
+const switchInOrUp = () => {
+    console.log("clicked!")
+    elements.signinCard.classList.toggle("u-hidden");
+    elements.signupCard.classList.toggle("u-hidden");
+}
+elements.switchSignup.addEventListener("click", switchInOrUp, false);
+elements.switchSignin.addEventListener("click", switchInOrUp, false);
 
 const renderTabView1 = () => {
     elements.tab1.classList.add("active");

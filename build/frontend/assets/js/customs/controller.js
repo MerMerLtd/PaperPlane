@@ -802,9 +802,9 @@ const checkValidity = inputKey => {
 
 const checkUrl = () => {
     const l = window.location;
-    if (!l.hash || checkValidity(l.href.slice(l.href.indexOf("#") + 1))) return false;
-
-    renderTabView2();
+    if (checkValidity(l.href.slice(l.href.indexOf("#") + 1))){
+        renderTabView2();
+    };
     return false;
 }
 
