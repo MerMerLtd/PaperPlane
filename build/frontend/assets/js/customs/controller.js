@@ -167,7 +167,6 @@ const initialLetter = async () => {
         console.log("letter", letter);
     }
 }
-initialLetter();
 
 const state = {};
 
@@ -502,7 +501,7 @@ const handleFilesSelected = evt => {
 
     // 2. 提供 (fileName && contentType && fileSize ) => fid
     Promise.all(files.map(async file => {
-        // console.log(file)
+            // console.log(file)
             const f = getMeta(file);
             const opts = {
                 contentType: 'application/json',
@@ -574,13 +573,13 @@ const fetchFilePath = async letter => {
         url: `/letter/${letter}/`, // 絕對正確的 url: `/letter/${letter}/`
     }));
 
-    if(err || data.lid !== letter){
+    if (err || data.lid !== letter) {
         //1.1.3 if letter is invalid, 要重新顯示input 👈 不是寫在這裡
         console.log(err || letter);
         // renderInputCard();
         return false;
     }
-    if(data){
+    if (data) {
         // console.log(data) 
         // {lid: "859070", files: Array(1)}
         // files: ["/letter/859070/upload/JOB0R2BJ3ggcRpRG"]
@@ -611,241 +610,66 @@ const fetchFile = async (filePath, pointer = 0) => {
     };
     let err, data;
     [err, data] = await to(makeRequest(opts));
-    if(err) throw {err, filePath}; //http://www.javascriptkit.com/javatutors/trycatch2.shtml 還沒細看
-    if(data){
+    if (err) throw {
+        err,
+        filePath
+    }; //http://www.javascriptkit.com/javatutors/trycatch2.shtml 還沒細看
+    if (data) {
         // console.log("fetchFile called: "+ i++ + " time", "data.progress: ",data.progress);
         let fileIndex = downloadQueue.findIndex(file => file.fid === data.fid);
-        if(fileIndex === -1){
-            downloadQueue.push({...data});
+        if (fileIndex === -1) {
+            downloadQueue.push({
+                ...data
+            });
             fileIndex = downloadQueue.length - 1;
         }
+
+        if(pointer < downloadQueue[fileIndex].waiting.length) pointer = downloadQueue[fileIndex].waiting.length;
+
         const list = data.slices.slice(pointer);
         const newPointer = pointer + list.findIndex((shardPath, i) => {
-            if(shardPath.includes("false")) return true;
-            downloadQueue[fileIndex].waiting.push({shardPath, index: pointer+i, fid: data.fid})
-            console.log(pointer+i, "0~644");
+            if (shardPath.includes("false")) return true;
+            downloadQueue[fileIndex].waiting.push({
+                shardPath,
+                index: pointer + i,
+                fid: data.fid
+            })
+            console.log(pointer + i, "0~644");
         });
 
         // console.log(`data.slices[${newPointer}]為下一次起點`);
 
-        if(data.progress === 1 || newPointer === -1) return data;
+        if (data.progress === 1 || newPointer === -1) return data;
 
         setTimeout(() => {
-          fetchFile(filePath, newPointer);
+            fetchFile(filePath, newPointer);
         }, delay); //setTimeout(fetchFile, delay, filePath, newPointer);
 
         return data;
     }
 }
-    // console.log(data) 
-        // {fid: "JOBSZn7dzir21Iys", fileName: "test_lg.mov", fileSize: 2704039688, contentType: "video/quicktime", slices: Array(645), …}
-        // contentType: "video/quicktime"
-        // fid: "JOBSZn7dzir21Iys"
-        // fileName: "test_lg.mov"
-        // fileSize: 2704039688
-        // progress: 0.262015503875969
-        // slices: (645) ["/letter/628379/upload/JOBSZn7dzir21Iys/b00557b19172b883ca2a85470d88744543a011d3", "/letter/628379/upload/JOBSZn7dzir21Iys/04f6ee6e6bab53d775f804093bfd264a72781d0c", ...]
-        // totalSlice: 645
-        // waiting: []
+// console.log(data) 
+// {fid: "JOBSZn7dzir21Iys", fileName: "test_lg.mov", fileSize: 2704039688, contentType: "video/quicktime", slices: Array(645), …}
+// contentType: "video/quicktime"
+// fid: "JOBSZn7dzir21Iys"
+// fileName: "test_lg.mov"
+// fileSize: 2704039688
+// progress: 0.262015503875969
+// slices: (645) ["/letter/628379/upload/JOBSZn7dzir21Iys/b00557b19172b883ca2a85470d88744543a011d3", "/letter/628379/upload/JOBSZn7dzir21Iys/04f6ee6e6bab53d775f804093bfd264a72781d0c", ...]
+// totalSlice: 645
+// waiting: []
 // }
 
-const renderDownloadFile = file => {
-    // console.log(file);
-    const markup = `
-    <div class="file" data-fid="${file.fid}">
-        <div class="file-icon">
-
-        <div class="cover">
-            <div class="cover__border"></div>
-            <div class="cover__continue ">
-                <div class="cover__sector--before"></div>
-                <div class="cover__sector">
-                    <!-- <div class="cover__sector--before"></div>
-                    <div class="cover__sector--after"></div> -->
-                </div>
-                <div class="cover__sector--after"></div>
-            </div>
-            <div class="cover__pause u-hidden">
-                <div class="cover__pause--p1"></div>
-                <div class="cover__pause--p2"></div>
-            </div>  
-        </div>  
-        
-        </div>
-    
-        <div class="file-name">${file.fileName}</div>
-        <div class="file-size">${formatFileSize(file.fileSize)}</div>
-    </div>
-
-    <!-- <p class="file-name">螢幕快照 2019-03-19 上午9.04.16.png</p> -->
-    <!-- <p class="file-name">螢幕快照 ...04.16.png</p> -->
-    `;
-
-    elements.downloadList.insertAdjacentHTML("beforeend", markup)
-}
-
-const renderDownloadFiles = async filePaths => {
-    if(!filePaths.length){
-        // ?? test
-        elements.downloadList.insertAdjacentHTML("afterbegin", `
-        <div style="text-align: center;">
-            <p>
-                <span class="arrow_back">&larr;</span>
-                目前沒有檔案哦！
-            </p>
-            <div>
-                <i class="material-icons refresh" style="color: #ff2d55">
-                    refresh
-                </i>
-            </div>
-        </div>
-        `);
-        document.querySelector(".arrow_back").addEventListener("click", () => {
-            elements.downloadList.innerText = "";
-            window.location.hash = ""; 
-            renderInputCard();
-        });
-        document.querySelector(".refresh").addEventListener("click", () => {
-            elements.downloadList.innerText = "";
-            checkUrl();
-        })
-        // or setInterval to fetch
-        // setTimeout(() => {
-        //         window.location.href = window.location.origin; // trim hash
-        //         renderInputCard();
-        //     }, 3000);
-    }else{
-        Promise.all(filePaths.map(async filePath => fetchFile(filePath)))
-        .then(files => {
-            console.log(files);
-            files.forEach(file => renderDownloadFile(file));
-        })
-        .then(() => {
-        //   startDownload(); //++ 開始下載囉
-        })
-    }
-}
-
-<<<<<<< HEAD
-=======
-/* 下載與合併檔案示範版本 */
-const ecFiles = {}; //++ 待處理檔案清單
-
-// 基礎下載功能
-const ecRequest = ({ path, method, responseType, data }) => {
-  const XMLReq = new XMLHttpRequest();
-  XMLReq.responseType = "arraybuffer";
-  return new Promise((resolve, reject) => {
-    XMLReq.onload = () => {
-      resolve(new Uint8Array(XMLReq.response));
-    };
-    XMLReq.onreadystatechange = (oEvent) => {
-      if (XMLReq.readyState === 4) {
-        if(XMLReq.status != 200) {
-          reject(new Error(XMLReq.statusText));
-        }
-      }
-    };
-    XMLReq.open(method, path);
-    XMLReq.send(data);
-  });
-};
-
-// 下載物件
-class ecFile {
-  constructor({ fid, fileName, totalSlice, contentType }) {
-    this.fid = fid;
-    this.fileName = fileName;
-    this.totalSlice = totalSlice;
-    this.contentType = contentType;
-    this.slices = [];
-    this.downloaded = false;
-  }
-  get progress() {
-    // 計算下載進度
-    return this.slices.filter((v) => v != undefined).length / this.totalSlice;
-  }
-  addSlice(slice, index) {
-    this.slices[index] = slice;
-    console.log(this.progress);
-    // 如果下載進度 100% 則觸發下載事件
-    if(this.progress == 1 && !this.downloaded) {
-      this.download();
-    }
-  }
-  download() {
-    // 合併檔案並賦予檔案型別
-    const blob = new Blob(this.slices, { type: this.contentType });
-
-    // 建立檔案物件
-    const url = window.URL.createObjectURL(blob);
-
-    // 建立下載 a Tag 以觸發下載事件
-	const a = document.createElement("a");
-	document.body.appendChild(a);
-	//a.style = "display: none";
-	a.href = url;
-    a.download = this.fileName;
-
-    // 觸發下載
-    a.click();
-    window.URL.revokeObjectURL(url);
-
-    // 移除物件與 a Tag
-    //window.URL.revokeObjectURL(url);
-    //document.body.removeChild(a);
-    //delete a;
-
-    // 標注檔案已下載
-    this.downloaded = true;
-  }
-}
-const downloadJob = (job) => {
-  // 下載碎片
-  return ecRequest({ path: job.shardPath, method: 'GET' })
-  .then((slice) => {
-    // 把碎片放到對應的檔案位置
-    return ecFiles[job.fid].addSlice(slice, job.index);
-  });
-}
-const startDownload = () => {
-  if(downloadQueue.length > 0) {
-    // 取出一個下載任務進行下載
-    const job = downloadQueue.pop();
-    downloadJob(job)
-    .then(
-      () => {
-        // 下載成功了，再下載下一個
-        startDownload();
-      },
-      (e) => {
-        return console.log(e);
-        // 下載失敗了，失敗任務重新排到最尾端，再下載下一個
-        downloadQueue.reverse().push(job);
-        downloadQueue.reverse();
-        startDownload();
-      }
-    )
-  } else {
-    // 沒事做，十秒後再回來看看
-    setTimeout(() => {
-      startDownload();
-    }, 10000);
-  }
-}
-/* 下載與合併檔案示範版本 END */
-
->>>>>>> 77880bc525cc6d3e27d2019997fef61ddb017e42
 // deg: 0 ~ 360;
 // progress: 0 ~ 1;
 const renderProgress = progress => { //?
-    let deg = progress*360;
-    
-    if(deg >= 180){
+    let deg = progress * 360;
+
+    if (deg >= 180) {
         elements.sectorAfter.style.zIndex = 1;
         elements.sectorBefore.style.transform = `rotate(90deg)`;
         elements.sectorAfter.style.transform = `rotate(${deg + 90}deg)`;
-    }else{
+    } else {
         elements.sectorBefore.style.transform = `rotate(${deg - 90}deg)`;
         elements.sectorAfter.style.transform = `rotate(${deg + 90}deg)`;
     }
@@ -855,7 +679,7 @@ const renderProgress = progress => { //?
     //     elements.sectorAfter.style.opacity = 1;
     //     elements.sector.style.overflow = "visible";
     // }
-    if(deg === 360){
+    if (deg === 360) {
         elements.cover.parentNode.removeChild(elements.cover);
         return;
     }
@@ -872,27 +696,39 @@ const renderDownloadZone = async letter => {
     renderDownloadCard();
     // 2.2 render loader 
     renderLoader(elements.downloadCard);
-  
+
     // 2.3 fetch data 👉 use elements.inputKey.value 跟backend要資料
     const filePaths = await fetchFilePath(letter);
 
     // 2.3.1 如果沒有要到，重新輸入inputKey
-    if(!filePaths){
+    if (!filePaths) {
         // ?? render custom alert downloadKey || inputKey is invalid
         removeLoader(elements.downloadCard);
         window.location.hash = ""; //// window.location = window.location.origin;
         renderInputCard();
         return false;
     };
-
     // 2.3.2 如果有要到filePaths，cleanLoader 
     // console.log(filePaths); //["/letter/505404/upload/JOB75mvKpyhcTerX", ...]
     removeLoader(elements.downloadCard);
-    // 3 renderDownloadFiles
+    // 3. change url
     window.location.hash = letter;
-    renderDownloadFiles(filePaths);
 
-    // downloadFiles(filesId);
+    // 4 filePaths.length = 0 沒有路徑
+    if (!filePaths.length) return renderEmptyFile();
+
+    // 4. fetch files
+    Promise.all(filePaths.map(async filePath => fetchFile(filePath)))
+        .then(files => {
+            console.log(files);
+            elements.downloadList.innerText = "";
+            // 5. renderFiles
+            files.forEach(file => renderDownloadFile(file));
+        })
+        .then(() => {
+            //   startDownload(); //++ 開始下載囉
+        })
+
 }
 
 const checkValidity = inputKey => {
@@ -901,52 +737,50 @@ const checkValidity = inputKey => {
 
     const regExp = new RegExp(/^\d+$/);
 
-    if(!regExp.test(inputKey)){
+    if (!regExp.test(inputKey)) {
         // 如果不是數字
         // case1: 作為網址打開 www.drophere.io/#123456
         // case2: 直接返回
         // return false;
     };
-    if(!regExp.test(inputKey) || inputKey.length !== 6){
+    if (!regExp.test(inputKey) || inputKey.length !== 6) {
         elements.inputCard.classList.add("shake");
         setTimeout(() => elements.inputCard.classList.remove("shake"), 1000);
         return false;
     };
 
     renderDownloadZone(inputKey);
-    return false;
-    // return inputKey;
+    // return false;
+    return inputKey;
 }
 
 const checkUrl = () => {
-    const l = window.location;
-    if (checkValidity(l.href.slice(l.href.indexOf("#") + 1))){
+    if(checkValidity(window.location.hash.substr(1)))
         renderTabView2();
-    };
     return false;
 }
 
 checkUrl();
+initialLetter();
 
 
-
-elements.tab2.addEventListener("click",renderInputCard , false); // 要判斷url 決定render inputCard or downloadCard
-
+elements.tab2.addEventListener("click", renderInputCard, false); // 要判斷url 決定render inputCard or downloadCard
 elements.btnDownload.addEventListener("click", () => checkValidity(elements.inputKey.value), false);
 
 
+//check for Navigation Timing API support
+if (window.performance) {
+    console.info("window.performance works fine on this browser");
+}
+if (performance.navigation.type == 1) {
+    console.info("This page is reloaded");
 
-// })()
+} else {
+    console.info("This page is not reloaded");
+}
 
-// // https://davidwalsh.name/add-rules-stylesheets
-// const addCSSRule = (sheet, selector, rules, index = 0) => {
-// 	if("insertRule" in sheet) {
 
-// 		sheet.insertRule(`${selector}{ ${rules} }`, index);
-// 	}
-// 	else if("addRule" in sheet) {
-// 		sheet.addRule(selector, rules, index);
-// 	}
+
+// window.onbeforeunload = evt => {
+//     return "false";
 // }
-
-

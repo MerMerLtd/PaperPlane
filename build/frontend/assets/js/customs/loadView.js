@@ -638,7 +638,7 @@ elements = {
 
 const renderInputCard = () => {
     // console.log(letter); // ?? for testing
-    if(window.location.hash){ // ??
+    if(window.location.hash.substr(1) === letter){ // ??
         elements.downloadList.innerText = "";
         checkUrl();
         return;
@@ -695,3 +695,64 @@ const removeLoader = parentEl => {
     unHiddenChildEls(parentEl);
 }
 
+
+const renderEmptyFile = () => {
+    const markup = `
+        <div style="text-align: center;">
+            <p>
+                <span class="arrow_back">&larr;</span>
+                目前沒有檔案哦！
+            </p>
+            <div>
+                <i class="material-icons refresh" style="color: #ff2d55">
+                    refresh
+                </i>
+            </div>
+        </div>
+    `;
+    elements.downloadList.insertAdjacentHTML("afterbegin", markup);
+    document.querySelector(".arrow_back").addEventListener("click", () => {
+        elements.downloadList.innerText = "";
+        window.location.hash = ""; 
+        renderInputCard();
+    });
+    document.querySelector(".refresh").addEventListener("click", () => {
+        elements.downloadList.innerText = "";
+        checkUrl();
+    })
+}
+
+const renderDownloadFile = file => {
+    // console.log(file);
+    const markup = `
+    <div class="file" data-fid="${file.fid}">
+        <div class="file-icon">
+
+        <div class="cover">
+            <div class="cover__border"></div>
+            <div class="cover__continue ">
+                <div class="cover__sector--before"></div>
+                <div class="cover__sector">
+                    <!-- <div class="cover__sector--before"></div>
+                    <div class="cover__sector--after"></div> -->
+                </div>
+                <div class="cover__sector--after"></div>
+            </div>
+            <div class="cover__pause u-hidden">
+                <div class="cover__pause--p1"></div>
+                <div class="cover__pause--p2"></div>
+            </div>  
+        </div>  
+        
+        </div>
+    
+        <div class="file-name">${file.fileName}</div>
+        <div class="file-size">${formatFileSize(file.fileSize)}</div>
+    </div>
+
+    <!-- <p class="file-name">螢幕快照 2019-03-19 上午9.04.16.png</p> -->
+    <!-- <p class="file-name">螢幕快照 ...04.16.png</p> -->
+    `;
+
+    elements.downloadList.insertAdjacentHTML("beforeend", markup)
+}
