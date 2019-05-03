@@ -51,6 +51,10 @@ const makeRequest = opts => {
     } else {
         connection++;
         const xhr = new XMLHttpRequest();
+        // xhr.responseType = "arraybuffer";
+        if (opts.responseType === "arraybuffer") {
+            xhr.responseType = "arraybuffer";
+        }
         return new Promise((resolve, reject) => {
             xhr.onreadystatechange = () => {
                 // only run if the request is complete
@@ -58,14 +62,13 @@ const makeRequest = opts => {
                 if (xhr.status >= 200 && xhr.status < 300) {
                     // If successful
                     closeConnection();
-                    resolve(JSON.parse(xhr.responseText));
+                    opts.responseType === "arraybuffer" ?
+                        resolve(new Uint8Array(xhr.response)) :
+                        resolve(JSON.parse(xhr.responseText));
                 } else {
                     // If false  
-                    console.log(xhr.response); // 👈 是 Buffer
                     closeConnection();
-                    reject({
-                        error: JSON.parse(xhr.response).error.message,
-                    });
+                    reject(xhr.response);
                 }
             }
             // Setup HTTP request
@@ -167,6 +170,7 @@ const initialLetter = async () => {
         console.log("letter", letter);
     }
 }
+initialLetter();
 
 const state = {};
 
@@ -484,7 +488,7 @@ const uploadFiles = () => {
             queue.push(uploadShard.bind(this, target));
             return false;
         }
-        uploadShard(target)
+        uploadShard(target);
     });
 }
 
@@ -563,7 +567,9 @@ if (window.File && window.FileReader && window.FileList && window.Blob) {
     alert('The File APIs are not fully supported in this browser.');
 }
 
-// download
+// ======================================
+// ============= download ===============
+
 const downloadQueue = [];
 
 const fetchFilePath = async letter => {
@@ -573,9 +579,9 @@ const fetchFilePath = async letter => {
         url: `/letter/${letter}/`, // 絕對正確的 url: `/letter/${letter}/`
     }));
 
-    if (err || data.lid !== letter) {
+    if (err) {
         //1.1.3 if letter is invalid, 要重新顯示input 👈 不是寫在這裡
-        console.log(err || letter);
+        console.log(err, letter);
         // renderInputCard();
         return false;
     }
@@ -588,22 +594,11 @@ const fetchFilePath = async letter => {
     }
 }
 
-// const addDownloadQueue = (data, pointer) => {
-//     console.log("addDownloadQueue: ", "pointer: ",pointer, `data.slices[${pointer}]為起點`);
-//     const list = data.slices.slice(pointer);
-//     if(pointer > 0) console.log(data.slices, list);
-//     const newPointer = pointer + list.findIndex((shardPath, i) => {
-//         if(shardPath.includes("false")) {console.log("addDownloadQueue: ", i, pointer, i+pointer); return i}//return (i+pointer);
-//         downloadQueue.push({shardPath, index: pointer+i})
-//     });
-//     console.log("addDownloadQueue: ", "newPointer: ", newPointer, `data.slices[${newPointer}]為下一次起點`);
-//     return newPointer;
-// }
 
 // let i = 1;// ?? test
 let delay = 10000;
 
-const fetchFile = async (filePath, pointer = 0) => {
+const fetchFile = async (filePath) => {
     const opts = {
         method: "GET",
         url: `${filePath}`,
@@ -616,33 +611,48 @@ const fetchFile = async (filePath, pointer = 0) => {
     }; //http://www.javascriptkit.com/javatutors/trycatch2.shtml 還沒細看
     if (data) {
         // console.log("fetchFile called: "+ i++ + " time", "data.progress: ",data.progress);
-        let fileIndex = downloadQueue.findIndex(file => file.fid === data.fid);
+        let fileIndex = downloadQueue.findIndex(file => file.fid === data.fid); 
         if (fileIndex === -1) {
             downloadQueue.push({
-                ...data
+                ...data,
+                isPaused: false,
+                pointer: 0,
+                // isCompleted: false
             });
             fileIndex = downloadQueue.length - 1;
         }
+        // console.log(downloadQueue[fileIndex].waiting)
 
-        if(pointer < downloadQueue[fileIndex].waiting.length) pointer = downloadQueue[fileIndex].waiting.length;
+        if(downloadQueue[fileIndex].pointer === -1) return data;
+
+        const pointer = downloadQueue[fileIndex].pointer;
+        // if(pointer < downloadQueue[fileIndex].waiting.length) pointer = downloadQueue[fileIndex].waiting.length;
+        // console.log(pointer);
 
         const list = data.slices.slice(pointer);
-        const newPointer = pointer + list.findIndex((shardPath, i) => {
+        // console.log(pointer, list)
+        const newPointer = list.findIndex((shardPath, i) => {
             if (shardPath.includes("false")) return true;
             downloadQueue[fileIndex].waiting.push({
-                shardPath,
+                path: shardPath,
                 index: pointer + i,
                 fid: data.fid
             })
-            console.log(pointer + i, "0~644");
+            // console.log(pointer, pointer + i, "0~644");
         });
+        
+        // if (newPointer === -1) downloadQueue[fileIndex].isCompleted === true;
+        // console.log(downloadQueue[fileIndex].waiting)
 
+        downloadQueue[fileIndex].pointer = pointer +  newPointer
         // console.log(`data.slices[${newPointer}]為下一次起點`);
 
-        if (data.progress === 1 || newPointer === -1) return data;
+        if (data.progress === 1 || newPointer === -1){
+            return data;
+        }
 
         setTimeout(() => {
-            fetchFile(filePath, newPointer);
+            fetchFile(filePath);
         }, delay); //setTimeout(fetchFile, delay, filePath, newPointer);
 
         return data;
@@ -691,6 +701,54 @@ const toggleProgressIcon = target => { // ?
     elements.coverPause.classList.toggle("u-hidden");
 }
 
+const assembleShard = (shard, index) => {
+
+}
+
+const downloadShard = async target => {
+    if (target.isPaused || !target.waiting.length) return;
+    const shardInfo = target.waiting.pop();
+
+    let err, data;
+    [err, data] = await to(makeRequest({
+        method: "GET",
+        url: shardInfo.path,
+        responseType: "arrayBuffer",
+    }));
+    if (err) {
+        target.retry = target.retry ? (target.retry + 1) : 1;
+        if (target.retry <= maxRetry) {
+            target.waiting.reverse().push(shardInfo);
+            target.waiting.reverse()
+            downloadShard(target);
+            return false;
+        } else {
+            throw new Error(`can not download shard: ${ ({
+                file: target.fileName,
+                fid: shardInfo.fid,
+                index: shardInfo.index,
+            })}`);
+        }
+    }
+    if (data) {
+        // 組裝
+        assembleShard(shard, shardInfo.index);
+        // 繼續下載下一個碎片
+        if(!!target.waiting.length) downloadShard(target);
+    }
+}
+
+const downloadFiles = () => {
+    if (!downloadQueue.length) return;
+    downloadQueue.forEach(file => {
+        if (connection >= maxConnection) {
+            queue.push(downloadShard.bind(this, target));
+            return false;
+        }
+        downloadShard(file);
+    });
+}
+
 const renderDownloadZone = async letter => {
 
     renderDownloadCard();
@@ -713,23 +771,24 @@ const renderDownloadZone = async letter => {
     removeLoader(elements.downloadCard);
     // 3. change url
     window.location.hash = letter;
+    elements.downloadList.innerText = "";
 
     // 4 filePaths.length = 0 沒有路徑
-    if (!filePaths.length) return renderEmptyFile();
+    if (!filePaths.length) renderEmptyFile();
 
     // 4. fetch files
     Promise.all(filePaths.map(async filePath => fetchFile(filePath)))
         .then(files => {
             console.log(files);
-            elements.downloadList.innerText = "";
+
             // 5. renderFiles
             files.forEach(file => renderDownloadFile(file));
         })
-        .then(() => {
-            //   startDownload(); //++ 開始下載囉
-        })
-
 }
+
+// disable btnRecieve if 
+// 6. 開始下載
+elements.btnRecieve.addEventListener("click", downloadFiles, false);
 
 const checkValidity = inputKey => {
     // 1. if elements.inputKey.value is numbers || 1.2.1 if elements.inputKey.value is string (can be link)
@@ -750,19 +809,16 @@ const checkValidity = inputKey => {
     };
 
     renderDownloadZone(inputKey);
-    // return false;
     return inputKey;
 }
 
 const checkUrl = () => {
-    if(checkValidity(window.location.hash.substr(1)))
+    if (checkValidity(window.location.hash.substr(1)))
         renderTabView2();
     return false;
 }
 
 checkUrl();
-initialLetter();
-
 
 elements.tab2.addEventListener("click", renderInputCard, false); // 要判斷url 決定render inputCard or downloadCard
 elements.btnDownload.addEventListener("click", () => checkValidity(elements.inputKey.value), false);
@@ -783,4 +839,10 @@ if (performance.navigation.type == 1) {
 
 // window.onbeforeunload = evt => {
 //     return "false";
-// }
+// } //https://stackoverflow.com/questions/3527041/prevent-any-form-of-page-refresh-using-jquery-javascript
+
+// https://stackoverflow.com/questions/6390341/how-to-detect-url-change-in-javascript
+// Add a hash change event listener!
+// window.addEventListener('hashchange', function(e){console.log('hash changed')});
+// Or, to listen to all URL changes:
+// window.addEventListener('popstate', function(e){console.log('url changed')});

@@ -255,7 +255,7 @@ const handleOutFileList = () => {
 }
 
 // UI Control
-const uploadFileControl = evt => {
+const uploadFileControl = async evt => {
     const element = evt.target.closest(".file");
     const fid = element.dataset.fid; // UI onClickedFid
     const index = uploadQueue.findIndex(file => file.fid === fid);
@@ -266,7 +266,11 @@ const uploadFileControl = evt => {
         element.parentElement.removeChild(element);
         uploadQueue.splice(index, 1);
         if (!elements.fileList.childElementCount) handleOutFileList();
-
+        const res = await makeRequest({
+            method: "DELETE",
+            url: `/letter/${letter}/upload/${fid}`
+        })
+        console.log(res);
     } else if (evt.target.closest(".file")) {
         isSend = false;
         if (file.sliceIndex === file.sliceCount) return;
@@ -638,7 +642,7 @@ elements = {
 
 const renderInputCard = () => {
     // console.log(letter); // ?? for testing
-    if(window.location.hash.substr(1) === letter){ // ??
+    if(window.location.hash.substr(1)){ // ??
         elements.downloadList.innerText = "";
         checkUrl();
         return;
@@ -730,7 +734,7 @@ const renderDownloadFile = file => {
 
         <div class="cover">
             <div class="cover__border"></div>
-            <div class="cover__continue ">
+            <div class="cover__continue u-hidden">
                 <div class="cover__sector--before"></div>
                 <div class="cover__sector">
                     <!-- <div class="cover__sector--before"></div>
@@ -738,7 +742,7 @@ const renderDownloadFile = file => {
                 </div>
                 <div class="cover__sector--after"></div>
             </div>
-            <div class="cover__pause u-hidden">
+            <div class="cover__pause">
                 <div class="cover__pause--p1"></div>
                 <div class="cover__pause--p2"></div>
             </div>  
