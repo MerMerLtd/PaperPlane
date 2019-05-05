@@ -571,6 +571,7 @@ if (window.File && window.FileReader && window.FileList && window.Blob) {
 // ============= download ===============
 
 const downloadQueue = [];
+const downloadFiles = [];
 
 const fetchFilePath = async letter => {
     let err, data;
@@ -616,7 +617,9 @@ const fetchFile = async (filePath) => {
             downloadQueue.push({
                 ...data,
                 isPaused: false,
+                isSelected: true,
                 pointer: 0,
+                // waiting: [],
                 // isCompleted: false
             });
             fileIndex = downloadQueue.length - 1;
@@ -640,6 +643,7 @@ const fetchFile = async (filePath) => {
             })
             // console.log(pointer, pointer + i, "0~644");
         });
+        console.log(downloadQueue)
         
         // if (newPointer === -1) downloadQueue[fileIndex].isCompleted === true;
         // console.log(downloadQueue[fileIndex].waiting)
@@ -658,8 +662,7 @@ const fetchFile = async (filePath) => {
         return data;
     }
 }
-// console.log(data) 
-// {fid: "JOBSZn7dzir21Iys", fileName: "test_lg.mov", fileSize: 2704039688, contentType: "video/quicktime", slices: Array(645), …}
+// console.log(data) {
 // contentType: "video/quicktime"
 // fid: "JOBSZn7dzir21Iys"
 // fileName: "test_lg.mov"
@@ -672,28 +675,35 @@ const fetchFile = async (filePath) => {
 
 // deg: 0 ~ 360;
 // progress: 0 ~ 1;
-const renderProgress = progress => { //?
+const renderProgress = (fid, progress, type) => { //?
     let deg = progress * 360;
 
+    const el = document.querySelector(`${type ==="download"? ".download-card": ".drop-card"} [data-coverId=${fid}]`);
+    console.log(el, fid,type)
+    el.parentElement.classList.add("continue");
+    el.parentElement.classList.remove("select");
+    el.parentElement.classList.remove("pause");
+
     if (deg >= 180) {
-        elements.sectorAfter.style.zIndex = 1;
-        elements.sectorBefore.style.transform = `rotate(90deg)`;
-        elements.sectorAfter.style.transform = `rotate(${deg + 90}deg)`;
+        console.log(progress)
+        el.children.item(2).style.zIndex = 1;
+        el.children.item(0).style.transform = `rotate(90deg)`;
+        el.children.item(2).style.transform = `rotate(${deg + 90}deg)`;
     } else {
-        elements.sectorBefore.style.transform = `rotate(${deg - 90}deg)`;
-        elements.sectorAfter.style.transform = `rotate(${deg + 90}deg)`;
+        console.log(progress)
+        el.children.item(0).style.transform = `rotate(${deg - 90}deg)`;
+        el.children.item(2).style.transform = `rotate(${deg + 90}deg)`;
     }
-    // elements.sectorBefore.style.transform = `rotate(${deg-90}deg)`;
+    // el.children.item(0).style.transform = `rotate(${deg-90}deg)`;
 
     // if(deg >= 180){
-    //     elements.sectorAfter.style.opacity = 1;
-    //     elements.sector.style.overflow = "visible";
+    //     el.children.item(2).style.opacity = 1;
+    //     el.children.item(1).style.overflow = "visible";
     // }
     if (deg === 360) {
-        elements.cover.parentNode.removeChild(elements.cover);
+        el.parentNode.remove();
         return;
     }
-    return;
 }
 
 const toggleProgressIcon = target => { // ?
@@ -701,11 +711,26 @@ const toggleProgressIcon = target => { // ?
     elements.coverPause.classList.toggle("u-hidden");
 }
 
-const assembleShard = (shard, index) => {
-
+const assembleShard = (target, shard, index) => {
+    let fileIndex = downloadFiles.findIndex(file => file.fid === target.fid);
+    // let waitingLength = target.waiting;
+    if(fileIndex === -1){
+        // delete target.waiting;
+        downloadFiles.push({...target,
+            slices: [],
+            progress: 0,
+            downloaded: false,
+        });
+        fileIndex = downloadFiles.length - 1;
+    }
+    downloadFiles[fileIndex].slices[index] = shard;
+    console.log(downloadFiles[fileIndex].slices.filter((v) => !!v).length )
+    downloadFiles[fileIndex].progress = downloadFiles[fileIndex].slices.filter((v) => !!v).length/ target.totalSlice;
+    return downloadFiles[fileIndex];
 }
 
 const downloadShard = async target => {
+    // console.log(target);
     if (target.isPaused || !target.waiting.length) return;
     const shardInfo = target.waiting.pop();
 
@@ -713,8 +738,9 @@ const downloadShard = async target => {
     [err, data] = await to(makeRequest({
         method: "GET",
         url: shardInfo.path,
-        responseType: "arrayBuffer",
+        responseType: "arraybuffer",
     }));
+    // console.log(err, data, "in downloadShard");
     if (err) {
         target.retry = target.retry ? (target.retry + 1) : 1;
         if (target.retry <= maxRetry) {
@@ -732,19 +758,43 @@ const downloadShard = async target => {
     }
     if (data) {
         // 組裝
-        assembleShard(shard, shardInfo.index);
+        const file = assembleShard(target, data, shardInfo.index);
+        // render progress
+        renderProgress(file.fid, file.progress, "download");
+        if(file.progress === 1 && !file.download){
+            // 合併檔案並賦予檔案型別
+            const blob = new Blob(file.slices, {type: file.contentType});
+            // 建立檔案物件
+            const url = window.URL.createObjectURL(blob);
+            // 建立下載 a Tag 以觸發下載事件
+            const a = document.createElement("a");
+            document.body.appendChild(a);
+            //a.style = "display: none";
+            a.href = url;
+            a.download = file.fileName;
+            // 觸發下載
+            a.click();
+             // 移除物件與 a Tag ??
+            window.URL.revokeObjectURL(url);
+             // 標注檔案已下載
+            file.downloaded = true;
+        }
         // 繼續下載下一個碎片
+        // console.log(target)
         if(!!target.waiting.length) downloadShard(target);
     }
 }
 
-const downloadFiles = () => {
+const startDownload = () => {
+    console.log(downloadQueue);
     if (!downloadQueue.length) return;
     downloadQueue.forEach(file => {
+        if(!file.isSelected) return;
         if (connection >= maxConnection) {
-            queue.push(downloadShard.bind(this, target));
+            queue.push(downloadShard.bind(this, file));
             return false;
         }
+        console.log(file, "startDownload")
         downloadShard(file);
     });
 }
@@ -780,7 +830,7 @@ const renderDownloadZone = async letter => {
     Promise.all(filePaths.map(async filePath => fetchFile(filePath)))
         .then(files => {
             console.log(files);
-
+            console.log(downloadQueue);
             // 5. renderFiles
             files.forEach(file => renderDownloadFile(file));
         })
@@ -788,7 +838,7 @@ const renderDownloadZone = async letter => {
 
 // disable btnRecieve if 
 // 6. 開始下載
-elements.btnRecieve.addEventListener("click", downloadFiles, false);
+elements.btnRecieve.addEventListener("click", startDownload, false);
 
 const checkValidity = inputKey => {
     // 1. if elements.inputKey.value is numbers || 1.2.1 if elements.inputKey.value is string (can be link)
@@ -835,8 +885,17 @@ if (performance.navigation.type == 1) {
     console.info("This page is not reloaded");
 }
 
+const checkEmail = email => {
+    const regExp = new RegExp(/^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/);
+    return regExp.test(email);
+}
 
+const checkPassword = password => {
+    const regExp = new RegExp(/[\x21-\x7e]{8,}$/);
+    return regExp.test(password);
+}
 
+// const inputHint
 // window.onbeforeunload = evt => {
 //     return "false";
 // } //https://stackoverflow.com/questions/3527041/prevent-any-form-of-page-refresh-using-jquery-javascript
@@ -846,3 +905,12 @@ if (performance.navigation.type == 1) {
 // window.addEventListener('hashchange', function(e){console.log('hash changed')});
 // Or, to listen to all URL changes:
 // window.addEventListener('popstate', function(e){console.log('url changed')});
+
+// elements.downloadList.addEventListener("click", evt => {
+//     console.log(evt.target.closest(".cover"));
+//     if(evt.target.matches("[data-coverId=JOBmd21NuEUGoOIk]")){
+//         console.log("match!")
+//         return;
+//     }
+//     return;
+// },false)

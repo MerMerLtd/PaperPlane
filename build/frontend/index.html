@@ -20,8 +20,35 @@
 
 <body class="login-page sidebar-collapse">
 
-  <div class="alert alert-success" role="alert">
+  <!-- <div class="alert alert-success" role="alert">
     You're on the right track! Just put it down.
+  </div> -->
+
+  <div class="alert-container">
+    <div class="alert alert-success fade show">
+      <div class="container">
+        <div class="alert-icon">
+          <i class="material-icons">check</i>
+        </div>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true"><i class="material-icons">clear</i></span>
+        </button>
+        <b>Success Alert:</b> Yuhuuu! You've got your $11.99 album from The Weeknd
+      </div>
+    </div>
+
+    <div class="alert alert-danger">
+      <div class="container">
+        <div class="alert-icon">
+          <i class="material-icons">error_outline</i>
+        </div>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true"><i class="material-icons">clear</i></span>
+        </button>
+        <b>Error Alert:</b> Damn man! You screwed up the server this time. You should find a good excuse for your
+        Boss...
+      </div>
+    </div>
   </div>
 
   <!-- <div class="container" id="login">
@@ -106,163 +133,185 @@
 
   <div class="modal fade" id="loginModal" tabindex="-1" role="">
     <div class="modal-dialog modal-login" role="document">
-        <div class="modal-content sign-up u-hidden">
-            <div class="card card-login card-plain">
-              <div class="modal-header">
-                <div class="card-header card-header-primary text-center">
-                  <!-- <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+      <div class="modal-content sign-up u-hidden">
+        <div class="card card-login card-plain">
+          <div class="modal-header">
+            <div class="card-header card-header-primary text-center">
+              <!-- <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
                     <i class="material-icons">clear</i>
                   </button> -->
-    
-                  <h4 class="card-title">Sign up</h4>
-                  <div class="social-line">
-                    <a href="#pablo" class="btn btn-just-icon btn-link btn-white">
-                      <i class="fa fa-facebook-square"></i>
-                    </a>
-                    <a href="#pablo" class="btn btn-just-icon btn-link btn-white">
-                      <i class="fa fa-twitter"></i>
-                      <div class="ripple-container"></div>
-                    </a>
-                    <a href="#pablo" class="btn btn-just-icon btn-link btn-white">
-                      <i class="fa fa-google-plus"></i>
-                    </a>
-                  </div>
-                </div>
-              </div>
-              <div class="modal-body">
-    
-                <div class="card-body ">
-                  <p class="card-description text-center">Or Be Classical</p>
-    
-                  <span class="bmd-form-group">
-                    <div class="input-group">
-                      <div class="input-group-prepend">
-                        <span class="input-group-text">
-                          <i class="material-icons">email</i>
-                        </span>
-                      </div>
-                      <input type="email" class="form-control" placeholder="Email...">
-                    </div>
-                  </span>
-                  <span class="bmd-form-group">
-                    <div class="input-group">
-                      <div class="input-group-prepend">
-                        <span class="input-group-text">
-                          <i class="material-icons">lock_outline</i>
-                        </span>
-                      </div>
-                      <input type="password" class="form-control" placeholder="Password..." name="password">
-                      <a data-toggle="tooltip" title="Password must be at least 8 Characters." style="color: grey">
-                        <i class="material-icons">
-                          info
-                        </i>
-                      </a>
-                    </div>
-                  </span>
-                  <span class="bmd-form-group">
-                    <div class="input-group">
-                      <div class="input-group-prepend">
-                        <span class="input-group-text">
-                          <i class="material-icons">lock_outline</i>
-                        </span>
-                      </div>
-                      <input type="password" class="form-control" placeholder="Confirmed Password..." name="password">
-                    </div>
-                  </span>
-                  <div class="form-check">
-                    <label class="form-check-label">
-                      <input class="form-check-input" type="checkbox" value="" checked="">
-                      <span class="form-check-sign">
-                        <span class="check"></span>
-                      </span>
-                      I agree to the
-                      <a href="#something" class="argee-terms">terms and conditions</a>.
-    
-                    </label>
-                  </div>
-                </div>
-              </div>
-              <div class="modal-footer justify-content-center">
-                <a href="#pablo" class="btn btn-primary btn-wd btn-lg disabled">Get Started</a>
-              </div>
-              <div class="btn-box">
-                  <p class="switch-signin">Already have an account? <span>Sign in</span></p>
+
+              <h4 class="card-title">Sign up</h4>
+              <div class="social-line">
+                <a href="#pablo" class="btn btn-just-icon btn-link btn-white">
+                  <i class="fa fa-facebook-square"></i>
+                </a>
+                <a href="#pablo" class="btn btn-just-icon btn-link btn-white">
+                  <i class="fa fa-twitter"></i>
+                  <div class="ripple-container"></div>
+                </a>
+                <a href="#pablo" class="btn btn-just-icon btn-link btn-white">
+                  <i class="fa fa-google-plus"></i>
+                </a>
               </div>
             </div>
           </div>
+          <div class="modal-body">
 
-          <div class="modal-content sign-in">
-              <div class="card card-login card-plain">
-                <div class="modal-header">
-                  <div class="card-header card-header-primary text-center">
-                    <!-- <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-                      <i class="material-icons">clear</i>
-                    </button> -->
-      
-                    <h4 class="card-title">Sign in</h4>
-                    <div class="social-line">
-                      <a href="#pablo" class="btn btn-just-icon btn-link btn-white">
-                        <i class="fa fa-facebook-square"></i>
-                      </a>
-                      <a href="#pablo" class="btn btn-just-icon btn-link btn-white">
-                        <i class="fa fa-twitter"></i>
-                        <div class="ripple-container"></div>
-                      </a>
-                      <a href="#pablo" class="btn btn-just-icon btn-link btn-white">
-                        <i class="fa fa-google-plus"></i>
-                      </a>
-                    </div>
-                  </div>
-                </div>
-                <div class="modal-body">
-      
-                  <div class="card-body ">
-                    <p class="card-description text-center">Or Be Classical</p>
-      
-                    <span class="bmd-form-group">
-                      <div class="input-group">
-                        <div class="input-group-prepend">
-                          <span class="input-group-text">
-                            <i class="material-icons">email</i>
-                          </span>
-                        </div>
-                        <input type="email" class="form-control" placeholder="Email..." name="account">
-                      </div>
+            <div class="card-body ">
+              <p class="card-description text-center">Or Be Classical</p>
+
+              <span class="bmd-form-group">
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text">
+                      <i class="material-icons">email</i>
                     </span>
-                    <span class="bmd-form-group">
-                      <div class="input-group">
-                        <div class="input-group-prepend">
-                          <span class="input-group-text">
-                            <i class="material-icons">lock_outline</i>
-                          </span>
-                        </div>
-                        <input type="password" class="form-control" placeholder="Password..." name="password">
-                        
-                      </div>
-                    </span>
-                   
-                    <div class="form-check">
-                      <label class="form-check-label">
-                        <input class="form-check-input" type="checkbox" value="" checked="">
-                        <span class="form-check-sign">
-                          <span class="check"></span>
-                        </span>
-                    
-                        <a class="argee-terms"> Keep me signed in</a>.
-      
-                      </label>
-                    </div>
                   </div>
+                  <input type="email" class="form-control" placeholder="Email..." name="email">
+                  <span class="form-control-feedback">
+                    <div></div>
+                    <div></div>
+                  </span>
                 </div>
-                <div class="modal-footer justify-content-center">
-                  <a href="#pablo" class="btn btn-primary btn-wd btn-lg disabled">Get Started</a>
+                <div class="bmd-hint">Please input valid email.</div>
+              </span>
+              <span class="bmd-form-group">
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text">
+                      <i class="material-icons">lock_outline</i>
+                    </span>
+                  </div>
+                  <input type="password" class="form-control" placeholder="Password..." name="password">
+                  <span class="form-control-feedback">
+                    <div></div>
+                    <div></div>
+                  </span>
+                  <a class=tooltip"" data-toggle="tooltip" title="Password must be at least 8 Characters."
+                    style="color: grey; margin: 0px">
+                    <i class="material-icons">
+                      info
+                    </i>
+                  </a>
                 </div>
-                <div class="btn-box">
-                    <p class="forgot-password"><span>Forgot password?</span></p>
-                    <p class="switch-signup">Don’t have an account? <span>Sign up now</span></p>
+                <div class="bmd-hint">Password should be at least 8 characters.</div>
+              </span>
+              <span class="bmd-form-group">
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text">
+                      <i class="material-icons">lock_outline</i>
+                    </span>
+                  </div>
+                  <input type="password" class="form-control" placeholder="Confirmed Password..." name="password2">
                 </div>
+                <div class="bmd-hint">Please make sure your passwords match.</div>
+              </span>
+              <div class="form-check">
+                <label class="form-check-label">
+                  <input class="form-check-input" type="checkbox" value="" checked="">
+                  <span class="form-check-sign">
+                    <span class="check"></span>
+                  </span>
+                  I agree to the
+                  <a href="#something" class="argee-terms">terms and use and privay policy.</a>.
+                </label>
               </div>
             </div>
+          </div>
+          <div class="modal-footer justify-content-center">
+            <a href="#pablo" class="btn btn-primary btn-wd btn-lg disabled">Get Started</a>
+          </div>
+          <div class="btn-box">
+            <p class="switch-signin">Already have an account? <span>Sign in</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-content sign-in">
+        <div class="card card-login card-plain">
+          <div class="modal-header">
+            <div class="card-header card-header-primary text-center">
+              <!-- <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                      <i class="material-icons">clear</i>
+                    </button> -->
+
+              <h4 class="card-title">Sign in</h4>
+              <div class="social-line">
+                <a href="#pablo" class="btn btn-just-icon btn-link btn-white">
+                  <i class="fa fa-facebook-square"></i>
+                </a>
+                <a href="#pablo" class="btn btn-just-icon btn-link btn-white">
+                  <i class="fa fa-twitter"></i>
+                  <div class="ripple-container"></div>
+                </a>
+                <a href="#pablo" class="btn btn-just-icon btn-link btn-white">
+                  <i class="fa fa-google-plus"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+          <div class="modal-body">
+
+            <div class="card-body ">
+              <p class="card-description text-center">Or Be Classical</p>
+
+              <span class="bmd-form-group has-success">
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text">
+                      <i class="material-icons">email</i>
+                    </span>
+                  </div>
+                  <input type="email" class="form-control" placeholder="Email..." name="account">
+                  <span class="form-control-feedback">
+                    <div></div>
+                    <!-- <i class="material-icons">done</i> -->
+                    <div></div>
+                  </span>
+                  <!-- <span class="form-control-feedback">
+                    <i class="material-icons">clear</i>
+                  </span> -->
+                </div>
+                <div class="bmd-hint">Please input valid email.</div>
+              </span>
+              <span class="bmd-form-group">
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text">
+                      <i class="material-icons">lock_outline</i>
+                    </span>
+                  </div>
+                  <input type="password" class="form-control" placeholder="Password..." name="password">
+                  <span class="form-control-feedback">
+                    <div></div>
+                    <div></div>
+                  </span>
+                </div>
+                <div class="bmd-hint">Password should be at least 8 characters.</div>
+              </span>
+
+              <div class="form-check">
+                <label class="form-check-label">
+                  <input class="form-check-input" type="checkbox" value="" checked="">
+                  <span class="form-check-sign">
+                    <span class="check"></span>
+                  </span>
+                  <a class="argee-terms"> Keep me signed in</a>.
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer justify-content-center">
+            <a href="#pablo" class="btn btn-primary btn-wd btn-lg disabled">Get Started</a>
+          </div>
+          <div class="btn-box">
+            <p class="forgot-password"><span>Forgot password?</span></p>
+            <p class="switch-signup">Don’t have an account? <span>Sign up now</span></p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   <nav class="navbar navbar-color-on-scroll navbar-transparent    fixed-top  navbar-expand-lg " color-on-scroll="100"

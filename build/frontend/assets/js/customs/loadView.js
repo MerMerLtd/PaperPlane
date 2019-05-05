@@ -14,25 +14,62 @@ let elements = {
     html: document.querySelector("html"),
     modal: document.querySelector(".modal"),
     container: document.querySelector(".page-header > .container"),
+    emailInput: document.querySelector(".sign-in input[type=email]"),
+    passwordInput: document.querySelector(".sign-in input[type=password]"),
+    signInCheck: document.querySelector(".sign-in input[type=checkbox]"),
+    signUpCheck: document.querySelector(".sign-up input[type=checkbox]"),
+    downloadCheck: document.querySelector(".download-card input[type=checkbox]"),
+    agreeTerms: document.querySelector(".agree-terms"),
 }
+
+elements.downloadCheck.addEventListener("change", evt => document.querySelectorAll(".cover__select").toggle("selected"), false)
 
 const switchInOrUp = () => {
     console.log("clicked!")
     elements.signinCard.classList.toggle("u-hidden");
     elements.signupCard.classList.toggle("u-hidden");
+    if (!elements.signinCard.classList.contains("u-hidden") && elements.signupCard.classList.contains("u-hidden")) {
+        elements = {
+            ...elements,
+            emailInput: document.querySelector(".sign-in input[type=email]"),
+            passwordInput: document.querySelector(".sign-in input[type=password]"),
+        }
+        window.location.href = `${window.location.href.replace("signup", "signin")}`;
+    }
+    if (!elements.signupCard.classList.contains("u-hidden") && elements.signinCard.classList.contains("u-hidden")) {
+        elements = {
+            ...elements,
+            emailInput: document.querySelector(".sign-up input[type=email]"),
+            passwordInput: document.querySelector(".sign-up input[name^=password]"),
+            confirmPassword: document.querySelector(".sign-up input[name^=password2]"),
+        }
+        window.location.href = `${window.location.href.replace("signin", "signup")}`;
+    }
 }
-const closeNav = () => {
+const openLoginPage = evt => {
+    // close Nav && change url
     elements.html.classList.remove("nav-open");
     elements.navbarToggle.classList.remove("toggled");
     elements.container.classList.add("u-hidden");
+    if (!elements.signinCard.classList.contains("u-hidden") && elements.signupCard.classList.contains("u-hidden")) {
+        window.location.href = `${window.location.href}/signin`;
+    }
+    if (elements.signinCard.classList.contains("u-hidden") && !elements.signupCard.classList.contains("u-hidden")) {
+        window.location.href = `${window.location.href}/signup`;
+    }
+    // add 
+}
+const closeLoginPage = evt => {
+    if (evt.target.matches(".modal")) {
+        elements.container.classList.remove("u-hidden");
+        window.location.href = `${window.location.href.replace("/signin" || "/signup", "")}`;
+    }
 }
 
-elements.modal.addEventListener("click", evt => {
-   if(evt.target.matches(".modal")) elements.container.classList.remove("u-hidden");
-}, false);
 elements.switchSignup.addEventListener("click", switchInOrUp, false);
 elements.switchSignin.addEventListener("click", switchInOrUp, false);
-elements.navLoginBtn.addEventListener("click", closeNav, false);
+elements.navLoginBtn.addEventListener("click", openLoginPage, false);
+elements.modal.addEventListener("click", closeLoginPage, false);
 
 
 const renderTabView1 = () => {
@@ -67,72 +104,7 @@ const removeMultiListener = (element, events, func) => {
 //================================================
 //================== Login View ==================
 
-const renderLoginView = () => {
-    const markup = `
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-4 col-md-6 col-sm-8 ml-auto mr-auto">
-          <form class="form" method="" action="">
-            <div class="card card-login card-hidden">
-              <div class="card-header card-header-primary text-center">
-                <h4 class="card-title">Login</h4>
-                <div class="social-line">
-                  <a href="#pablo" class="btn btn-just-icon btn-link btn-white">
-                    <i class="fa fa-facebook-square"></i>
-                  <div class="ripple-container"></div></a>
-                  <a href="#pablo" class="btn btn-just-icon btn-link btn-white">
-                    <i class="fa fa-twitter"></i>
-                  <div class="ripple-container"></div></a>
-                  <a href="#pablo" class="btn btn-just-icon btn-link btn-white">
-                    <i class="fa fa-google-plus"></i>
-                  <div class="ripple-container"></div></a>
-                </div>
-              </div>
-              <div class="card-body ">
-                <p class="card-description text-center">Or Be Classical</p>
-                <span class="bmd-form-group">
-                  <div class="input-group">
-                    <div class="input-group-prepend">
-                      <span class="input-group-text">
-                        <i class="material-icons">face</i>
-                      </span>
-                    </div>
-                    <input type="text" class="form-control" placeholder="First Name...">
-                  </div>
-                </span>
-                <span class="bmd-form-group">
-                  <div class="input-group">
-                    <div class="input-group-prepend">
-                      <span class="input-group-text">
-                        <i class="material-icons">email</i>
-                      </span>
-                    </div>
-                    <input type="email" class="form-control" placeholder="Email...">
-                  </div>
-                </span>
-                <span class="bmd-form-group">
-                  <div class="input-group">
-                    <div class="input-group-prepend">
-                      <span class="input-group-text">
-                        <i class="material-icons">lock_outline</i>
-                      </span>
-                    </div>
-                    <input type="password" class="form-control" placeholder="Password...">
-                  </div>
-                </span>
-              </div>
-              <div class="card-footer justify-content-center">
-                <a href="#pablo" class="btn btn-rose btn-link btn-lg">Lets Go<div class="ripple-container"></div></a>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-    `;
 
-    //?? 還沒完成
-}
 
 //================================================
 //=================== Drop View ==================
@@ -167,9 +139,26 @@ const formatFileSize = size => {
 
 const renderFile = file => {
     const markup = `
-            <div class="file" data-fid="${file.fid}">
+            <div class="file" data-fid="${file.fid}" data-type="upload">
                 <div class="delete-button"></div>
-                <div class="file-icon"></div>
+                <div class="file-icon">
+                    <div class="cover u-hidden">
+                        <div class="cover__border"></div>
+                        <div class="cover__continue">
+                            <div class="cover__sector--before"></div>
+                            <div class="cover__sector"></div>
+                            <div class="cover__sector--after"></div>
+                        </div>
+                        <div class="cover__pause">
+                            <div class="cover__pause--p1"></div>
+                            <div class="cover__pause--p2"></div>
+                        </div>  
+                        <div class="cover__select">
+                            <div class="cover__select--s1"></div>
+                            <div class="cover__select--s2"></div>
+                        </div>     
+                    </div>
+                </div>
                 <div class="progress">
                     <div data-progressId="${file.fid}" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: ${(file.sliceIndex/file.sliceCount)*100}%"></div>
                 </div>
@@ -258,6 +247,7 @@ const handleOutFileList = () => {
 const uploadFileControl = async evt => {
     const element = evt.target.closest(".file");
     const fid = element.dataset.fid; // UI onClickedFid
+    const type = element.dataset.type;
     const index = uploadQueue.findIndex(file => file.fid === fid);
     const file = uploadQueue[index];
 
@@ -272,6 +262,7 @@ const uploadFileControl = async evt => {
         })
         console.log(res);
     } else if (evt.target.closest(".file")) {
+        // if (type === "upload") {
         isSend = false;
         if (file.sliceIndex === file.sliceCount) return;
         file.isPaused = !file.isPaused;
@@ -279,8 +270,78 @@ const uploadFileControl = async evt => {
         if (!file.isPaused) {
             uploadShard(file);
         }
+        // }
+        // if(type === "download"){
+        //     if(file.progress === 1 || file.isDownloaded) return;
+        //     file.isPaused = !file.isPaused;
+        //     if(!file.isPasused){
+        //         downloadShard(file);
+        //     }
+        // }
     }
 }
+
+const fileControl = evt => {
+    const element = evt.target.closest(".file"); 
+    const elementCover = evt.target.closest(".cover");
+    const fid = element.dataset.fid;
+    // console.log("fileControl", evt.target.closest(".file"), evt.target.matches(`.cover, .cover > *`))
+    const type = element.dataset.type;
+    const file = type === "upload" ?
+        uploadQueue[uploadQueue.findIndex(file => file.fid === fid)] :
+        downloadQueue[downloadQueue.findIndex(file => file.fid === fid)];
+    const isStarted = type === "download" 
+    ? downloadFiles.findIndex(file => file.fid === fid) !== -1
+    : true;
+
+    if (evt.target.matches(".delete-button, .delete-button *")) {
+        isSend = false;
+        element.parentElement.removeChild(element);
+        uploadQueue.splice(index, 1);
+        if (!elements.fileList.childElementCount) handleOutFileList();
+        return makeRequest({
+            method: "DELETE",
+            url: `/letter/${letter}/upload/${fid}`
+        })
+    }
+
+    if (evt.target.matches(`.cover, .cover > *`)) {
+        console.log("match!", file)
+        if (file.progress === 1 && file.isDownloaded) return;
+
+        console.log(isStarted)
+        if (!isStarted) {
+            file.isSelected = !file.isSelected;
+            elementCover.classList.remove("continue");
+            elementCover.classList.add("select");
+            elementCover.classList.remove("pause");
+            if (file.isSelected) {
+                elementCover.children.item(3).classList.add("selected")
+            } else {
+                elementCover.children.item(3).classList.remove("selected")
+            }
+        } else {
+        console.log("isSelected", file)
+
+            file.isPaused = !file.isPaused;
+            if (file.isPaused) {
+                elementCover.classList.remove("continue");
+                elementCover.classList.remove("select");
+                elementCover.classList.add("pause");
+            } else {
+                elementCover.classList.add("continue");
+                elementCover.classList.remove("select");
+                elementCover.classList.remove("pause");
+                type === "upload" ? uploadShard(file) : downloadShard(file);
+            }
+        }
+        return;
+    }
+}
+
+
+
+
 
 const renderDropView = files => {
     const markup = `
@@ -419,7 +480,7 @@ const countdown = time => {
         let min, sec;
         time -= 1000;
         [min, sec] = formatTime(time);
-        if( elements.countdown)
+        if (elements.countdown)
             elements.countdown.innerText = `${min}:${sec}`;
         timerTime = time;
         return;
@@ -458,9 +519,9 @@ const genQRCode = letter => {
         text: ``,
         width: 100,
         height: 100,
-        colorDark : "#ff2d55",
-        colorLight : "#ffffff",
-        correctLevel : QRCode.CorrectLevel.H
+        colorDark: "#ff2d55",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
     });
     qrcode.makeCode(`http://localhost/letter/${letter}`);
 }
@@ -543,7 +604,7 @@ const renderSendingWays = data => {
         countdown: document.querySelector(".countdown > span"),
     }
 
-    if(document.querySelector(".display-code")) genQRCode();
+    if (document.querySelector(".display-code")) genQRCode();
 
     const progressData = calculator();
     renderTotalProgress(progressData);
@@ -633,16 +694,17 @@ elements = {
     btnDownload: document.querySelector(".btn-download"),
     inputKey: document.querySelector(".input-key"),
     downloadCard: document.querySelector(".download-card "),
-    btnRecieve:document.querySelector(".btn-recieve"),
+    btnRecieve: document.querySelector(".btn-recieve"),
     downloadList: document.querySelector(".download-card .file-list"),
     downloadBody: document.querySelector(".download-card > .card-body"),
     expDate: document.querySelector(".download-card .exp-date "),
     filesInfo: document.querySelector(".download-card .files-info "),
 }
+elements.downloadList.addEventListener("click", fileControl, false)
 
 const renderInputCard = () => {
     // console.log(letter); // ?? for testing
-    if(window.location.hash.substr(1)){ // ??
+    if (window.location.hash.substr(1)) { // ??
         elements.downloadList.innerText = "";
         checkUrl();
         return;
@@ -669,7 +731,7 @@ const unHiddenChildEls = parentEl => {
     Array.from(parentEl.children).forEach(el => el.classList.remove("u-hidden"));
 }
 
-const renderLoader = parentEl => { 
+const renderLoader = parentEl => {
     // console.log(parentEl)  // elements.downloadCard
     hiddenChildEls(parentEl);
     const markup = `
@@ -689,7 +751,8 @@ const renderLoader = parentEl => {
         </div>
     `;
     parentEl.insertAdjacentHTML("afterbegin", markup);
-    elements = {...elements,
+    elements = {
+        ...elements,
         loader: document.querySelector(".lds-spinner"),
     }
 }
@@ -717,7 +780,7 @@ const renderEmptyFile = () => {
     elements.downloadList.insertAdjacentHTML("afterbegin", markup);
     document.querySelector(".arrow_back").addEventListener("click", () => {
         elements.downloadList.innerText = "";
-        window.location.hash = ""; 
+        window.location.hash = "";
         renderInputCard();
     });
     document.querySelector(".refresh").addEventListener("click", () => {
@@ -729,25 +792,27 @@ const renderEmptyFile = () => {
 const renderDownloadFile = file => {
     // console.log(file);
     const markup = `
-    <div class="file" data-fid="${file.fid}">
+    <div class="file" data-fid="${file.fid}" data-type="download">
         <div class="file-icon">
-
-        <div class="cover">
-            <div class="cover__border"></div>
-            <div class="cover__continue u-hidden">
-                <div class="cover__sector--before"></div>
-                <div class="cover__sector">
-                    <!-- <div class="cover__sector--before"></div>
-                    <div class="cover__sector--after"></div> -->
+            <div class="cover select">
+                <div class="cover__border"></div>
+                <div class="cover__continue" data-coverId="${file.fid}">
+                    <div class="cover__sector--before"></div>
+                    <div class="cover__sector">
+                        <!-- <div class="cover__sector--before"></div>
+                        <div class="cover__sector--after"></div> -->
+                    </div>
+                    <div class="cover__sector--after"></div>
                 </div>
-                <div class="cover__sector--after"></div>
+                <div class="cover__pause">
+                    <div class="cover__pause--p1"></div>
+                    <div class="cover__pause--p2"></div>
+                </div>  
+                <div class="cover__select selected">
+                    <div class="cover__select--s1"></div>
+                    <div class="cover__select--s2"></div>
+                </div>     
             </div>
-            <div class="cover__pause">
-                <div class="cover__pause--p1"></div>
-                <div class="cover__pause--p2"></div>
-            </div>  
-        </div>  
-        
         </div>
     
         <div class="file-name">${file.fileName}</div>
@@ -759,4 +824,13 @@ const renderDownloadFile = file => {
     `;
 
     elements.downloadList.insertAdjacentHTML("beforeend", markup)
+}
+
+const disableBtn = btn => {
+    if (btn.classList.contains("disable")) return;
+    btn.classList.add("disable");
+}
+const enableBtn = btn => {
+    if (!btn.classList.contains("disable")) return;
+    btn.classList.remove("disable");
 }

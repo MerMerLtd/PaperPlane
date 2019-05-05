@@ -220,6 +220,22 @@
         background-color: transparent;
     }
 
+    &__continue,
+    &__pause,
+    &__select{
+        opacity: 0;
+    }
+
+    .file .continue > &__continue{
+        opacity: 1;
+    }
+    .file .pause > &__pause{
+        opacity: 1;
+    }
+    .file .select > &__select{
+        opacity: 1;
+    }
+
     &__sector {
 
         // @include absCenter;
@@ -300,7 +316,48 @@
             right: 13.5px;
         }
     }
+
+    &__select {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        width: 40px;
+        height: 40px;
+        border-radius: 100%;
+        background-color: #00000033;
+
+        &--s1,
+        &--s2 {
+            position: absolute;
+            top: 10px;
+            width: 3px;
+            height: 20px;
+            background: #42a8d1; // 到時換成image
+            border-radius: 3px;
+            transform-origin: right;
+            opacity: 0;
+        }
+
+        &--s1 {
+            transform: rotate(-45deg);
+            left: 14.5px;
+            height: 10px;
+            top: 19px;
+        }
+
+        &--s2 {
+            transform: rotate(-135deg);
+            right: 15.5px;
+        }
+
+        &.selected > *{
+            opacity: 1;
+        }
+    }
 }
+
+
+
 
 //     &__sector{
 //          // @include absCenter;
@@ -415,17 +472,17 @@
     }
 }
 
-.alert {
-    --opacity: 0;
-    z-index: 100;
-    position: fixed;
-    transform: translate(-50%, -50%);
-    top: 6vh;
-    left: 50%;
-    padding: 15px 10px;
-    // opacity: 1;
-    opacity: var(--opacity);
-}
+// .alert {
+//     --opacity: 0;
+//     z-index: 100;
+//     position: fixed;
+//     transform: translate(-50%, -50%);
+//     top: 6vh;
+//     left: 50%;
+//     padding: 15px 10px;
+//     // opacity: 1;
+//     opacity: var(--opacity);
+// }
 
 .btn-download {
     margin-top: 15px;
@@ -671,11 +728,24 @@ a:visited {
     //   border-bottom: 1px solid  #6d6d6d;
 }
 
-footer a,
-a:active,
-a:visited {
-    display: inline-block;
+.form-control > .tooltip {
+
+    &,
+    &:active,
+    &:visited {
+        margin: 0;
+    }
 }
+footer a {
+
+    &,
+    &:active,
+    &:visited {
+        display: inline-block;
+    }
+}
+
+
 
 .lds-spinner {
     color: official;
@@ -832,24 +902,26 @@ a:visited {
     height: 100vh;
 }
 
-.modal-body > .card-body > .form-check a{
+.modal-body>.card-body>.form-check a {
     font-size: 14px;
     // color: $purple-700;
     display: inline-block;
 }
 
-.modal-body > .card-body > .form-check input[type=checkbox]:checked ~ a{
+.modal-body>.card-body>.form-check input[type=checkbox]:checked~a {
     color: $purple-700;
     font-weight: 500;
     text-decoration: underline;
 }
 
-.modal .card > .btn-box{
+.modal .card>.btn-box {
     padding: 20px 24px;
-    p{
+
+    p {
         margin: 0 0 4px;
     }
-    span{
+
+    span {
         color: $purple-700;
         font-weight: 500;
         text-decoration: underline;
