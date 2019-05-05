@@ -16,6 +16,7 @@ let elements = {
     container: document.querySelector(".page-header > .container"),
     emailInput: document.querySelector(".sign-in input[type=email]"),
     passwordInput: document.querySelector(".sign-in input[type=password]"),
+    passwordInput2: document.querySelector(".sign-up input[name^=password2]"),
     signInCheck: document.querySelector(".sign-in input[type=checkbox]"),
     signUpCheck: document.querySelector(".sign-up input[type=checkbox]"),
     downloadCheck: document.querySelector(".download-card input[type=checkbox]"),
@@ -23,7 +24,47 @@ let elements = {
 }
 
 elements.downloadCheck.addEventListener("change", evt => document.querySelectorAll(".cover__select").toggle("selected"), false)
+const checkEmail = email => {
+    const regExp = new RegExp(/^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/);
+    return regExp.test(email);
+}
 
+const checkPassword = password => {
+    const regExp = new RegExp(/[\x21-\x7e]{8,}$/);
+    return regExp.test(password);
+}
+
+const inputValidation = type => {
+    console.log(evt)
+    const checkedEmail = checkEmail(elements.emailInput.value);
+    if(checkedEmail) {
+        elements.emailInput.classList.add("has-success")
+        elements.emailInput.classList.remove("has-danger");
+    }
+    const checkedPassword = checkPassword(elements.passwordInput.value);
+    if(checkedPassword) {
+        elements.passwordInput.classList.add("has-success")
+        elements.passwordInput.classList.remove("has-danger");
+    }
+   
+    if(type === "signup"){
+        // const checkedPassword2 = checkPassword(elements.passwordInput2.value);
+        // if(checkedPassword2) {
+        //     elements.passwordInput2.classList.add("has-success")
+        //     elements.passwordInput2.classList.remove("has-danger");
+        // }
+        // if(checkedEmail && checkedPassword && checkedPassword2 && elements.signUpCheck.checked){
+        if(checkedEmail && checkedPassword && elements.signUpCheck.checked){
+            // enable 
+        }
+    }
+    if(type === "signin"){
+        if(checkedEmail && checkedPassword){
+        
+        }
+    }
+   
+}
 const switchInOrUp = () => {
     console.log("clicked!")
     elements.signinCard.classList.toggle("u-hidden");
@@ -35,15 +76,20 @@ const switchInOrUp = () => {
             passwordInput: document.querySelector(".sign-in input[type=password]"),
         }
         window.location.href = `${window.location.href.replace("signup", "signin")}`;
+        elements.emailInput.addEventListener("change", () => inputValidation("signin"), false)
+        elements.passwordInput.addEventListener("change", () => inputValidation("signin"), false)
+
     }
     if (!elements.signupCard.classList.contains("u-hidden") && elements.signinCard.classList.contains("u-hidden")) {
         elements = {
             ...elements,
             emailInput: document.querySelector(".sign-up input[type=email]"),
             passwordInput: document.querySelector(".sign-up input[name^=password]"),
-            confirmPassword: document.querySelector(".sign-up input[name^=password2]"),
         }
         window.location.href = `${window.location.href.replace("signin", "signup")}`;
+        elements.emailInput.addEventListener("change", () => inputValidation("signup"), false)
+        elements.passwordInput.addEventListener("change", () => inputValidation("signup"), false)
+
     }
 }
 const openLoginPage = evt => {

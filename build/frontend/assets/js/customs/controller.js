@@ -885,15 +885,10 @@ if (performance.navigation.type == 1) {
     console.info("This page is not reloaded");
 }
 
-const checkEmail = email => {
-    const regExp = new RegExp(/^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/);
-    return regExp.test(email);
-}
 
-const checkPassword = password => {
-    const regExp = new RegExp(/[\x21-\x7e]{8,}$/);
-    return regExp.test(password);
-}
+
+
+
 
 // const inputHint
 // window.onbeforeunload = evt => {
