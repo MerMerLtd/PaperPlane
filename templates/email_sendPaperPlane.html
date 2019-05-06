@@ -9,10 +9,10 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         .container {
-            /* border: 1px solid #efefef; */
+            border: 1px solid #efefef;
             max-width: 600px;
             margin: 0 auto;
-            padding: 20px 20px;
+            /* padding: 20px 20px; */
             border-radius: 5px;
             color: #333;
             /* background: #d8d8d8; */
@@ -23,7 +23,9 @@
             color: #fff;
             position: relative;
             text-align: center;
-            border-radius: 5px;
+            /* border-radius: 5px; */
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
             background-color: #ff2d55;
 
         }
@@ -66,6 +68,17 @@
             width: 5%;
             height: 20%;
             border-radius: 50%;
+            bottom: 0.2em;
+            left: -5%;
+            animation: 2s linear infinite;
+            transform-origin: 50% -.75em;
+            animation-name: run, rotating;
+        }
+        .loader .airplane {
+            font-size: 36px;
+
+            position: absolute;
+           
             bottom: 0.2em;
             left: -5%;
             animation: 2s linear infinite;
@@ -165,12 +178,13 @@
             border: 1px solid #efefef;
             position: relative;
             margin: 20px 0;
+            
         }
 
         .link span {
             position: absolute;
             display: inline-block;
-           
+            font-size: 20px;
         }
 
         .link>:first-child {
@@ -178,6 +192,64 @@
             width: 80px;
             background-color: #ff2d55;
             margin: 10px;
+            border-radius: 5px;
+            color: #fff;
+        }
+
+
+        .icon{
+            position: absolute;
+            top: 35%;
+            left: 38px;
+            width: 2px;
+            height: 20px;
+            background-color: #fff;
+            border-radius: 2px;
+        }
+
+        .icon::after,
+        .icon::before{
+            content: "";
+            display: block;
+            position: absolute;
+            top: 9px;
+            width: 2px;
+            height: 10px;
+            background-color: #fff;
+            transform-origin: bottom;
+            border-radius: 2px;
+
+            /* border-top-left-radius: 2px;
+            border-top-right-radius: 2px; */
+        }
+        .icon::after{
+            transform-origin: right bottom;
+            transform: rotate(-45deg);
+            /* left: .5px; */
+        }
+        .icon::before{
+            transform-origin: left bottom;
+            transform: rotate(45deg);
+            /* right: .5px;/ */
+
+        }
+        .icon-box{
+            position: absolute;
+            top: 55%;
+            left: 25px;
+            width: 30px;
+            height: 10px;
+            background-color: #fff;
+        }
+        .icon-box::after{
+            content: "";
+            position: absolute;
+            top: -7px;
+            left: 2px;
+            /* margin: 0 auto; */
+            width: 26px;
+            height: 15px;
+            background-color: #ff2d55;
         }
 
         .link>:last-child {
@@ -191,26 +263,110 @@
             padding: 20px;
         }
         .footer {
+            border-bottom-left-radius: 5px;
+            border-bottom-right-radius: 5px;
             /* width: 100%; */
             padding: 10px;
             background-color: #ededed;
             font-size: 10px;
-            
+            /* border-radius: 5px; */
         }
         p{
             line-height: 0.8;
+        }
+
+        .bow-tail{
+            position: absolute;
+            height: 10px;
+            width: 10px;
+            border-right: 3px solid #fff;
+            border-top: 3px solid #fff;
+            transform: rotate(-45deg); 
+            top: -1px;
+            left: 5.5px;
+        }
+        .bow::after,
+        .bow::before{
+            content: "";
+            display: block;
+            position: absolute;
+            height: 4px;
+            width: 4px;
+            border-radius: 100%;
+            border: 3px solid #fff; /*#ff2d55;*/
+            top: -10px;
+            /* transform: rotate(0deg); */
+        }
+        .bow::after{
+            /* top: -8px;*/
+            left: 2.5px;
+            
+        }
+        .bow::before{
+            /* top: -8px;*/
+            left: 11.5px; 
+        }
+        .bow-box{
+            position: absolute;
+            width: 24px;
+            height: 17px;
+            /* border: 3px solid #ff2d55; */
+            border: 3px solid #fff;
+            border-radius: 3px;
+            /* top: 20px; */
+            top: -30px;
+            left: 300px;
+        }
+        .bow-box::after{
+            content: "";
+            display: block;
+            position: absolute;
+            /* border: 3px solid #ff2d55; */
+            border: 3px solid #fff;
+            width: 18px;
+            top: 8px;
+        }
+        .airplane{
+            border-bottom: 14px solid transparent;
+            border-top: 14px solid transparent;
+            border-left: 36px solid #fff;
+        }
+        .airplane::after{
+            content: "";
+            display: block;
+            position: absolute;
+            margin-top: -3px;
+            margin-left: -36px;
+            border-bottom: 3px solid transparent;
+            border-top: 3px solid transparent;
+            border-left: 28px solid #ff2d55;
         }
     </style>
 </head>
 
 <body>
+    <!-- 或是用 9 or q or p -->
+    <!-- <div class="bow-box">
+        <div class="bow"></div>
+        <div class="bow-tail"></div> 
+    </div> -->
+    <!-- <div class="airplane"></div> -->
+    
     <div class="container">
         <div class="logo-box">
             <h1 class="logo-text">DropHere.io</h1>
             <div class="loader">
-                <i class="material-icons">send</i>
+                <!-- <i class="material-icons">send</i> -->
+                <div class="airplane"></div>
             </div>
-            <i class="material-icons gift">card_giftcard</i>
+            <!-- <i class="material-icons gift">card_giftcard</i> -->
+            <div class="gift">
+                <!-- 或是用 9 or q or p -->
+                <div class="bow-box">
+                    <div class="bow"></div>
+                    <div class="bow-tail"></div> 
+                </div>
+            </div>
         </div>
         <div class="main">
             <h2 class="title">Let's get your packages!</h2>
@@ -225,7 +381,9 @@
 
             <a href="drophere.io" class="link">
                 <span>
-                    <i class="material-icons">get_app</i>
+                    <!-- <i class="material-icons">get_app</i> -->
+                    <div class="icon-box"></div>
+                    <div class="icon"></div>
                 </span>
                 <span>Take a look here.</span>
             </a>
