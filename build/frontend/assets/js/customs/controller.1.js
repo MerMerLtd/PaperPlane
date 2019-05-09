@@ -551,25 +551,15 @@ const handleFilesSelected = evt => {
         });
 }
 
-elements.boxFile.addEventListener("change", evt => handleFilesSelected(evt), false);
-
 const send = evt => {
-    console.log("send is called");
     isSend = true;
-
-    elements.dropCard.classList.add("u-hidden");
-    elements.sendingCard.classList.remove("u-hidden");
-    
     const data = {
         type: document.querySelector("#tab1 .active").innerText || "LINK",
     }
-
-    renderSendingWays(data);
+    renderSendingView(data);
     elements.sendingCard.addEventListener("click", evt => sendingViewControl(evt));
 
 }
-
-
 // Check for the various File API support.
 if (window.File && window.FileReader && window.FileList && window.Blob) {
     // Great success! All the File APIs are supported.

@@ -3,7 +3,7 @@ let elements = {
     tab2: document.querySelector("a[href$='tab2']"),
     tabPane1: document.querySelector("#tab1"), // same div 👉 dropCard: document.querySelector(".drop-card"),
     tabPane2: document.querySelector("#tab2"),
-    dropCard: document.querySelector(".drop-card"),
+    // dropCard: document.querySelector(".drop-card"),
     downloadCard: document.querySelector(".download-card"),
     signinCard: document.querySelector(".sign-in"),
     signupCard: document.querySelector(".sign-up"),
@@ -21,22 +21,6 @@ let elements = {
     signUpCheck: document.querySelector(".sign-up input[type=checkbox]"),
     downloadCheck: document.querySelector(".download-card input[type=checkbox]"),
     agreeTerms: document.querySelector(".agree-terms"),
-    pageHeader: document.querySelector(".page-header"),
-    addIcon: document.querySelector(".add__icon"),
-    addText: document.querySelector(".add__text"),
-    dropndDrop: document.querySelector(".box__dragndrop"), //text
-    placeholder: document.querySelector(".placeholder"),
-    cardHeader: document.querySelector(".card-header"),
-    dropZone: document.querySelector(".box__dropzone"),
-    fileList: document.querySelector(".file-list"),
-    boxFile: document.querySelector(".box__file"),
-    btnSend: document.querySelector(".btn-send"),
-    sendingCard: document.querySelector(".sending-card"),
-    sendingWays: document.querySelector(".sending-ways"),
-    btnBack: document.querySelector(".btn-back"),
-    btnCancel: document.querySelector(".btn-cancel"),
-    btnOk: document.querySelector(".btn-ok"),
-    diaplayProgress: document.querySelector(".display-progress"),
 }
 
 elements.downloadCheck.addEventListener("change", evt => document.querySelectorAll(".cover__select").toggle("selected"), false)
@@ -53,33 +37,33 @@ const checkPassword = password => {
 const inputValidation = type => {
     console.log(evt)
     const checkedEmail = checkEmail(elements.emailInput.value);
-    if (checkedEmail) {
+    if(checkedEmail) {
         elements.emailInput.classList.add("has-success")
         elements.emailInput.classList.remove("has-danger");
     }
     const checkedPassword = checkPassword(elements.passwordInput.value);
-    if (checkedPassword) {
+    if(checkedPassword) {
         elements.passwordInput.classList.add("has-success")
         elements.passwordInput.classList.remove("has-danger");
     }
-
-    if (type === "signup") {
+   
+    if(type === "signup"){
         // const checkedPassword2 = checkPassword(elements.passwordInput2.value);
         // if(checkedPassword2) {
         //     elements.passwordInput2.classList.add("has-success")
         //     elements.passwordInput2.classList.remove("has-danger");
         // }
         // if(checkedEmail && checkedPassword && checkedPassword2 && elements.signUpCheck.checked){
-        if (checkedEmail && checkedPassword && elements.signUpCheck.checked) {
+        if(checkedEmail && checkedPassword && elements.signUpCheck.checked){
             // enable 
         }
     }
-    if (type === "signin") {
-        if (checkedEmail && checkedPassword) {
-
+    if(type === "signin"){
+        if(checkedEmail && checkedPassword){
+        
         }
     }
-
+   
 }
 const switchInOrUp = () => {
     console.log("clicked!")
@@ -184,22 +168,16 @@ const removeMultiListener = (element, events, func) => {
 //================================================
 //=================== Drop View ==================
 
+// let elements = {
+//     dropCard: document.querySelector(".drop-card"),
+//     downloadCard: document.querySelector(".download-card"),
+// }
+
 // 判斷瀏覽器是否支持拖拉上傳
 let isAdvancedUpload = function () {
     let div = document.createElement('div');
     return (('draggable' in div) || ('ondragstart' in div && 'ondrop' in div));
 }();
-
-if (isAdvancedUpload) {
-    elements.cardHeader.classList.add("has-advanced-upload");
-    addMultiListener(elements.pageHeader, "drag dragstart dragend dragover dragenter dragleave drop", evt => handleDefault(evt));
-    addMultiListener(elements.pageHeader, "dragover dragenter", evt => handleDragInPageHeader(evt));
-    addMultiListener(elements.pageHeader, "dragleave dragend drop", evt => handleDragoutPageHeader(evt));
-    addMultiListener(elements.pageHeader, "drop", evt => handleFilesSelected(evt));
-}
-// elements.btnDownload.addEventListener("click", evt => downloadFiles(evt), false);
-
-
 
 const formatFileSize = size => {
     let formatted, power;
@@ -362,11 +340,8 @@ const uploadFileControl = async evt => {
     }
 }
 
-elements.fileList.addEventListener("click", evt => uploadFileControl(evt), false);
-
-
 const fileControl = evt => {
-    const element = evt.target.closest(".file");
+    const element = evt.target.closest(".file"); 
     const elementCover = evt.target.closest(".cover");
     const fid = element.dataset.fid;
     // console.log("fileControl", evt.target.closest(".file"), evt.target.matches(`.cover, .cover > *`))
@@ -374,9 +349,9 @@ const fileControl = evt => {
     const file = type === "upload" ?
         uploadQueue[uploadQueue.findIndex(file => file.fid === fid)] :
         downloadQueue[downloadQueue.findIndex(file => file.fid === fid)];
-    const isStarted = type === "download" ?
-        downloadFiles.findIndex(file => file.fid === fid) !== -1 :
-        true;
+    const isStarted = type === "download" 
+    ? downloadFiles.findIndex(file => file.fid === fid) !== -1
+    : true;
 
     if (evt.target.matches(".delete-button, .delete-button *")) {
         isSend = false;
@@ -405,7 +380,7 @@ const fileControl = evt => {
                 elementCover.children.item(3).classList.remove("selected")
             }
         } else {
-            console.log("isSelected", file)
+        console.log("isSelected", file)
 
             file.isPaused = !file.isPaused;
             if (file.isPaused) {
@@ -531,7 +506,7 @@ const renderDropView = files => {
     if (!files || !files.length) return;
     handleInFileList();
     renderFiles(files) // uploadQueue || state;
-} // --
+}
 
 //================================================
 //================= Sending View =================
@@ -576,7 +551,7 @@ const countdown = time => {
 // ?? if Choose EMAIL disable btnBack but can cancel uploading 問題在於什麼時候寄email
 const renderTotalProgress = data => {
     const markup = `
-    <!-- <div class="display-progress"> -->
+    <div class="display-progress">
         <div class="progress progress-custom">
             <div class="progress-num" style = "margin-left: ${ data.marginLeft || 10}px">${(data.totalProgress || 0 )}%</div>
             <div class="progress-bar progress-bar-striped progress-bar-animated total-progress-bar" role="progressbar"
@@ -586,9 +561,9 @@ const renderTotalProgress = data => {
             <p class="file-nums">Total ${data.fileCount || 0} files</p>
             <p class="file-size">${formatFileSize(data.completeSize) || "0B"}/${formatFileSize(data.totalSize) || "0B"}</p>
         </div>
-    <!-- </div> -->
+    </div>
     `;
-    elements.diaplayProgress.insertAdjacentHTML("afterbegin", markup);
+    elements.display.insertAdjacentHTML("beforeend", markup);
     elements = {
         ...elements,
         progressNum: document.querySelector(".progress-num"),
@@ -610,17 +585,13 @@ const genQRCode = letter => {
     qrcode.makeCode(`http://localhost/letter/${letter}`);
 }
 
-const renderSendingWays = () => {
-    const data = {
-        type: document.querySelector("#tab1 .active").innerText || "LINK",
-    }
-    console.log(data)
+const renderSendingWays = data => {
     // ?? download link && Qrcode
     elements.boxFile.removeEventListener("change", evt => handleFilesSelected(evt));
     elements.fileList.removeEventListener("click", evt => uploadFileControl(evt));
     // elements.btnDownload.removeEventListener("click", evt => downloadFiles(evt));
     elements.btnSend.removeEventListener("click", evt => send(evt));
-    
+
     const direct = `
     <p class="countdown">Expire in 
         <span>
@@ -684,8 +655,7 @@ const renderSendingWays = () => {
         default:
             throw new Error(`${data}`);
     }
-    elements.sendingWays.innerHTML = "";
-    
+
     elements.sendingWays.insertAdjacentHTML("afterbegin", markup);
     elements = {
         ...elements,
@@ -697,12 +667,7 @@ const renderSendingWays = () => {
 
     const progressData = calculator();
     renderTotalProgress(progressData);
-
-    elements.dropCard.classList.add("u-hidden");
-    elements.sendingCard.classList.remove("u-hidden");
 }
-elements.btnSend.addEventListener("click", renderSendingWays, false); 
-elements.sendingCard.addEventListener("click", evt => sendingViewControl(evt));
 
 const renderSendingView = data => {
     const markup = `
@@ -724,11 +689,9 @@ const renderSendingView = data => {
         </div>
     </div>
     `;
-    elements
 
-    // elements.tabPane1.innerHTML = ""
-    // elements.dropCard.classList.add("u-hidden");
-    // elements.tabPane1.insertAdjacentHTML("afterbegin", markup);
+    elements.tabPane1.innerHTML = ""
+    elements.tabPane1.insertAdjacentHTML("afterbegin", markup);
 
     elements = {
         ...elements,
@@ -741,11 +704,11 @@ const renderSendingView = data => {
     renderSendingWays(data);
 }
 
-// const backSendingControl = () => {
-//     // render dropZone with sending files;
-//     renderDropView(uploadQueue);
+const backSendingControl = () => {
+    // render dropZone with sending files;
+    renderDropView(uploadQueue);
 
-// }
+}
 
 const enableBtnOk = () => {
     Array.from(btnOk.classList).findIndex(s => s === "disable") !== -1 ?
@@ -761,8 +724,7 @@ const doneWithSending = () => {
     }
     // 還我一個初始畫面 && 清空 uploadQueue // ?? 順序有差嗎？
     isCountdown = false;
-    // renderDropView();
-
+    renderDropView();
     emptyUploadQueue();
     // renderDropView(uploadQueue) // uploadQueue.length should be 0
     return false;
@@ -771,10 +733,7 @@ const doneWithSending = () => {
 const sendingViewControl = evt => {
     if (evt.target.matches(".btn-back, .btn-back *")) {
         // render dropZone with sending files;
-        // renderDropView(uploadQueue);
-        console.log(".btn-back")
-        elements.sendingCard.classList.add("u-hidden");
-        elements.dropCard.classList.remove("u-hidden");
+        renderDropView(uploadQueue);
     } else if (evt.target.matches(".btn-cancel")) {
         doneWithSending(isDone);
     } else if (evt.target.matches(".btn-ok")) {
@@ -783,7 +742,7 @@ const sendingViewControl = evt => {
     }
 }
 
-// renderDropView();
+renderDropView();
 //================================================
 //================ Download View =================
 let isFetching = false;
