@@ -13039,7 +13039,7 @@ thead.thead-inverse th,
   background: transparent;
   bottom: 0;
   color: #fff;
-  z-index: 1; }
+  z-index: -1; }
   .login-page .footer .copyright a {
     color: #fff; }
 
