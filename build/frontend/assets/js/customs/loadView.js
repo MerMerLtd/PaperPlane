@@ -98,17 +98,18 @@ const openLoginPage = evt => {
     elements.navbarToggle.classList.remove("toggled");
     elements.container.classList.add("u-hidden");
     if (!elements.signinCard.classList.contains("u-hidden") && elements.signupCard.classList.contains("u-hidden")) {
-        window.location.href = `${window.location.href}/signin`;
+        window.location.hash = `${window.location.hash}/#signin`;
     }
     if (elements.signinCard.classList.contains("u-hidden") && !elements.signupCard.classList.contains("u-hidden")) {
-        window.location.href = `${window.location.href}/signup`;
+        window.location.hash = `${window.location.hash}/#signup`;
     }
     // add 
 }
 const closeLoginPage = evt => {
     if (evt.target.matches(".modal")) {
         elements.container.classList.remove("u-hidden");
-        window.location.href = `${window.location.href.replace("/signin" || "/signup", "")}`;
+        window.location.href = window.location.href.replace("/#signin" || "/#signup", "");
+        // window.location.href = `${window.location.href.replace("/signin" || "/signup", "")}`;
     }
 }
 
@@ -146,7 +147,19 @@ const addMultiListener = (element, events, func) => {
 const removeMultiListener = (element, events, func) => {
     events.split(" ").forEach(event => element.removeEventListener(event, func, false));
 }
+//================================================
+//================== Alert View ==================
+//https://sweetalert.js.org/guides/#getting-started
+// elements = {...elements,
+//     alertContainer: document.querySelector(".alert-container"),
+// }
 
+// const showAlert = (opts) => {
+//     // opts = {
+//     //     type: "success" || "danger",
+
+//     // }
+// }
 //================================================
 //================== Login View ==================
 

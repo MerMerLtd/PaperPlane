@@ -93,7 +93,7 @@ let isCurrentIn = false;
 
 elements = {
     ...elements,
-    alertSuccess: document.querySelector(".alert"),
+    // alertSuccess: document.querySelector(".alert"),
 
     body: document.querySelector("body"),
 
@@ -495,7 +495,7 @@ const uploadFiles = () => {
 const handleFilesSelected = evt => {
     // （view: 提示訊息們）
     handleInFileList();
-    elements.alertSuccess.style.setProperty("--opacity", 0);
+    // elements.alertSuccess.style.setProperty("--opacity", 0);
 
     // 1. 解析檔案
     // create file object
