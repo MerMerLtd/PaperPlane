@@ -5,20 +5,22 @@ let elements = {
     tabPane2: document.querySelector("#tab2"),
     dropCard: document.querySelector(".drop-card"),
     downloadCard: document.querySelector(".download-card"),
-    signinCard: document.querySelector(".sign-in"),
-    signupCard: document.querySelector(".sign-up"),
-    switchSignin: document.querySelector(".switch-signin > span"),
-    switchSignup: document.querySelector(".switch-signup > span"),
+    signinCard: document.querySelector("#sign-in"),
+    signupCard: document.querySelector("#sign-up"),
+    switchSignin: document.querySelector(".switch-signin > a"),
+    switchSignup: document.querySelector(".switch-signup > a"),
     navLoginBtn: document.querySelector("li[data-toggle='modal'] > .btn"),
     navbarToggle: document.querySelector(".navbar-toggler"),
     html: document.querySelector("html"),
     modal: document.querySelector(".modal"),
     container: document.querySelector(".page-header > .container"),
-    emailInput: document.querySelector(".sign-in input[type=email]"),
-    passwordInput: document.querySelector(".sign-in input[type=password]"),
-    passwordInput2: document.querySelector(".sign-up input[name^=password2]"),
-    signInCheck: document.querySelector(".sign-in input[type=checkbox]"),
-    signUpCheck: document.querySelector(".sign-up input[type=checkbox]"),
+    signInEmail: document.querySelector("#sign-in input[type=email]"),
+    signUpEmail: document.querySelector("#sign-up input[type=email]"),
+    signInPassword: document.querySelector("#sign-in input[type=password]"),
+    signUpPassword: document.querySelector("#sign-up input[type=password]"),
+    passwordConfirm: document.querySelector("#sign-up input[name^=password2]"),
+    signInCheck: document.querySelector("#sign-in input[type=checkbox]"),
+    signUpCheck: document.querySelector("#sign-up input[type=checkbox]"),
     downloadCheck: document.querySelector(".download-card input[type=checkbox]"),
     agreeTerms: document.querySelector(".agree-terms"),
     pageHeader: document.querySelector(".page-header"),
@@ -55,16 +57,90 @@ let elements = {
     downloadBody: document.querySelector(".download-card > .card-body"),
     expDate: document.querySelector(".download-card .exp-date "),
     filesInfo: document.querySelector(".download-card .files-info "),
-
+    body: document.querySelector(".login-page"),
+    navBarBrand: document.querySelector(".navbar-brand"),
+    btnConfirmed: document.querySelector(".btn-confirmed"),
+    varificationPage: document.querySelector(".varification-page"),
 }
 
-// 同一 element 監聽 && 不監聽多個event
+// 同一 element 監聽 || 不監聽多個event
 const addMultiListener = (element, events, func) => {
     events.split(" ").forEach(event => element.addEventListener(event, func, false));
 }
 
 const removeMultiListener = (element, events, func) => {
     events.split(" ").forEach(event => element.removeEventListener(event, func, false));
+}
+
+// enableBtn || disableBtn
+const disableBtn = btn => {
+    if (btn.classList.contains("disable")) return;
+    btn.classList.add("disable");
+}
+const enableBtn = btn => {
+    if (!btn.classList.contains("disable")) return;
+    btn.classList.remove("disable");
+}
+
+// after file in the fileList
+const handleInFileList = () => {
+    elements.placeholder.classList.add("u-margin-top--sm");
+    elements.addIcon.classList.add("add__icon--small");
+    elements.addText.classList.add("add__text--small");
+    // elements.alertSuccess.style.setProperty("--opacity", 1); // 待修改
+    elements.dropZone.classList.add("pointer");
+    // dropZone pointer Event: none
+}
+const handleOutFileList = () => {
+    elements.placeholder.classList.remove("u-margin-top--sm");
+    elements.addIcon.classList.remove("add__icon--small");
+    elements.addText.classList.remove("add__text--small");
+    // elements.alertSuccess.style.setProperty("--opacity", 0);
+    elements.dropZone.classList.remove("pointer");
+}
+
+// // 放進 file-container 的 提示
+// const hintReward = () => {
+//     const markup = `
+//         <div class="alert alert-success" role="alert">
+//             Well done!
+//         </div>
+//     `;
+//     elements.page.insertAdjacentHTML("afterbegin", markup);
+// }
+
+// 放進 “哪裡” 的 提示
+const hintLocation = () => {
+    elements.cardHeader.classList.add("hint");
+    elements.dropZone.classList.add("invisible");
+    //elements.fileList.classList.add("invisible");
+}
+const removeHintLocation = () => {
+    elements.cardHeader.classList.remove("hint");
+    elements.dropZone.classList.remove("invisible");
+    // elements.fileList.classList.remove("invisible");
+}
+
+// drag file in the pageHeader
+const handleDragInPageHeader = evt => {
+    if (!isCurrentIn) {
+        isCurrentIn = true;
+        hintLocation();
+    }
+    if (evt.target.matches(".box__dropzone, .box__dropzone * " || state.fileObj.files.length)) {
+        removeHintLocation();
+        handleInFileList();
+    } else {
+        hintLocation();
+        handleOutFileList();
+    }
+}
+
+const handleDragoutPageHeader = evt => {
+    if (isCurrentIn) {
+        isCurrentIn = false;
+        removeHintLocation();
+    }
 }
 
 //================================================
@@ -147,23 +223,6 @@ const showFileProgress = file => {
     const progress = (file.sliceIndex / file.sliceCount).toFixed(2) * 100;
     document.querySelector(`[data-progressid='${file.fid}']`).style.width = `${progress}%`;
     // ??之後我想要改這裡的樣式
-}
-
-// after file in the fileList
-const handleInFileList = () => {
-    elements.placeholder.classList.add("u-margin-top--sm");
-    elements.addIcon.classList.add("add__icon--small");
-    elements.addText.classList.add("add__text--small");
-    // elements.alertSuccess.style.setProperty("--opacity", 1); // 待修改
-    elements.dropZone.classList.add("pointer");
-    // dropZone pointer Event: none
-}
-const handleOutFileList = () => {
-    elements.placeholder.classList.remove("u-margin-top--sm");
-    elements.addIcon.classList.remove("add__icon--small");
-    elements.addText.classList.remove("add__text--small");
-    // elements.alertSuccess.style.setProperty("--opacity", 0);
-    elements.dropZone.classList.remove("pointer");
 }
 
 // UI Control v1
@@ -273,17 +332,23 @@ elements.fileList.addEventListener("click", evt => uploadFileControl(evt), false
 
 let intervalId;
 
-const countdown = time => {
-    
-    let timerTime = time * 60 * 1000;
+const formatTime = time => {
+    const min = Math.trunc(time / 1000 / 60).toString().length === 2 ?
+        `${Math.trunc(time / 1000 / 60)}` :
+        `0${Math.trunc(time / 1000 / 60)}`;
+    const sec = ((time / 1000) % 60).toString().length === 2 ?
+        `${(time / 1000) % 60}` :
+        `0${(time / 1000) % 60}`;
+    return [min, sec];
+}
 
+const countdown = time => {
+    let timerTime = time * 60 * 1000;
     const interval = () => {
-    
         let min, sec;
         timerTime -= 1000;
         [min, sec] = formatTime(timerTime);
         elements.countdown.innerText = `${min}:${sec}`;
-       
         return timerTime;
     }
 
@@ -318,17 +383,7 @@ const displayLink = (el, letter) => {
     el.firstElementChild.lastElementChild.innerText += `${letter}`;
 }
 
-const formatTime = time => {
-    const min = Math.trunc(time / 1000 / 60).toString().length === 2 ?
-        `${Math.trunc(time / 1000 / 60)}` :
-        `0${Math.trunc(time / 1000 / 60)}`;
-    const sec = ((time / 1000) % 60).toString().length === 2 ?
-        `${(time / 1000) % 60}` :
-        `0${(time / 1000) % 60}`;
-    return [min, sec];
-}
-
-const calculator = () => {
+const progressCalculator = () => {
     // ?? Or setInterval check
     let completeCount = 0,
         totalCount = 0,
@@ -361,7 +416,7 @@ const calculator = () => {
 
     if (totalProgress === 100) {
         isDone = true;
-        elements.btnOk.classList.remove("disable"); // ?? 不應該放這裡不過就先這樣吧
+        enableBtn(elements.btnOk); // ?? 不應該放這裡不過就先這樣吧
     }
     return {
         totalProgress,
@@ -374,32 +429,13 @@ const calculator = () => {
 
 // ?? if Choose EMAIL disable btnBack but can cancel uploading 問題在於什麼時候寄email
 const updateTotalProgress = () => {
-    const data = calculator();
+    const data = progressCalculator();
     elements.totalProgressBar.style.width = `${data.totalProgress}%`;
     elements.progressNum.style.marginLeft = `${5 + data.totalProgress *.8}%`;
     elements.progressNum.innerText = `${(data.totalProgress || 0 )}%`;
     elements.fileNums.innerText = `Total ${data.fileCount || 0} files`;
     elements.fileSize.innerText = `${formatFileSize(data.completeSize || 0)}/${formatFileSize(data.totalSize)}`;
 }
-
-
-elements.sendingCard.addEventListener("click", evt => sendingViewControl(evt));
-
-
-
-// const backSendingControl = () => {
-//     // render dropZone with sending files;
-//     renderDropView(uploadQueue);
-
-// }
-
-const enableBtnOk = () => {
-    elements.btnOk.classList.remove("disable");
-    // Array.from(btnOk.classList).findIndex(s => s === "disable") !== -1 ?
-    //     elements.btnOk.classList.remove("disable") :
-    //     null;
-}
-
 
 // btn-cancel || btn-ok 
 const doneWithSending = deleteFile => {
@@ -547,14 +583,7 @@ const renderDownloadFile = file => {
     elements.downloadList.insertAdjacentHTML("beforeend", markup)
 }
 
-const disableBtn = btn => {
-    if (btn.classList.contains("disable")) return;
-    btn.classList.add("disable");
-}
-const enableBtn = btn => {
-    if (!btn.classList.contains("disable")) return;
-    btn.classList.remove("disable");
-}
+
 
 
 //================================================
@@ -573,22 +602,22 @@ const checkPassword = password => {
 
 const inputValidation = type => {
     console.log(evt)
-    const checkedEmail = checkEmail(elements.emailInput.value);
+    const checkedEmail = checkEmail(elements.signInEmail.value);
     if (checkedEmail) {
-        elements.emailInput.classList.add("has-success")
-        elements.emailInput.classList.remove("has-danger");
+        elements.signInEmail.classList.add("has-success")
+        elements.signInEmail.classList.remove("has-danger");
     }
-    const checkedPassword = checkPassword(elements.passwordInput.value);
+    const checkedPassword = checkPassword(elements.signInPassword.value);
     if (checkedPassword) {
-        elements.passwordInput.classList.add("has-success")
-        elements.passwordInput.classList.remove("has-danger");
+        elements.signInpassword.classList.add("has-success")
+        elements.signInpassword.classList.remove("has-danger");
     }
 
     if (type === "signup") {
-        // const checkedPassword2 = checkPassword(elements.passwordInput2.value);
+        // const checkedPassword2 = checkPassword(elements.passwordConfirm.value);
         // if(checkedPassword2) {
-        //     elements.passwordInput2.classList.add("has-success")
-        //     elements.passwordInput2.classList.remove("has-danger");
+        //     elements.passwordConfirm.classList.add("has-success")
+        //     elements.passwordConfirm.classList.remove("has-danger");
         // }
         // if(checkedEmail && checkedPassword && checkedPassword2 && elements.signUpCheck.checked){
         if (checkedEmail && checkedPassword && elements.signUpCheck.checked) {
@@ -602,63 +631,21 @@ const inputValidation = type => {
     }
 
 }
-const switchInOrUp = () => {
-    console.log("clicked!")
-    elements.signinCard.classList.toggle("u-hidden");
-    elements.signupCard.classList.toggle("u-hidden");
-    if (!elements.signinCard.classList.contains("u-hidden") && elements.signupCard.classList.contains("u-hidden")) {
-        elements = {
-            ...elements,
-            emailInput: document.querySelector(".sign-in input[type=email]"),
-            passwordInput: document.querySelector(".sign-in input[type=password]"),
-        }
-        window.location.href = `${window.location.href.replace("signup", "signin")}`;
-        elements.emailInput.addEventListener("change", () => inputValidation("signin"), false)
-        elements.passwordInput.addEventListener("change", () => inputValidation("signin"), false)
 
-    }
-    if (!elements.signupCard.classList.contains("u-hidden") && elements.signinCard.classList.contains("u-hidden")) {
-        elements = {
-            ...elements,
-            emailInput: document.querySelector(".sign-up input[type=email]"),
-            passwordInput: document.querySelector(".sign-up input[name^=password]"),
-        }
-        window.location.href = `${window.location.href.replace("signin", "signup")}`;
-        elements.emailInput.addEventListener("change", () => inputValidation("signup"), false)
-        elements.passwordInput.addEventListener("change", () => inputValidation("signup"), false)
-
-    }
-}
-const openLoginPage = evt => {
-    // close Nav && change url
-    elements.html.classList.remove("nav-open");
-    elements.navbarToggle.classList.remove("toggled");
-    elements.container.classList.add("u-hidden");
-    if (!elements.signinCard.classList.contains("u-hidden") && elements.signupCard.classList.contains("u-hidden")) {
-        window.location.hash = `${window.location.hash}/#signin`;
-    }
-    if (elements.signinCard.classList.contains("u-hidden") && !elements.signupCard.classList.contains("u-hidden")) {
-        window.location.hash = `${window.location.hash}/#signup`;
-    }
-    // add 
-}
-const closeLoginPage = evt => {
-    elements.container.classList.remove("u-hidden");
-    // if (evt.target.matches(".modal")) {
-    //     elements.container.classList.remove("u-hidden");
-    //     window.location.href = window.location.href.replace("/#signin" || "/#signup", "");
-    //     // window.location.href = `${window.location.href.replace("/signin" || "/signup", "")}`;
-    // }
-}
-
-elements.switchSignup.addEventListener("click", switchInOrUp, false);
-elements.switchSignin.addEventListener("click", switchInOrUp, false);
-elements.navLoginBtn.addEventListener("click", openLoginPage, false);
-elements.modal.addEventListener("click", closeLoginPage, false);
+elements.signInEmail.addEventListener("change", () => inputValidation("signin"), false)
+elements.signInPassword.addEventListener("change", () => inputValidation("signin"), false)
 
 
 //================================================
 //================ UI renderView =================
+// routes = {
+//     '/': dropView,
+//     '/#send': dropView,
+//     '/#receive/letter': downloadView,
+//     '/#sign-in': signInView,
+//     '/#sign-up': signUpView,
+//     '/#validation': validationView,
+//   };
 
 const renderSendingView = () => {
     console.log(isSend);
@@ -701,8 +688,6 @@ const renderSendingView = () => {
     elements.sendingCard.classList.remove("u-hidden");
 }
 
-elements.btnSend.addEventListener("click", renderSendingView, false);
-
 const sendingViewControl = evt => {
     if (!evt.target.matches(".btn-back, .btn-back *, .btn-cancel,.btn-ok")) return;
     if (evt.target.matches(".btn-back, .btn-back *")) {
@@ -719,3 +704,134 @@ const sendingViewControl = evt => {
     elements.sendingCard.classList.add("u-hidden");
     elements.dropCard.classList.remove("u-hidden");
 }
+
+elements.btnSend.addEventListener("click", renderSendingView, false);
+elements.sendingCard.addEventListener("click", evt => sendingViewControl(evt));
+
+const renderTabView1 = () => {
+    elements.tab1.classList.add("active");
+    elements.tab1.classList.add("show");
+    elements.tabPane1.classList.add("active");
+    elements.tabPane1.classList.add("show");
+    elements.tab2.classList.remove("active");
+    elements.tab2.classList.remove("show");
+    elements.tabPane2.classList.remove("active");
+    elements.tabPane2.classList.remove("show");
+}
+const renderTabView2 = () => {
+    elements.tab1.classList.remove("active");
+    elements.tab1.classList.remove("show");
+    elements.tabPane1.classList.remove("active");
+    elements.tabPane1.classList.remove("show");
+    elements.tab2.classList.add("active");
+    elements.tab2.classList.add("show");
+    elements.tabPane2.classList.add("active");
+    elements.tabPane2.classList.add("show");
+}
+
+const unhiddenElement = (element, delay) => {
+    setTimeout(() => {
+        element.classList.remove("u-hidden");
+    }, delay); 
+}
+const hiddenElement = (element, delay) => {
+    setTimeout(() => {
+        element.classList.add("u-hidden");
+    }, delay); 
+}
+
+const closeLoginView = () => {
+    elements.html.classList.remove("nav-open");
+    elements.navbarToggle.classList.remove("toggled");
+    elements.modal.classList.remove("show");
+    setTimeout(() => {
+        elements.body.classList.remove("modal-open");
+        elements.modal.setAttribute("aria-hidden", false);
+        elements.modal.style.display = "none";
+        elements.modal.style.pointerEvents = "auto";
+        elements.modal.style.zIndex = "1050";
+    }, 300); 
+}
+
+//     '/#sign-in': signInView,
+//     '/#sign-up': signUpView,
+const renderLoginView = () => {
+    hiddenElement(elements.varificationPage, 0);
+    elements.html.classList.remove("nav-open");
+    elements.navbarToggle.classList.remove("toggled");
+    elements.container.classList.add("u-hidden");
+    
+    elements.body.classList.add("modal-open");
+    elements.modal.removeAttribute("aria-hidden");
+    elements.modal.style.display = "block";
+    elements.modal.style.pointerEvents = "none";
+    elements.modal.style.zIndex = "2";
+    setTimeout(() => elements.modal.classList.add("show"), 100);
+}
+
+//     '/': dropView,
+//     '/#send': dropView,
+const renderDropView = () => {
+    hiddenElement(elements.varificationPage, 0);
+    closeLoginView();
+
+    renderTabView1();
+    unhiddenElement(elements.container, 300);
+}
+
+//  '/#receive/letter': downloadView,
+const renderDownloadView = () => {
+    hiddenElement(elements.varificationPage, 0);
+    closeLoginView();
+
+    renderTabView2();
+    unhiddenElement(elements.container, 300);
+    elements.inputCard.classList.remove("active");
+    elements.downloadCard.classList.add("active");
+}
+
+// '/#receive': downloadInput,
+const renderDownloadInput = () => {
+    hiddenElement(elements.varificationPage, 0);
+    closeLoginView();
+
+    renderTabView2();
+    unhiddenElement(elements.container, 300);
+    elements.inputCard.classList.add("active");
+    elements.downloadCard.classList.remove("active");
+}
+
+//     '/#validation': validationView,
+const renderValidationView = result => {
+    closeLoginView(); 
+    hiddenElement(elements.container, 0);
+    unhiddenElement(elements.varificationPage, 0);
+    if(result){
+    // result === true 👉 驗證成功
+
+    }else{
+    // result === false 👉 驗證失敗
+
+    }
+}
+
+renderValidationView();
+
+// open && close by modal
+const openLoginPage = evt => {
+    // close Nav && change url
+    elements.html.classList.remove("nav-open");
+    elements.navbarToggle.classList.remove("toggled");
+    elements.container.classList.add("u-hidden");
+   
+    // add 
+}
+const closeLoginPage = evt => {
+    if (evt.target.matches(".modal")) {
+        elements.container.classList.remove("u-hidden");
+        window.location.hash = "send";
+    }
+}
+elements.btnConfirmed.addEventListener("click", renderDropView, false);
+elements.navLoginBtn.addEventListener("click", openLoginPage, false);
+elements.modal.addEventListener("click", closeLoginPage, false);

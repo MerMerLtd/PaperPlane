@@ -101,54 +101,8 @@ elements = {
 
 }
 
-
-
-// // 放進 file-container 的 提示
-// const hintReward = () => {
-//     const markup = `
-//         <div class="alert alert-success" role="alert">
-//             Well done!
-//         </div>
-//     `;
-//     elements.page.insertAdjacentHTML("afterbegin", markup);
-// }
-
-// 放進 “哪裡” 的 提示
-const hintLocation = () => {
-    elements.cardHeader.classList.add("hint");
-    elements.dropZone.classList.add("invisible");
-    //elements.fileList.classList.add("invisible");
-}
-const removeHintLocation = () => {
-    elements.cardHeader.classList.remove("hint");
-    elements.dropZone.classList.remove("invisible");
-    // elements.fileList.classList.remove("invisible");
-}
-
-// drag file in the pageHeader
-const handleDragInPageHeader = evt => {
-    if (!isCurrentIn) {
-        isCurrentIn = true;
-        hintLocation();
-    }
-    if (evt.target.matches(".box__dropzone, .box__dropzone * " || state.fileObj.files.length)) {
-        removeHintLocation();
-        handleInFileList();
-    } else {
-        hintLocation();
-        handleOutFileList();
-    }
-}
-const handleDragoutPageHeader = evt => {
-    if (isCurrentIn) {
-        isCurrentIn = false;
-        removeHintLocation();
-    }
-}
-
-
 // =============================================================
-// Models
+// Modeals
 
 const File = {
     files: [],

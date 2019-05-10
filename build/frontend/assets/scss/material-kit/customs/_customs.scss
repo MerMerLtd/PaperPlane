@@ -222,17 +222,19 @@
 
     &__continue,
     &__pause,
-    &__select{
+    &__select {
         opacity: 0;
     }
 
-    .file .continue > &__continue{
+    .file .continue>&__continue {
         opacity: 1;
     }
-    .file .pause > &__pause{
+
+    .file .pause>&__pause {
         opacity: 1;
     }
-    .file .select > &__select{
+
+    .file .select>&__select {
         opacity: 1;
     }
 
@@ -350,7 +352,7 @@
             right: 15.5px;
         }
 
-        &.selected > *{
+        &.selected>* {
             opacity: 1;
         }
     }
@@ -505,14 +507,15 @@
         // color: #e91e63
     }
 
-    &__title{
+    &__title {
         display: flex;
         font-size: 24px;
         margin-top: 26px;
     }
-    
+
 }
-.btn-back{
+
+.btn-back {
     cursor: pointer;
 }
 
@@ -742,7 +745,7 @@ a:visited {
     //   border-bottom: 1px solid  #6d6d6d;
 }
 
-.form-control > .tooltip {
+.form-control>.tooltip {
 
     &,
     &:active,
@@ -750,6 +753,7 @@ a:visited {
         margin: 0;
     }
 }
+
 footer a {
 
     &,
@@ -935,28 +939,58 @@ footer a {
         margin: 0 0 4px;
     }
 
-    span {
+    a {
         color: $purple-700;
         font-weight: 500;
         text-decoration: underline;
         cursor: pointer;
+        display: inline-block;
+        font-size: 14px;
     }
 }
 
-.sending-ways > *{
+.sending-ways>* {
     display: none;
 }
 
-.direct .sending-ways>:first-child{
-    display: block;
-}
-.link .sending-ways>:nth-child(2){
-    display: block;
-}
-.email .sending-ways>:last-child{
+.direct .sending-ways>:first-child {
     display: block;
 }
 
-.email .btn-cancel{
+.link .sending-ways>:nth-child(2) {
+    display: block;
+}
+
+.email .sending-ways>:last-child {
+    display: block;
+}
+
+.email .btn-cancel {
     cursor: not-allowed;
+}
+
+.varification-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    z-index: 1;
+    & > .container {
+        position: absolute !important;
+        top: 50%;
+        left: 50%;
+        z-index: 2;
+        -ms-transform: translate(-50%, -50%);
+        -webkit-transform: translate(-50%, -50%);
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: #FFFFFF;
+        padding: 0 15px;
+        width: 100%;
+        max-width: 880px;
+
+        & .title {
+            font-size: 5em;
+        }
+    }
 }

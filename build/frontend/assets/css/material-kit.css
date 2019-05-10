@@ -3963,7 +3963,7 @@ button.close {
 .modal-dialog {
   position: relative;
   width: auto;
-  margin: 0.5rem;
+  margin: 0.5rem auto;
   pointer-events: none; }
   .modal.fade .modal-dialog {
     transition: -webkit-transform 0.3s ease-out;
@@ -16405,11 +16405,13 @@ footer a, footer a:active, footer a:visited {
   padding: 20px 24px; }
   .modal .card > .btn-box p {
     margin: 0 0 4px; }
-  .modal .card > .btn-box span {
+  .modal .card > .btn-box a {
     color: #7b1fa2;
     font-weight: 500;
     text-decoration: underline;
-    cursor: pointer; }
+    cursor: pointer;
+    display: inline-block;
+    font-size: 14px; }
 
 .sending-ways > * {
   display: none; }
@@ -16425,6 +16427,27 @@ footer a, footer a:active, footer a:visited {
 
 .email .btn-cancel {
   cursor: not-allowed; }
+
+.varification-page {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  z-index: 1; }
+  .varification-page > .container {
+    position: absolute !important;
+    top: 50%;
+    left: 50%;
+    z-index: 2;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #FFFFFF;
+    padding: 0 15px;
+    width: 100%;
+    max-width: 880px; }
+    .varification-page > .container .title {
+      font-size: 5em; }
 
 /**
  * Computes a CSS calc function that betweens a value from
