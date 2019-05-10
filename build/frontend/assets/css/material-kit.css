@@ -15995,8 +15995,16 @@ select.selectpicker {
   justify-content: space-between; }
   .text-box:not(:nth-child(1)) {
     margin: 0 5px; }
+  .text-box__title {
+    display: flex;
+    font-size: 24px;
+    margin-top: 26px; }
+
+.btn-back {
+  cursor: pointer; }
 
 .btn-cancel {
+  cursor: pointer;
   margin-top: 26px;
   margin-bottom: 10px; }
 
@@ -16402,6 +16410,21 @@ footer a, footer a:active, footer a:visited {
     font-weight: 500;
     text-decoration: underline;
     cursor: pointer; }
+
+.sending-ways > * {
+  display: none; }
+
+.direct .sending-ways > :first-child {
+  display: block; }
+
+.link .sending-ways > :nth-child(2) {
+  display: block; }
+
+.email .sending-ways > :last-child {
+  display: block; }
+
+.email .btn-cancel {
+  cursor: not-allowed; }
 
 /**
  * Computes a CSS calc function that betweens a value from

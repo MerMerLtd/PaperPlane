@@ -156,7 +156,6 @@ const File = {
 // =============================================================
 // Controller
 let letter;
-
 const initialLetter = async () => {
     let err, data;
     [err, data] = await to(makeRequest({
@@ -167,10 +166,18 @@ const initialLetter = async () => {
         console.trace(err)
     } else {
         letter = data.lid;
+
         console.log("letter", letter);
+
+        displayDigit(elements.displayDigit, letter);
+        displayLink(elements.displayLink, letter);
+        genQRCode(elements.displayQRCode1, letter);
+        genQRCode(elements.displayQRCode2, letter);
     }
 }
 initialLetter();
+
+
 
 const state = {};
 
@@ -431,13 +438,28 @@ const popUploadQueue = target => {
     return uploadQueue;
 }
 
-const emptyUploadQueue = () => {
+const deleteUploadFile = fid => ({
+    method: "DELETE",
+    url: `/letter/${letter}/upload/${fid}`
+});
+
+const emptyUploadQueue = deleteFile => {
     if (uploadQueue.length) {
-        uploadQueue.pop();
-        return emptyUploadQueue();
+        !deleteFile 
+        ? uploadQueue.pop()
+        : deleteUploadFile(uploadQueue.pop().fid);
+        return emptyUploadQueue(deleteFile);
     }
     return uploadQueue;
 }
+
+// const emptyUploadQueue = () => {
+//     if (uploadQueue.length) {
+//         uploadQueue.pop().fid;
+//         return emptyUploadQueue();
+//     }
+//     return uploadQueue;
+// }
 
 const uploadShard = async target => {
     // console.log("uploadShard/ isPaused", target.fid, target.isPaused)
@@ -476,7 +498,8 @@ const uploadShard = async target => {
         }
     } else {
         target.sliceIndex < target.sliceCount ? uploadShard(target) : null; // ?? popUploadQueue(target); 需要嗎？
-        isSend ? showTotalProgress() : showFileProgress(target);
+        showFileProgress(target);
+        updateTotalProgress();
     }
 }
 

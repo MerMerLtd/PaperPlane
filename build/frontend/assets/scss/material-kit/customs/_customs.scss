@@ -504,12 +504,26 @@
         margin: 0 5px;
         // color: #e91e63
     }
+
+    &__title{
+        display: flex;
+        font-size: 24px;
+        margin-top: 26px;
+    }
+    
+}
+.btn-back{
+    cursor: pointer;
 }
 
 .btn-cancel {
+    cursor: pointer;
     margin-top: 26px;
     margin-bottom: 10px;
 }
+
+
+
 
 .progress-custom {
     height: 35px;
@@ -929,3 +943,20 @@ footer a {
     }
 }
 
+.sending-ways > *{
+    display: none;
+}
+
+.direct .sending-ways>:first-child{
+    display: block;
+}
+.link .sending-ways>:nth-child(2){
+    display: block;
+}
+.email .sending-ways>:last-child{
+    display: block;
+}
+
+.email .btn-cancel{
+    cursor: not-allowed;
+}
