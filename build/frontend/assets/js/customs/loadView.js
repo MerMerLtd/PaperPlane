@@ -270,8 +270,32 @@ elements.fileList.addEventListener("click", evt => uploadFileControl(evt), false
 
 //================================================
 //================= Sending View =================
-// let isCountdown = false;
-let timerTime = 0;
+
+let intervalId;
+
+const countdown = time => {
+    
+    let timerTime = time * 60 * 1000;
+
+    const interval = () => {
+    
+        let min, sec;
+        timerTime -= 1000;
+        [min, sec] = formatTime(timerTime);
+        elements.countdown.innerText = `${min}:${sec}`;
+       
+        return timerTime;
+    }
+
+    if (!timerTime) {
+        clearInterval(intervalId);
+        elements.countdown.innerText = `10:00`;
+        return timerTime;
+    }
+
+    intervalId = setInterval(interval, 1000, timerTime);
+}
+
 
 const genQRCode = (el, letter) => {
     let qrcode = new QRCode(el, {
@@ -312,9 +336,9 @@ const calculator = () => {
         completeSize = 0,
         fileCount = 0,
         totalProgress = 0;
-        // marginLeft = 0;
-    
-    if(!uploadQueue.length) return{
+    // marginLeft = 0;
+
+    if (!uploadQueue.length) return {
         totalProgress,
         totalSize,
         completeSize,
@@ -358,76 +382,7 @@ const updateTotalProgress = () => {
     elements.fileSize.innerText = `${formatFileSize(data.completeSize || 0)}/${formatFileSize(data.totalSize)}`;
 }
 
-const countdown = time => {
-    // isCountdown = true
-    time *= 60 * 1000;
-    const interval = () => {
-        let min, sec;
-        time -= 1000;
-        [min, sec] = formatTime(time);
-        if (elements.countdown)
-            elements.countdown.innerText = `${min}:${sec}`;
-        timerTime = time;
-    
-        // ??
-        if (time <= 0) {
-            // clearInterval(interval);
-            // elements.countdown.innerText = `00:00`;
-            elements.countdown.parentElement.innerHTML = `<span>Expired!<span>`;
-            // isCountdown = false;
-            timerTime = 0;
 
-            return;
-            // return `00:00`;
-        }
-        // return `${min}:${sec}`;
-        return; 
-    }
-     setInterval(interval, 1000);
-}
-
-const renderSendingView = () => {
-    console.log(isSend);
-    if(!isSend){ // && !!uploadQueue.length
-        countdown(10);
-    }
-    isSend = true;
-
-    // 1. according to "#tab1 .active" to render differ sendingWays
-    const type = document.querySelector("#tab1 .active").innerText || "LINK";
-    // css
-    switch (type) {
-        case "EMAIL":
-            elements.sendingCard.classList.add("email");
-            elements.sendingCard.classList.remove("link");
-            elements.sendingCard.classList.remove("direct");
-            console.log(type)
-
-            break;
-        case "LINK":
-            elements.sendingCard.classList.remove("email");
-            elements.sendingCard.classList.add("link");
-            elements.sendingCard.classList.remove("direct");
-        console.log(type)
-
-            break;
-        case "DIRECT":
-            elements.sendingCard.classList.remove("email");
-            elements.sendingCard.classList.remove("link");
-            elements.sendingCard.classList.add("direct");
-        console.log(type)
-
-            break;
-        default:
-            throw new Error(`${type}`);
-    }
-    // 2. hidden drop-card
-    elements.dropCard.classList.add("u-hidden");
-    // 3. show sending-card
-    elements.sendingCard.classList.remove("u-hidden");
-}
-
-elements.btnSend.addEventListener("click", renderSendingView, false);
 elements.sendingCard.addEventListener("click", evt => sendingViewControl(evt));
 
 
@@ -449,34 +404,15 @@ const enableBtnOk = () => {
 // btn-cancel || btn-ok 
 const doneWithSending = deleteFile => {
     // 將uploadQueue裡面的files移除並 && 根據deleteFile判斷是否刪除在後段的資料
-    emptyUploadQueue(deleteFile); 
+    emptyUploadQueue(deleteFile);
     // 刪除計時器並將ui歸零
-    !!deleteFile ? isSend = false: null;
-    countdown(0); 
+    !!deleteFile ? isSend = false : null;
+    countdown(0);
     //恢復初始畫面
     elements.fileList.innerHTML = ""; //!elements.fileList.childElementCount? === true
-    handleOutFileList(); 
+    handleOutFileList();
     updateTotalProgress();
     return false;
-}
-
-const sendingViewControl = evt => {
-    if (evt.target.matches(".btn-back, .btn-back *")) {
-        // render dropZone with sending files;
-        // renderDropView(uploadQueue);
-        console.log(evt.target)
-        
-    } else if (evt.target.matches(".btn-cancel")) {
-        // ++ alert ?? 自己寫一個library;
-        console.log("btn-cancel")
-        doneWithSending(true);
-        
-    } else if (evt.target.matches(".btn-ok")) {
-        if (!isDone) return;
-        doneWithSending(); //將uploadQueue裡面的files移除
-    }
-    elements.sendingCard.classList.add("u-hidden");
-    elements.dropCard.classList.remove("u-hidden");
 }
 
 // renderDropView();
@@ -707,11 +643,12 @@ const openLoginPage = evt => {
     // add 
 }
 const closeLoginPage = evt => {
-    if (evt.target.matches(".modal")) {
-        elements.container.classList.remove("u-hidden");
-        window.location.href = window.location.href.replace("/#signin" || "/#signup", "");
-        // window.location.href = `${window.location.href.replace("/signin" || "/signup", "")}`;
-    }
+    elements.container.classList.remove("u-hidden");
+    // if (evt.target.matches(".modal")) {
+    //     elements.container.classList.remove("u-hidden");
+    //     window.location.href = window.location.href.replace("/#signin" || "/#signup", "");
+    //     // window.location.href = `${window.location.href.replace("/signin" || "/signup", "")}`;
+    // }
 }
 
 elements.switchSignup.addEventListener("click", switchInOrUp, false);
@@ -720,261 +657,65 @@ elements.navLoginBtn.addEventListener("click", openLoginPage, false);
 elements.modal.addEventListener("click", closeLoginPage, false);
 
 
-// const renderDropView = files => {
-//     const markup = `
-//         <div class="card">
-//             <div class="placeholder"></div>
-//             <div class="card-header ">
-//                 <div class="file-list"></div>
-//                 <div class="box__dropzone ">
-//                     <input class="box__file" type="file" name="files[]" id="file"
-//                     data-multiple-caption="{count} files selected" multiple />
-//                     <button class="box__button" type="submit">Upload</button>
-//                 </div>
-//                 <label for="file">
-//                     <div class="add__icon"></div>
-//                     <div class="add__text">
-//                         <strong>Choose a file</strong>
-//                         <span class="box__dragndrop"> or drag it here</span>
-//                         .
-//                     </div>
-//                 </label>
-//             </div>
+//================================================
+//================ UI renderView =================
 
-//             <div class="card-body">
-//                 <ul class="nav nav-pills nav-pills-rose">
-//                     <li class="nav-item">
-//                         <a class="nav-link" href="#pill1" data-toggle="tab">Direct</a>
-//                     </li>
-//                     <li class="nav-item">
-//                         <a class="nav-link" href="#pill2" data-toggle="tab">Link</a>
-//                     </li>
-//                     <li class="nav-item">
-//                         <a class="nav-link active show" href="#pill3" data-toggle="tab">Email</a>
-//                     </li>
-//                 </ul>
-//                 <div class="tab-content">
-//                     <div class="tab-pane" id="pill1">
-//                         <!-- &nbsp; -->
-//                         <div class="space"></div>
-//                     </div>
-//                     <div class="tab-pane" id="pill2">
-//                         <!-- &nbsp; -->
-//                         <div class="space"></div>
-//                     </div>
-//                     <div class="tab-pane active show" id="pill3">
-//                         <div class="input-group">
-//                             <div class="input-group-prepend">
-//                                 <span class="input-group-text">
-//                                     <i class="material-icons">mail</i>
-//                                 </span>
-//                             </div>
-//                             <input type="email" value="" placeholder="Email to..." class="form-control">
-//                             </div>
-//                             <div class="input-group">
-//                             <div class="input-group-prepend">
-//                             <span class="input-group-text">
-//                                 <i class="material-icons">label</i>
-//                             </span>
-//                             </div>
-//                             <input type="text" value="" placeholder="Subject..." class="form-control">
-//                         </div>
-//                         <div class="form-group label-floating bmd-form-group is-filled">
-//                             <label class="form-control-label bmd-label-floating" for="message"> Your message</label>
-//                             <textarea class="form-control" rows="4" id="message"></textarea>
-//                         </div>
-//                     </div>
-//                 </div>
-//                 <div class="btn btn-primary btn-block btn-send">Send<div class="ripple-container"></div>
-//             </div>
+const renderSendingView = () => {
+    console.log(isSend);
+    if (!isSend) { // && !!uploadQueue.length
+        countdown(10);
+    }
+    isSend = true;
 
-//         </div>
-//     `;
+    // 1. according to "#tab1 .active" to render differ sendingWays
+    const type = document.querySelector("#tab1 .active").innerText || "LINK";
+    // css
+    switch (type) {
+        case "EMAIL":
+            elements.sendingCard.classList.add("email");
+            elements.sendingCard.classList.remove("link");
+            elements.sendingCard.classList.remove("direct");
+            console.log(type)
 
-//     elements.tabPane1.innerHTML = "";
-//     elements.tabPane1.insertAdjacentHTML("afterbegin", markup);
+            break;
+        case "LINK":
+            elements.sendingCard.classList.remove("email");
+            elements.sendingCard.classList.add("link");
+            elements.sendingCard.classList.remove("direct");
+            console.log(type)
 
-//     elements = {
-//         ...elements,
-//         pageHeader: document.querySelector(".page-header"),
-//         addIcon: document.querySelector(".add__icon"),
-//         addText: document.querySelector(".add__text"),
-//         dropndDrop: document.querySelector(".box__dragndrop"), //text
-//         placeholder: document.querySelector(".placeholder"),
-//         cardHeader: document.querySelector(".card-header"),
-//         dropZone: document.querySelector(".box__dropzone"),
-//         fileList: document.querySelector(".file-list"),
-//         boxFile: document.querySelector(".box__file"),
-//         btnSend: document.querySelector(".btn-send"),
-//     }
+            break;
+        case "DIRECT":
+            elements.sendingCard.classList.remove("email");
+            elements.sendingCard.classList.remove("link");
+            elements.sendingCard.classList.add("direct");
+            console.log(type)
 
-//     elements.boxFile.addEventListener("change", evt => handleFilesSelected(evt), false);
-//     elements.fileList.addEventListener("click", evt => uploadFileControl(evt), false);
-//     // elements.btnDownload.addEventListener("click", evt => downloadFiles(evt), false);
-//     elements.btnSend.addEventListener("click", evt => send(evt), false);
+            break;
+        default:
+            throw new Error(`${type}`);
+    }
+    // 2. hidden drop-card
+    elements.dropCard.classList.add("u-hidden");
+    // 3. show sending-card
+    elements.sendingCard.classList.remove("u-hidden");
+}
 
-//     if (isAdvancedUpload) {
-//         elements.cardHeader.classList.add("has-advanced-upload");
-//         addMultiListener(elements.pageHeader, "drag dragstart dragend dragover dragenter dragleave drop", evt => handleDefault(evt));
-//         addMultiListener(elements.pageHeader, "dragover dragenter", evt => handleDragInPageHeader(evt));
-//         addMultiListener(elements.pageHeader, "dragleave dragend drop", evt => handleDragoutPageHeader(evt));
-//         addMultiListener(elements.pageHeader, "drop", evt => handleFilesSelected(evt));
-//     }
+elements.btnSend.addEventListener("click", renderSendingView, false);
 
-//     if (!files || !files.length) return;
-//     handleInFileList();
-//     renderFiles(files) // uploadQueue || state;
-// } // --
+const sendingViewControl = evt => {
+    if (!evt.target.matches(".btn-back, .btn-back *, .btn-cancel,.btn-ok")) return;
+    if (evt.target.matches(".btn-back, .btn-back *")) {
+        console.log(evt.target)
+    } else if (evt.target.matches(".btn-cancel")) {
+        // ++ alert ?? 自己寫一個library;
+        countdown(0);
+        doneWithSending(true);
 
-// const renderTotalProgress = data => {
-//     const markup = `
-//     <!-- <div class="display-progress"> -->
-//         <div class="progress progress-custom">
-//             <div class="progress-num" style = "margin-left: ${ data.marginLeft || 10}px">${(data.totalProgress || 0 )}%</div>
-//             <div class="progress-bar progress-bar-striped progress-bar-animated total-progress-bar" role="progressbar"
-//                 aria-valuenow="75" aria-valuemin="0%" aria-valuemax="100" style="width: ${(data.totalProgress || 0 )}%"></div>
-//         </div>
-//         <div class="text-box">
-//             <p class="file-nums">Total ${data.fileCount || 0} files</p>
-//             <p class="file-size">${formatFileSize(data.completeSize) || "0B"}/${formatFileSize(data.totalSize) || "0B"}</p>
-//         </div>
-//     <!-- </div> -->
-//     `;
-//     elements.diaplayProgress.insertAdjacentHTML("afterbegin", markup);
-//     elements = {
-//         ...elements,
-//         progressNum: document.querySelector(".progress-num"),
-//         fileNums: document.querySelector(".file-nums"),
-//         fileSize: document.querySelector(".file-size"),
-//         totalProgressBar: document.querySelector(".total-progress-bar"),
-//     }
-// }
-
-// const renderSendingWays = () => {
-//     const data = {
-//         type: document.querySelector("#tab1 .active").innerText || "LINK",
-//     }
-//     console.log(data)
-//     // ?? download link && Qrcode
-//     elements.boxFile.removeEventListener("change", evt => handleFilesSelected(evt));
-//     elements.fileList.removeEventListener("click", evt => uploadFileControl(evt));
-//     // elements.btnDownload.removeEventListener("click", evt => downloadFiles(evt));
-//     elements.btnSend.removeEventListener("click", evt => send(evt));
-
-//     const direct = `
-//     <p class="countdown">Expire in 
-//         <span>
-//             ${(isCountdown && data.type === "DIRECT")
-//             ? formatTime(timerTime) 
-//             : countdown(10) || "10:00"}
-//         </span>
-//     </p>
-//     <div class="display">
-//         <div class="display-digit">
-//             <span>${letter[0]}</span>
-//             <span>${letter[1]}</span>
-//             <span>${letter[2]}</span>
-//             <span>${letter[3]}</span>
-//             <span>${letter[4]}</span>
-//             <span>${letter[5]}</span>
-//         </div> 
-//         <div class="display-code"></div>
-
-//         <!-- display progress -->
-
-//     </div>
-
-//     `;
-//     // ?? download link && Qrcode
-//     const link = `
-//     <div class="display">
-//         <div class="display-code"></div>
-//         <div class="display-link">
-//             <a href="http://localhost/#${letter}" target="_blank" class="link"> 
-//             <span><i class="material-icons">file_copy</i></span>
-//             https://drophere.io/download
-//             </a>
-//         </div>
-//         <!-- display progress -->
-//     </div>
-//     `;
-//     const email = `
-//     <div class="display">
-//         <div class="display-paperplane">
-//             <div class="loader">
-//                 <i class="material-icons">send</i>
-//             </div>
-//             <i class="material-icons gift">card_giftcard</i>
-//         </div>
-//         <!-- display progress -->
-//     </div>
-//     `;
-
-//     let markup;
-//     switch (data.type) {
-//         case "EMAIL":
-//             markup = email;
-//             break;
-//         case "LINK":
-//             markup = link;
-//             break;
-//         case "DIRECT":
-//             markup = direct;
-//             break;
-//         default:
-//             throw new Error(`${data}`);
-//     }
-//     elements.sendingWays.innerHTML = "";
-
-//     elements.sendingWays.insertAdjacentHTML("afterbegin", markup);
-//     elements = {
-//         ...elements,
-//         display: document.querySelector(".display"),
-//         countdown: document.querySelector(".countdown > span"),
-//     }
-
-//     if (document.querySelector(".display-code")) genQRCode();
-
-//     const progressData = calculator();
-//     renderTotalProgress(progressData);
-
-//     elements.dropCard.classList.add("u-hidden");
-//     elements.sendingCard.classList.remove("u-hidden");
-// }
-
-// const renderSendingView = data => {
-//     const markup = `
-//     <div class="card sending-card">
-//         <div class="card-body">
-//             <div class="text-box">
-//                 <h3>
-//                     <span class="btn-back">
-//                         <i class="material-icons">arrow_back</i>
-//                     </span>
-//                     <span class="tim-note">Sending...</span>
-//                 </h3>
-//                 <h5 class="tim-note btn-cancel">Cancel</h5>
-//             </div>
-
-//             <div class="sending-ways"></div>
-
-//             <div class="btn btn-block btn-ok disable">O K !</div>
-//         </div>
-//     </div>
-//     `;
-//     elements
-
-//     // elements.tabPane1.innerHTML = ""
-//     // elements.dropCard.classList.add("u-hidden");
-//     // elements.tabPane1.insertAdjacentHTML("afterbegin", markup);
-
-//     elements = {
-//         ...elements,
-//         sendingCard: document.querySelector(".sending-card"),
-//         sendingWays: document.querySelector(".sending-ways"),
-//         btnBack: document.querySelector(".btn-back"),
-//         btnCancel: document.querySelector(".btn-cancel"),
-//         btnOk: document.querySelector(".btn-ok"),
-//     }
-//     renderSendingWays(data);
-// }
+    } else if (evt.target.matches(".btn-ok")) {
+        if (!isDone) return;
+        doneWithSending(); //將uploadQueue裡面的files移除
+    }
+    elements.sendingCard.classList.add("u-hidden");
+    elements.dropCard.classList.remove("u-hidden");
+}
