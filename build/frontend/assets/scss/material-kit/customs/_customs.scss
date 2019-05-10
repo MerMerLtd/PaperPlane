@@ -994,3 +994,10 @@ footer a {
         }
     }
 }
+
+#sign-up, #sign-in{
+    display: none;
+}
+#sign-in:target, #sign-up:target{
+    display: block;
+}

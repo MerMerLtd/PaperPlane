@@ -132,7 +132,7 @@
   </div> -->
   <div class="modal fade" id="loginModal" tabindex="-1" role="">
     <div class="modal-dialog modal-login" role="document">
-      <div class="modal-content u-hidden" id="sign-up">
+      <div class="modal-content" id="sign-up">
         <div class="card card-login card-plain">
           <div class="modal-header">
             <div class="card-header card-header-primary text-center">
@@ -449,16 +449,16 @@
         <div class="col-md-4">
           <ul class="nav nav-pills nav-pills-rose flex-column">
             <li class="nav-item">
-              <a class="nav-link nav-link--light active show" href="#tab1" data-toggle="tab">Send</a>
+              <a class="nav-link nav-link--light active show" href="#send" data-toggle="tab">Send</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link nav-link--light" href="#tab2" data-toggle="tab">Receive</a>
+              <a class="nav-link nav-link--light" href="#receive" data-toggle="tab">Receive</a>
             </li>
           </ul>
         </div>
         <div class="col-md-8">
           <div class="tab-content">
-            <div class="tab-pane active show" id="tab1">
+            <div class="tab-pane active show" id="send">
               <!-- drop files zone -->
               <div class="card drop-card">
                 <div class="placeholder"></div>
@@ -601,7 +601,7 @@
                 </div>
               </div>
             </div>
-            <div class="tab-pane" id="tab2">
+            <div class="tab-pane" id="receive">
               <!-- digit input || download files zone -->
               <div class="card input-card">
                 <div class="card-body ">
@@ -681,7 +681,8 @@
   </div>
 
   <!-- <div class="page-header header-filter error-page" style="background-image: url('../assets/img/clint-mckoy.jpg')"> -->
-  <div class="page-header header-filter varification-page" style="background-image: url('../assets/img/dg2.jpg')">
+  <div class="page-header header-filter varification-page u-hidden"
+    style="background-image: url('../assets/img/dg2.jpg')">
     <!--   you can change the color of the filter page using: data-color="blue | green | orange | red | purple" -->
     <div class="container">
       <div class="row">
@@ -691,9 +692,46 @@
           <h4 class="description">Email confirmation is completed. Let's get started!</h4>
           <!--innerText = Ooooups! Email confirmation Failed.-->
           <button class="btn btn-primary btn-round btn-lg btn-confirmed" style="text-transform: none; font-size: 1rem;">
-              Back to homepage <i class="material-icons">favorite</i>
-              <!--innerHtml = Let's Try Again <i class="material-icons">favorite</i> -->
+            Back to homepage <i class="material-icons">favorite</i>
+            <!--innerHtml = Let's Try Again <i class="material-icons">favorite</i> -->
           </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="popup" id="popup">
+    <div class="row">
+      <div class="container">
+        <div class="col-lg-6 col-md-12">
+          <div class="row">
+            <div class="col-md-4">
+              <ul class="nav nav-pills nav-pills-rose flex-column">
+                <li class="nav-item">
+                  <a class="nav-link active" href="#term-of-use" data-toggle="tab">Profile</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#privay-policy" data-toggle="tab">Settings</a>
+                </li>
+              </ul>
+            </div>
+            <div class="col-md-8">
+              <div class="tab-content">
+                <div class="tab-pane active" id="term-of-use">
+                  Collaboratively administrate empowered markets via plug-and-play networks. Dynamically procrastinate
+                  B2C users after installed base benefits.
+                  <br>
+                  <br> Dramatically visualize customer directed convergence without revolutionary ROI.
+                </div>
+                <div class="tab-pane" id="privay-policy">
+                  Efficiently unleash cross-media information without cross-media value. Quickly maximize timely
+                  deliverables for real-time schemas.
+                  <br>
+                  <br>Dramatically maintain clicks-and-mortar solutions without functional solutions.
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

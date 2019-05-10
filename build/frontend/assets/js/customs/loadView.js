@@ -1,8 +1,8 @@
 let elements = {
-    tab1: document.querySelector("a[href$='tab1']"),
-    tab2: document.querySelector("a[href$='tab2']"),
-    tabPane1: document.querySelector("#tab1"), // same div 👉 dropCard: document.querySelector(".drop-card"),
-    tabPane2: document.querySelector("#tab2"),
+    tab1: document.querySelector(".main-page a[href$='send']"),
+    tab2: document.querySelector(".main-page a[href$='receive']"),
+    tabPane1: document.querySelector(".main-page #send"), // same div 👉 dropCard: document.querySelector(".drop-card"),
+    tabPane2: document.querySelector(".main-page #receive"),
     dropCard: document.querySelector(".drop-card"),
     downloadCard: document.querySelector(".download-card"),
     signinCard: document.querySelector("#sign-in"),
@@ -815,7 +815,7 @@ const renderValidationView = result => {
     }
 }
 
-renderValidationView();
+// renderValidationView();
 
 // open && close by modal
 const openLoginPage = evt => {

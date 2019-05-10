@@ -16449,6 +16449,12 @@ footer a, footer a:active, footer a:visited {
     .varification-page > .container .title {
       font-size: 5em; }
 
+#sign-up, #sign-in {
+  display: none; }
+
+#sign-in:target, #sign-up:target {
+  display: block; }
+
 /**
  * Computes a CSS calc function that betweens a value from
  * A to B over viewport-width A to viewport-width B.
