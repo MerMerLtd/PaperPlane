@@ -404,10 +404,10 @@ const handleFilesSelected = evt => {
                 method: "POST",
                 url: `/letter/${letter}/upload`,
                 payload: {
-                    fileName: f.name,
-                    fileSize: f.size,
+                    fileName: f.fileName,
+                    fileSize: f.fileSize,
                     totalSlice: f.sliceCount,
-                    contentType: f.type,
+                    contentType: f.contentType,
                 },
             }
             console.log(file);
