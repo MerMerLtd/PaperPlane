@@ -1,6 +1,6 @@
 let elements = {
-    tab1: document.querySelector(".main-page a[href$='send']"),
-    tab2: document.querySelector(".main-page a[href$='receive']"),
+    tabSend: document.querySelector(".main-page a[href$='send']"),
+    tabReceive: document.querySelector(".main-page a[href$='receive']"),
     tabPane1: document.querySelector(".main-page #send"), // same div 👉 dropCard: document.querySelector(".drop-card"),
     tabPane2: document.querySelector(".main-page #receive"),
     dropCard: document.querySelector(".drop-card"),
@@ -654,8 +654,8 @@ const renderSendingView = () => {
     }
     isSend = true;
 
-    // 1. according to "#tab1 .active" to render differ sendingWays
-    const type = document.querySelector("#tab1 .active").innerText || "LINK";
+    // 1. according to "#send .active" to render differ sendingWays
+    const type = document.querySelector("#send .active").innerText || "LINK";
     // css
     switch (type) {
         case "EMAIL":
@@ -709,22 +709,22 @@ elements.btnSend.addEventListener("click", renderSendingView, false);
 elements.sendingCard.addEventListener("click", evt => sendingViewControl(evt));
 
 const renderTabView1 = () => {
-    elements.tab1.classList.add("active");
-    elements.tab1.classList.add("show");
+    elements.tabSend.classList.add("active");
+    elements.tabSend.classList.add("show");
     elements.tabPane1.classList.add("active");
     elements.tabPane1.classList.add("show");
-    elements.tab2.classList.remove("active");
-    elements.tab2.classList.remove("show");
+    elements.tabReceive.classList.remove("active");
+    elements.tabReceive.classList.remove("show");
     elements.tabPane2.classList.remove("active");
     elements.tabPane2.classList.remove("show");
 }
 const renderTabView2 = () => {
-    elements.tab1.classList.remove("active");
-    elements.tab1.classList.remove("show");
+    elements.tabSend.classList.remove("active");
+    elements.tabSend.classList.remove("show");
     elements.tabPane1.classList.remove("active");
     elements.tabPane1.classList.remove("show");
-    elements.tab2.classList.add("active");
-    elements.tab2.classList.add("show");
+    elements.tabReceive.classList.add("active");
+    elements.tabReceive.classList.add("show");
     elements.tabPane2.classList.add("active");
     elements.tabPane2.classList.add("show");
 }

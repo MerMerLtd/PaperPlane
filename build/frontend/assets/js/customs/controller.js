@@ -538,7 +538,7 @@ const send = evt => {
     elements.sendingCard.classList.remove("u-hidden");
     
     const data = {
-        type: document.querySelector("#tab1 .active").innerText || "LINK",
+        type: document.querySelector("#send .active").innerText || "LINK",
     }
 
     renderSendingWays(data);
@@ -857,7 +857,7 @@ const checkUrl = () => {
 
 checkUrl();
 
-elements.tab2.addEventListener("click", renderInputCard, false); // 要判斷url 決定render inputCard or downloadCard
+elements.tabReceive.addEventListener("click", renderInputCard, false); // 要判斷url 決定render inputCard or downloadCard
 elements.btnDownload.addEventListener("click", () => checkValidity(elements.inputKey.value), false);
 
 

@@ -15765,10 +15765,10 @@ select.selectpicker {
 .space {
   height: 30px; }
 
-#tab2 .card .card-body {
+#receive .card .card-body {
   padding: 1.2rem 1.875rem; }
 
-#tab1 .card .card-body {
+#send .card .card-body {
   padding: 0 1.875rem 0.75rem; }
 
 .box__dropzone {
@@ -16334,7 +16334,7 @@ footer a, footer a:active, footer a:visited {
   color: #ff2d55;
   font-size: 12px; }
 
-#tab2 > .card {
+#receive > .card {
   display: none; }
 
 @-webkit-keyframes shake {
@@ -16377,7 +16377,7 @@ footer a, footer a:active, footer a:visited {
     -webkit-transform: translateX(0);
             transform: translateX(0); } }
 
-#tab2 > .active {
+#receive > .active {
   display: block; }
 
 .shake {
@@ -16396,10 +16396,11 @@ footer a, footer a:active, footer a:visited {
   font-size: 14px;
   display: inline-block; }
 
-.modal-body > .card-body > .form-check input[type=checkbox]:checked ~ a {
+.modal-body > .card-body > .form-check input[type=checkbox] ~ a {
   color: #7b1fa2;
   font-weight: 500;
-  text-decoration: underline; }
+  text-decoration: underline;
+  display: inline; }
 
 .modal .card > .btn-box {
   padding: 20px 24px; }
@@ -16449,11 +16450,70 @@ footer a, footer a:active, footer a:visited {
     .varification-page > .container .title {
       font-size: 5em; }
 
-#sign-up, #sign-in {
+#sign-up,
+#sign-in {
   display: none; }
 
-#sign-in:target, #sign-up:target {
+#sign-in:target,
+#sign-up:target {
   display: block; }
+
+#popup {
+  display: none;
+  position: fixed;
+  height: 100vh;
+  width: 100vw;
+  top: 0;
+  left: 0;
+  z-index: 1060; }
+  #popup > .row {
+    position: absolute;
+    -webkit-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+    width: 85vw;
+    height: 82vh;
+    top: 53%;
+    left: 50%;
+    margin: 0;
+    border-radius: 5px;
+    background-color: #fff; }
+  #popup > .row .col-md-8 .tab-content .tab-pane {
+    height: 74vh;
+    overflow: scroll !important; }
+    #popup > .row .col-md-8 .tab-content .tab-pane div {
+      position: relative;
+      padding-bottom: 45px; }
+    #popup > .row .col-md-8 .tab-content .tab-pane a:last-child.btn {
+      margin: 1rem;
+      text-align: center;
+      position: absolute;
+      -webkit-transform: translate(-50%, 0%);
+              transform: translate(-50%, 0%);
+      bottom: 0;
+      left: 48%; }
+
+.popup > .row > .container {
+  margin-top: 2rem; }
+
+@media screen and (max-width: 767px) {
+  .popup > .row > .container {
+    margin-top: 1rem; }
+  #popup > .row .col-md-8 .tab-content .tab-pane {
+    height: 60vh;
+    padding: 1rem; } }
+
+.popup__modal {
+  background-color: #00000011;
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0; }
+
+#popup:target {
+  display: block; }
+
+.form-check .form-check-label {
+  padding-top: 16px; }
 
 /**
  * Computes a CSS calc function that betweens a value from
