@@ -1,3 +1,76 @@
+//check for Navigation Timing API support
+if (window.performance) {
+    console.info("window.performance works fine on this browser");
+}
+if (performance.navigation.type == 1) {
+    console.info("This page is reloaded");
+
+} else {
+    console.info("This page is not reloaded");
+}
+
+// Check for the various File API support.
+if (window.File && window.FileReader && window.FileList && window.Blob) {
+    // Great success! All the File APIs are supported.
+} else {
+    alert('The File APIs are not fully supported in this browser.');
+}
+
+// polyfill for Element.closest from MDN
+if (!Element.prototype.matches)
+    Element.prototype.matches = Element.prototype.msMatchesSelector ||
+    Element.prototype.webkitMatchesSelector;
+
+if (!Element.prototype.closest)
+    Element.prototype.closest = function (s) {
+        var el = this;
+        if (!document.documentElement.contains(el)) return null;
+        do {
+            if (el.matches(s)) return el;
+            el = el.parentElement;
+        } while (el !== null);
+        return null;
+    };
+
+// 同一 element 監聽 || 不監聽多個event
+const addMultiListener = (element, events, func) => {
+    events.split(" ").forEach(event => element.addEventListener(event, func, false));
+}
+
+const removeMultiListener = (element, events, func) => {
+    events.split(" ").forEach(event => element.removeEventListener(event, func, false));
+}
+// enableBtn || disableBtn
+const disableBtn = btnEl => {
+    if (btnEl.classList.contains("disable")) return;
+    btnEl.classList.add("disable");
+}
+const enableBtn = btnEl => {
+    if (!btnEl.classList.contains("disable")) return;
+    btnEl.classList.remove("disable");
+}
+
+// hidden Child Elements
+const hiddenChildEls = parentEl => {
+    Array.from(parentEl.children).forEach(el => el.classList.add("u-hidden"));
+}
+
+const unHiddenChildEls = parentEl => {
+    Array.from(parentEl.children).forEach(el => el.classList.remove("u-hidden"));
+}
+
+// hidden Element
+const unhiddenElement = (element, delay) => {
+    setTimeout(() => {
+        element.classList.remove("u-hidden");
+    }, delay);
+}
+const hiddenElement = (element, delay) => {
+    setTimeout(() => {
+        element.classList.add("u-hidden");
+    }, delay);
+}
+
 // https://blog.grossman.io/how-to-write-async-await-without-try-catch-blocks-in-javascript/
 const to = promise => {
     return promise.then(data => {
@@ -140,60 +213,40 @@ let elements = {
     btnRefresh: document.querySelector(".download-card .btn-refresh"),
 }
 
-// polyfill for Element.closest from MDN
-if (!Element.prototype.matches)
-    Element.prototype.matches = Element.prototype.msMatchesSelector ||
-    Element.prototype.webkitMatchesSelector;
+let letter;
+const initialLetter = async () => {
+    let err, data;
+    [err, data] = await to(makeRequest({
+        method: "POST",
+        url: "/letter",
+    }));
+    if (err) {
+        console.trace(err)
+    } else {
+        letter = data.lid;
 
-if (!Element.prototype.closest)
-    Element.prototype.closest = function (s) {
-        var el = this;
-        if (!document.documentElement.contains(el)) return null;
-        do {
-            if (el.matches(s)) return el;
-            el = el.parentElement;
-        } while (el !== null);
-        return null;
-    };
+        console.log("letter", letter);
 
-// 同一 element 監聽 || 不監聽多個event
-const addMultiListener = (element, events, func) => {
-    events.split(" ").forEach(event => element.addEventListener(event, func, false));
+        displayDigit(elements.displayDigit, letter);
+        displayLink(elements.displayLink, letter);
+        genQRCode(elements.displayQRCode1, letter);
+        genQRCode(elements.displayQRCode2, letter);
+    }
 }
+initialLetter();
 
-const removeMultiListener = (element, events, func) => {
-    events.split(" ").forEach(event => element.removeEventListener(event, func, false));
-}
+// 判斷瀏覽器是否支持拖拉上傳
+let isAdvancedUpload = function () {
+    let div = document.createElement('div');
+    return (('draggable' in div) || ('ondragstart' in div && 'ondrop' in div));
+}();
 
-// enableBtn || disableBtn
-const disableBtn = btn => {
-    if (btn.classList.contains("disable")) return;
-    btn.classList.add("disable");
-}
-const enableBtn = btn => {
-    if (!btn.classList.contains("disable")) return;
-    btn.classList.remove("disable");
-}
-
-// hidden Child Elements
-const hiddenChildEls = parentEl => {
-    Array.from(parentEl.children).forEach(el => el.classList.add("u-hidden"));
-}
-
-const unHiddenChildEls = parentEl => {
-    Array.from(parentEl.children).forEach(el => el.classList.remove("u-hidden"));
-}
-
-// hidden Element
-const unhiddenElement = (element, delay) => {
-    setTimeout(() => {
-        element.classList.remove("u-hidden");
-    }, delay); 
-}
-const hiddenElement = (element, delay) => {
-    setTimeout(() => {
-        element.classList.add("u-hidden");
-    }, delay); 
+if (isAdvancedUpload) {
+    elements.dropCardHeader.classList.add("has-advanced-upload");
+    addMultiListener(elements.pageHeader, "drag dragstart dragend dragover dragenter dragleave drop", evt => handleDefault(evt));
+    addMultiListener(elements.pageHeader, "dragover dragenter", evt => handleDragInPageHeader(evt));
+    addMultiListener(elements.pageHeader, "dragleave dragend drop", evt => handleDragoutPageHeader(evt));
+    addMultiListener(elements.pageHeader, "drop", evt => handleFilesSelected(evt));
 }
 
 // render Loader && remove Loader
@@ -290,21 +343,6 @@ const handleDragoutPageHeader = evt => {
     }
 }
 
-// 判斷瀏覽器是否支持拖拉上傳
-let isAdvancedUpload = function () {
-    let div = document.createElement('div');
-    return (('draggable' in div) || ('ondragstart' in div && 'ondrop' in div));
-}();
-
-if (isAdvancedUpload) {
-    elements.dropCardHeader.classList.add("has-advanced-upload");
-    addMultiListener(elements.pageHeader, "drag dragstart dragend dragover dragenter dragleave drop", evt => handleDefault(evt));
-    addMultiListener(elements.pageHeader, "dragover dragenter", evt => handleDragInPageHeader(evt));
-    addMultiListener(elements.pageHeader, "dragleave dragend drop", evt => handleDragoutPageHeader(evt));
-    addMultiListener(elements.pageHeader, "drop", evt => handleFilesSelected(evt));
-}
-
-
 //================================================
 //=========== render File ===========
 
@@ -326,9 +364,11 @@ const formatFileSize = size => {
 }
 
 const renderFile = (parentEl, file) => {
-    console.log(parentEl, file);
+    // console.log(parentEl, file);
+    const isDownload = parentEl.classList.contains("download-list");
     const markup = `
-    <div class="file" data-fid="${file.fid}" data-type="download">
+    <div class="file" data-fid="${file.fid}" data-type="${isDownload?"download":"upload"}">
+        <div class="delete-button" style="display:${isDownload?"none":"block"}"></div>    
         <div class="file-icon">
             <div class="cover select">
                 <div class="cover__border"></div>
@@ -364,14 +404,18 @@ const renderFile = (parentEl, file) => {
 
 // deg: 0 ~ 360;
 // progress: 0 ~ 1;
-const renderProgress = (fid, progress, type) => { //?
+const renderProgress = (file, type) => { //?
+    let progress = file.progress;
+    let fid = file.fid;
     let deg = progress * 360;
 
     const el = document.querySelector(`${type ==="download"? ".download-card": ".drop-card"} [data-coverId=${fid}]`);
-    // console.log(el, fid,type)
-    el.parentElement.classList.add("continue");
-    el.parentElement.classList.remove("select");
-    el.parentElement.classList.remove("pause");
+    if(!file.isPaused){
+        console.log(file.isPaused)
+        el.parentElement.classList.add("continue");
+        el.parentElement.classList.remove("select");
+        el.parentElement.classList.remove("pause");
+    }
 
     if (deg >= 180) {
         // console.log(progress)
@@ -446,9 +490,6 @@ const uiControlFile = evt => {
     const file = type === "upload" ?
         uploadQueue[uploadQueue.findIndex(file => file.fid === fid)] :
         downloadQueue[downloadQueue.findIndex(file => file.fid === fid)];
-    const isStarted = type === "download" ?
-        downloadFiles.findIndex(file => file.fid === fid) !== -1 :
-        true;
 
     if (evt.target.matches(".delete-button, .delete-button *")) {
         isSend = false;
@@ -461,43 +502,27 @@ const uiControlFile = evt => {
         })
     }
 
-    if (evt.target.matches(`.cover, .cover > *`)) {
-        console.log("match!", file);
-        if (file.progress === 1 && file.isDownloaded) return;
-
-        console.log(isStarted)
-        if (!isStarted) {
-            file.isSelected = !file.isSelected;
+    if (evt.target.closest(".file")) {
+        // console.log("match!", file);
+        // console.log(file.progress)
+        if (file.progress === 1 || file.isDownloaded) return;
+        file.isPaused = !file.isPaused;
+        if (file.isPaused) {
             elementCover.classList.remove("continue");
-            elementCover.classList.add("select");
-            elementCover.classList.remove("pause");
-            if (file.isSelected) {
-                elementCover.children.item(3).classList.add("selected")
-            } else {
-                elementCover.children.item(3).classList.remove("selected")
-            }
+            elementCover.classList.remove("select");
+            elementCover.classList.add("pause");
+            console.log("uiControlFile/ isPaused: ", file.fid, file.isPaused);
+
         } else {
-            console.log("isSelected", file)
-
-            file.isPaused = !file.isPaused;
-            if (file.isPaused) {
-                elementCover.classList.remove("continue");
-                elementCover.classList.remove("select");
-                elementCover.classList.add("pause");
-            } else {
-                elementCover.classList.add("continue");
-                elementCover.classList.remove("select");
-                elementCover.classList.remove("pause");
-                type === "upload" ? uploadShard(file) : downloadShard(file);
-            }
+            elementCover.classList.add("continue");
+            elementCover.classList.remove("select");
+            elementCover.classList.remove("pause");
+            console.log("uiControlFile/ isPaused: ", file.fid, file.isPaused);
+            type === "upload" ? uploadShard(file) : downloadShard(file);
         }
-        return;
     }
+    return;
 }
-
-elements.fileList.addEventListener("click", evt => uploadFileControl(evt), false);
-// elements.fileList.addEventListener("click", evt => uiControlFile(evt), false);
-
 
 
 //================================================
@@ -741,9 +766,6 @@ const sendingViewControl = evt => {
     elements.dropCard.classList.remove("u-hidden");
 }
 
-elements.btnSend.addEventListener("click", renderSendingView, false);
-elements.sendingCard.addEventListener("click", evt => sendingViewControl(evt));
-
 const renderTabView1 = () => {
     elements.tabSend.classList.add("active");
     elements.tabSend.classList.add("show");
@@ -775,7 +797,7 @@ const closeLoginView = () => {
         elements.modal.style.display = "none";
         elements.modal.style.pointerEvents = "auto";
         elements.modal.style.zIndex = "1050";
-    }, 300); 
+    }, 300);
 }
 
 //     '/#sign-in': signInView,
@@ -786,7 +808,7 @@ const renderLoginView = () => {
     elements.html.classList.remove("nav-open");
     elements.navbarToggle.classList.remove("toggled");
     elements.container.classList.add("u-hidden");
-    
+
     elements.body.classList.add("modal-open");
     elements.modal.removeAttribute("aria-hidden");
     elements.modal.style.display = "block";
@@ -832,14 +854,14 @@ const renderDownloadInput = () => {
 
 //     '/#varification': varificationView,
 const renderVarificationView = result => {
-    closeLoginView(); 
+    closeLoginView();
     hiddenElement(elements.container, 0);
-    if(result){
-    // result === true 👉 驗證成功
+    if (result) {
+        // result === true 👉 驗證成功
         hiddenElement(elements.failedPage, 0);
         unhiddenElement(elements.successPage, 0);
-    }else{
-    // result === false 👉 驗證失敗
+    } else {
+        // result === false 👉 驗證失敗
         hiddenElement(elements.successPage, 0);
         unhiddenElement(elements.failedPage, 0);
     }
@@ -853,7 +875,7 @@ const openLoginPage = evt => {
     elements.html.classList.remove("nav-open");
     elements.navbarToggle.classList.remove("toggled");
     elements.container.classList.add("u-hidden");
-   
+
     // add 
 }
 const closeLoginPage = evt => {
@@ -863,10 +885,15 @@ const closeLoginPage = evt => {
     }
 }
 
-elements.downloadList.addEventListener("click", uiControlFile, false);
+elements.btnSend.addEventListener("click", renderSendingView, false);
+elements.sendingCard.addEventListener("click", evt => sendingViewControl(evt));
 elements.navLoginBtn.addEventListener("click", openLoginPage, false);
 elements.modal.addEventListener("click", closeLoginPage, false);
-
 elements.btnConfirmed.addEventListener("click", renderDropView, false);
 elements.btnBackToReceive.addEventListener("click", renderDownloadInput);
 // elements.btnRefresh.addEventListener("click", checkUrl, false);
+
+elements.downloadList.addEventListener("click", evt => uiControlFile(evt), false);
+// elements.downloadList.addEventListener("click", evt => uploadFileControl(evt), false);
+// elements.fileList.addEventListener("click", evt => uploadFileControl(evt), false);
+elements.fileList.addEventListener("click", evt => uiControlFile(evt), false);

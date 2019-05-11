@@ -5,27 +5,6 @@ const File = {
 }
 // =============================================================
 // Controller
-let letter;
-const initialLetter = async () => {
-    let err, data;
-    [err, data] = await to(makeRequest({
-        method: "POST",
-        url: "/letter",
-    }));
-    if (err) {
-        console.trace(err)
-    } else {
-        letter = data.lid;
-
-        console.log("letter", letter);
-
-        displayDigit(elements.displayDigit, letter);
-        displayLink(elements.displayLink, letter);
-        genQRCode(elements.displayQRCode1, letter);
-        genQRCode(elements.displayQRCode2, letter);
-    }
-}
-initialLetter();
 
 const state = {};
 
@@ -128,7 +107,6 @@ const getMeta = file => {
 // 產生佇列 👉[{fid: fid, fragment: blob}, {...}, ...]
 
 // 需改良 類似maxConnection的做法
-
 const releaseSlave = slave => {
     slave.type === "Worker" ? slave.theSlave.terminate() : slave.theSlave.abort();
     slave.slaves--;
@@ -142,7 +120,6 @@ const releaseSlave = slave => {
     }
     return true;
 }
-
 
 const maxWorker = Infinity;
 const sha1Queue = [];
@@ -276,17 +253,6 @@ let isDone = false;
 let isSend = false; // 用來判斷現在是顯示 dropZone Or Sending View
 
 
-const addUploadQueue = target => {
-    uploadQueue.push(target);
-    return uploadQueue;
-}
-
-const popUploadQueue = target => {
-    const index = uploadQueue.findIndex(file => file.fid === target.fid);
-    uploadQueue.splice(index, 1);
-    return uploadQueue;
-}
-
 const deleteUploadFile = fid => ({
     method: "DELETE",
     url: `/letter/${letter}/upload/${fid}`
@@ -301,14 +267,6 @@ const emptyUploadQueue = deleteFile => {
     }
     return uploadQueue;
 }
-
-// const emptyUploadQueue = () => {
-//     if (uploadQueue.length) {
-//         uploadQueue.pop().fid;
-//         return emptyUploadQueue();
-//     }
-//     return uploadQueue;
-// }
 
 const uploadShard = async target => {
     // console.log("uploadShard/ isPaused", target.fid, target.isPaused)
@@ -346,10 +304,11 @@ const uploadShard = async target => {
             })}`);
         }
     } else {
-        // console.log(data);
+        console.log(data);
+        target.progress = data.progress
         if(data.progress < 1 ) uploadShard(target);
         // target.sliceIndex < target.sliceCount ? uploadShard(target) : null; // ?? popUploadQueue(target); 需要嗎？
-        renderProgress(data.fid, data.progress, "upload");
+        renderProgress(target, "upload");
         updateTotalProgress();
     }
 }
@@ -392,7 +351,7 @@ const handleFilesSelected = evt => {
                     contentType: f.contentType,
                 },
             }
-            console.log(file);
+            // console.log(file);
             // return each result make of new Array
             try {
                 const res = await makeRequest(opts);
@@ -417,38 +376,12 @@ const handleFilesSelected = evt => {
 
             if (resultArray.length) {
                 // add ParsedFiles into the uploadQueue
-                resultArray.forEach(file => addUploadQueue(file));
+                resultArray.forEach(file => uploadQueue.push({...file}));
                 uploadFiles();
             }
 
             // 7. 上傳失敗 3s 後 重新傳送
         });
-}
-
-elements.boxFile.addEventListener("change", evt => handleFilesSelected(evt), false);
-
-const send = evt => {
-    console.log("send is called");
-    isSend = true;
-
-    elements.dropCard.classList.add("u-hidden");
-    elements.sendingCard.classList.remove("u-hidden");
-    
-    const data = {
-        type: document.querySelector("#send .active").innerText || "LINK",
-    }
-
-    renderSendingWays(data);
-    elements.sendingCard.addEventListener("click", evt => sendingViewControl(evt));
-
-}
-
-
-// Check for the various File API support.
-if (window.File && window.FileReader && window.FileList && window.Blob) {
-    // Great success! All the File APIs are supported.
-} else {
-    alert('The File APIs are not fully supported in this browser.');
 }
 
 // ======================================
@@ -480,7 +413,6 @@ const fetchFilePath = async letter => {
     }
 }
 
-
 // let i = 1;// ?? test
 let delay = 10000;
 
@@ -502,7 +434,7 @@ const fetchFile = async (filePath) => {
         if (fileIndex === -1) {
             downloadQueue.push({
                 ...data,
-                isPaused: false,
+                isPaused: true,
                 isSelected: true,
                 pointer: 0,
                 // waiting: [],
@@ -559,11 +491,6 @@ const fetchFile = async (filePath) => {
     }
 }
 
-const toggleProgressIcon = target => { // ?
-    elements.coverContinue.classList.toggle("u-hidden");
-    elements.coverPause.classList.toggle("u-hidden");
-}
-
 const assembleShard = (target, shard, index) => {
     let fileIndex = downloadFiles.findIndex(file => file.fid === target.fid);
     // let waitingLength = target.waiting;
@@ -613,7 +540,7 @@ const downloadShard = async target => {
         // 組裝
         const file = assembleShard(target, data, shardInfo.index);
         // render progress
-        renderProgress(file.fid, file.progress, "download");
+        renderProgress(file, "download");
         if(file.progress === 1 && !file.download){
             // 合併檔案並賦予檔案型別
             const blob = new Blob(file.slices, {type: file.contentType});
@@ -638,16 +565,16 @@ const downloadShard = async target => {
     }
 }
 
-const startDownload = () => {
+const downloadAll = () => {
     console.log(downloadQueue);
     if (!downloadQueue.length) return;
     downloadQueue.forEach(file => {
-        if(!file.isSelected) return;
+        if(!file.isPaused) file.isPaused = false;
         if (connection >= maxConnection) {
             queue.push(downloadShard.bind(this, file));
             return false;
         }
-        console.log(file, "startDownload")
+        console.log(file, "download all Files")
         downloadShard(file);
     });
 }
@@ -693,7 +620,7 @@ const renderDownloadZone = async letter => {
 
 // disable btnReceive if 
 // 6. 開始下載
-elements.btnReceive.addEventListener("click", startDownload, false);
+elements.btnReceive.addEventListener("click", downloadAll, false);
 
 const checkValidity = inputKey => {
     // 1. if elements.inputKey.value is numbers || 1.2.1 if elements.inputKey.value is string (can be link)
@@ -725,24 +652,9 @@ const checkUrl = () => {
 
 checkUrl();
 
+elements.boxFile.addEventListener("change", evt => handleFilesSelected(evt), false);
 elements.btnRefresh.addEventListener("click", checkUrl, false);
 elements.btnDownload.addEventListener("click", () => checkValidity(elements.inputKey.value), false);
-
-
-//check for Navigation Timing API support
-if (window.performance) {
-    console.info("window.performance works fine on this browser");
-}
-if (performance.navigation.type == 1) {
-    console.info("This page is reloaded");
-
-} else {
-    console.info("This page is not reloaded");
-}
-
-
-
-
 
 
 // const inputHint
