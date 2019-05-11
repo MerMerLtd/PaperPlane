@@ -1,91 +1,3 @@
-// https://blog.grossman.io/how-to-write-async-await-without-try-catch-blocks-in-javascript/
-const to = promise => {
-    return promise.then(data => {
-            return [null, data];
-        })
-        .catch(err => [err, null]);
-}
-
-// polyfill for Element.closest from MDN
-if (!Element.prototype.matches)
-    Element.prototype.matches = Element.prototype.msMatchesSelector ||
-    Element.prototype.webkitMatchesSelector;
-
-if (!Element.prototype.closest)
-    Element.prototype.closest = function (s) {
-        var el = this;
-        if (!document.documentElement.contains(el)) return null;
-        do {
-            if (el.matches(s)) return el;
-            el = el.parentElement;
-        } while (el !== null);
-        return null;
-    };
-
-// =============================================================
-// base
-// XHR
-const maxConnection = Infinity;
-const maxRetry = 3;
-let connection = 0;
-let queue = [];
-
-
-const closeConnection = () => {
-    connection--;
-
-    if (queue.length > 0 && connection < maxConnection) {
-        let next = queue.pop();
-        if (typeof next === "function") {
-            next();
-        }
-    }
-
-    return true;
-}
-
-const makeRequest = opts => {
-    // 工作排程 && 重傳
-    if (connection >= maxConnection) {
-        queue.push(opts); // ??
-    } else {
-        connection++;
-        const xhr = new XMLHttpRequest();
-        // xhr.responseType = "arraybuffer";
-        if (opts.responseType === "arraybuffer") {
-            xhr.responseType = "arraybuffer";
-        }
-        return new Promise((resolve, reject) => {
-            xhr.onreadystatechange = () => {
-                // only run if the request is complete
-                if (xhr.readyState !== 4) return;
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    // If successful
-                    closeConnection();
-                    opts.responseType === "arraybuffer" ?
-                        resolve(new Uint8Array(xhr.response)) :
-                        resolve(JSON.parse(xhr.responseText));
-                } else {
-                    // If false  
-                    closeConnection();
-                    reject(xhr.response);
-                }
-            }
-            // Setup HTTP request
-            xhr.open(opts.method || "GET", opts.url, true);
-            if (opts.headers) {
-                Object.keys(opts.headers).forEach(key => xhr.setRequestHeader(key, opts.headers[key]));
-            }
-            // Send the request
-            if (opts.contentType == 'application/json') {
-                xhr.setRequestHeader('content-type', 'application/json');
-                xhr.send(JSON.stringify(opts.payload));
-            } else {
-                xhr.send(opts.payload);
-            }
-        });
-    }
-}
 
 // =============================================================
 // Views
@@ -196,29 +108,30 @@ const genShardInfo = (sliceCount, sliceIndex) => {
 // const info = genShardInfo(parseInt("ffffffff", 16), 234);
 
 const getMeta = file => {
+    // console.log(file)
     let fid = file.fid;
-    let name = file.name;
-    let type = file.type;
-    let size = file.size;
+    let fileName = file.name;
+    let contentType = file.type;
+    let fileSize = file.size;
     let sliceCount, sliceSize;
 
-    if (size > defaultSize * minSliceCount) {
-        sliceCount = Math.ceil(size / defaultSize);
+    if (fileSize > defaultSize * minSliceCount) {
+        sliceCount = Math.ceil(fileSize / defaultSize);
         sliceSize = defaultSize;
-    } else if (size > minSize * minSliceCount) {
+    } else if (fileSize > minSize * minSliceCount) {
         sliceCount = minSliceCount;
-        sliceSize = Math.ceil(size / sliceCount);
+        sliceSize = Math.ceil(fileSize / sliceCount);
     } else {
         sliceCount = 1;
-        sliceSize = size;
+        sliceSize = fileSize;
     }
 
     return {
         file,
         fid,
-        name,
-        type,
-        size,
+        fileName,
+        contentType,
+        fileSize,
         sliceCount,
         sliceSize,
         sliceIndex: 0,
@@ -451,8 +364,10 @@ const uploadShard = async target => {
             })}`);
         }
     } else {
-        target.sliceIndex < target.sliceCount ? uploadShard(target) : null; // ?? popUploadQueue(target); 需要嗎？
-        showFileProgress(target);
+        // console.log(data);
+        if(data.progress < 1 ) uploadShard(target);
+        // target.sliceIndex < target.sliceCount ? uploadShard(target) : null; // ?? popUploadQueue(target); 需要嗎？
+        renderProgress(data.fid, data.progress, "upload");
         updateTotalProgress();
     }
 }
@@ -516,7 +431,7 @@ const handleFilesSelected = evt => {
             // 3. 把資料存到 state 裡 =>state.fileObj.files
             state.fileObj.files = state.fileObj.files.concat(files); // FileList object.
             // 4. render 畫面
-            renderFiles(resultArray);
+            resultArray.forEach(file => renderFile(elements.fileList, file));
 
             if (resultArray.length) {
                 // add ParsedFiles into the uploadQueue
@@ -790,7 +705,7 @@ const renderDownloadZone = async letter => {
 
     renderDownloadCard();
     // 2.2 render loader 
-    renderLoader(elements.downloadCard);
+    renderLoader(elements.emptyFileHint);
 
     // 2.3 fetch data 👉 use elements.inputKey.value 跟backend要資料
     const filePaths = await fetchFilePath(letter);
@@ -805,21 +720,22 @@ const renderDownloadZone = async letter => {
     };
     // 2.3.2 如果有要到filePaths，cleanLoader 
     // console.log(filePaths); //["/letter/505404/upload/JOB75mvKpyhcTerX", ...]
-    removeLoader(elements.downloadCard);
+    setTimeout(removeLoader, 500, elements.emptyFileHint);
     // 3. change url
     window.location.hash = letter;
     elements.downloadList.innerText = "";
 
     // 4 filePaths.length = 0 沒有路徑
-    if (!filePaths.length) renderEmptyFile();
+    if (!filePaths.length) return;
 
     // 4. fetch files
+    hiddenElement(elements.emptyFileHint, 0);
     Promise.all(filePaths.map(async filePath => fetchFile(filePath)))
         .then(files => {
             console.log(files);
             console.log(downloadQueue);
             // 5. renderFiles
-            files.forEach(file => renderDownloadFile(file));
+            files.forEach(file => renderFile(elements.downloadList, file));
         })
 }
 
@@ -857,7 +773,7 @@ const checkUrl = () => {
 
 checkUrl();
 
-elements.tabReceive.addEventListener("click", renderInputCard, false); // 要判斷url 決定render inputCard or downloadCard
+elements.btnRefresh.addEventListener("click", checkUrl, false);
 elements.btnDownload.addEventListener("click", () => checkValidity(elements.inputKey.value), false);
 
 

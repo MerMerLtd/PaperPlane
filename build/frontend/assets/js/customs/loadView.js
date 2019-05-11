@@ -1,3 +1,92 @@
+// https://blog.grossman.io/how-to-write-async-await-without-try-catch-blocks-in-javascript/
+const to = promise => {
+    return promise.then(data => {
+            return [null, data];
+        })
+        .catch(err => [err, null]);
+}
+
+// polyfill for Element.closest from MDN
+if (!Element.prototype.matches)
+    Element.prototype.matches = Element.prototype.msMatchesSelector ||
+    Element.prototype.webkitMatchesSelector;
+
+if (!Element.prototype.closest)
+    Element.prototype.closest = function (s) {
+        var el = this;
+        if (!document.documentElement.contains(el)) return null;
+        do {
+            if (el.matches(s)) return el;
+            el = el.parentElement;
+        } while (el !== null);
+        return null;
+    };
+
+// =============================================================
+// base
+// XHR
+const maxConnection = Infinity;
+const maxRetry = 3;
+let connection = 0;
+let queue = [];
+
+
+const closeConnection = () => {
+    connection--;
+
+    if (queue.length > 0 && connection < maxConnection) {
+        let next = queue.pop();
+        if (typeof next === "function") {
+            next();
+        }
+    }
+
+    return true;
+}
+
+const makeRequest = opts => {
+    // 工作排程 && 重傳
+    if (connection >= maxConnection) {
+        queue.push(opts); // ??
+    } else {
+        connection++;
+        const xhr = new XMLHttpRequest();
+        // xhr.responseType = "arraybuffer";
+        if (opts.responseType === "arraybuffer") {
+            xhr.responseType = "arraybuffer";
+        }
+        return new Promise((resolve, reject) => {
+            xhr.onreadystatechange = () => {
+                // only run if the request is complete
+                if (xhr.readyState !== 4) return;
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    // If successful
+                    closeConnection();
+                    opts.responseType === "arraybuffer" ?
+                        resolve(new Uint8Array(xhr.response)) :
+                        resolve(JSON.parse(xhr.responseText));
+                } else {
+                    // If false  
+                    closeConnection();
+                    reject(xhr.response);
+                }
+            }
+            // Setup HTTP request
+            xhr.open(opts.method || "GET", opts.url, true);
+            if (opts.headers) {
+                Object.keys(opts.headers).forEach(key => xhr.setRequestHeader(key, opts.headers[key]));
+            }
+            // Send the request
+            if (opts.contentType == 'application/json') {
+                xhr.setRequestHeader('content-type', 'application/json');
+                xhr.send(JSON.stringify(opts.payload));
+            } else {
+                xhr.send(opts.payload);
+            }
+        });
+    }
+}
+
 let elements = {
     tabSend: document.querySelector(".main-page a[href$='send']"),
     tabReceive: document.querySelector(".main-page a[href$='receive']"),
@@ -26,9 +115,9 @@ let elements = {
     pageHeader: document.querySelector(".page-header"),
     addIcon: document.querySelector(".add__icon"),
     addText: document.querySelector(".add__text"),
-    dropndDrop: document.querySelector(".box__dragndrop"), //text
+    dropndDropText: document.querySelector(".box__dragndrop"), //text
     placeholder: document.querySelector(".placeholder"),
-    cardHeader: document.querySelector(".card-header"),
+    dropCardHeader: document.querySelector(".drop-card .card-header"),
     dropZone: document.querySelector(".box__dropzone"),
     fileList: document.querySelector(".file-list"),
     boxFile: document.querySelector(".box__file"),
@@ -61,6 +150,9 @@ let elements = {
     navBarBrand: document.querySelector(".navbar-brand"),
     btnConfirmed: document.querySelector(".btn-confirmed"),
     varificationPage: document.querySelector(".varification-page"),
+    emptyFileHint: document.querySelector(".download-card .empty-file"),
+    btnBackToReceive: document.querySelector(".download-card .btn-back"),
+    btnRefresh: document.querySelector(".download-card .btn-refresh"),
 }
 
 // 同一 element 監聽 || 不監聽多個event
@@ -111,12 +203,12 @@ const handleOutFileList = () => {
 
 // 放進 “哪裡” 的 提示
 const hintLocation = () => {
-    elements.cardHeader.classList.add("hint");
+    elements.dropCardHeader.classList.add("hint");
     elements.dropZone.classList.add("invisible");
     //elements.fileList.classList.add("invisible");
 }
 const removeHintLocation = () => {
-    elements.cardHeader.classList.remove("hint");
+    elements.dropCardHeader.classList.remove("hint");
     elements.dropZone.classList.remove("invisible");
     // elements.fileList.classList.remove("invisible");
 }
@@ -153,7 +245,7 @@ let isAdvancedUpload = function () {
 }();
 
 if (isAdvancedUpload) {
-    elements.cardHeader.classList.add("has-advanced-upload");
+    elements.dropCardHeader.classList.add("has-advanced-upload");
     addMultiListener(elements.pageHeader, "drag dragstart dragend dragover dragenter dragleave drop", evt => handleDefault(evt));
     addMultiListener(elements.pageHeader, "dragover dragenter", evt => handleDragInPageHeader(evt));
     addMultiListener(elements.pageHeader, "dragleave dragend drop", evt => handleDragoutPageHeader(evt));
@@ -180,7 +272,7 @@ const formatFileSize = size => {
     return `${formatted}${unit[power]}`
 }
 
-const renderFile = file => {
+const renderFile_old_version = file => {
     const markup = `
             <div class="file" data-fid="${file.fid}" data-type="upload">
                 <div class="delete-button"></div>
@@ -224,7 +316,115 @@ const showFileProgress = file => {
     document.querySelector(`[data-progressid='${file.fid}']`).style.width = `${progress}%`;
     // ??之後我想要改這裡的樣式
 }
+// renderDropView();
 
+
+//================================================
+//================ Download View =================
+let isFetching = false;
+
+
+
+
+const renderInputCard = () => {
+    // console.log(letter); // ?? for testing
+    if (window.location.hash.substr(1)) { // ??
+        elements.downloadList.innerText = "";
+        checkUrl();
+        return;
+    }
+    elements.inputCard.classList.add("active");
+    elements.downloadCard.classList.remove("active");
+}
+const renderDownloadCard = () => {
+    elements.inputCard.classList.remove("active");
+    elements.downloadCard.classList.add("active");
+}
+// const toggleInputOrDownloadCard = () => {
+//     elements.inputCard.classList.toggle("active");
+//     elements.downloadCard.classList.toggle("active");
+// }
+
+// let testEl;
+const hiddenChildEls = parentEl => {
+    // testEl = parentEl;
+    Array.from(parentEl.children).forEach(el => el.classList.add("u-hidden"));
+}
+
+const unHiddenChildEls = parentEl => {
+    Array.from(parentEl.children).forEach(el => el.classList.remove("u-hidden"));
+}
+
+const renderLoader = parentEl => {
+    // console.log(parentEl)  // elements.downloadCard
+    hiddenChildEls(parentEl);
+    const markup = `
+        <div class="lds-spinner">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    `;
+    parentEl.insertAdjacentHTML("afterbegin", markup);
+    elements = {
+        ...elements,
+        loader: document.querySelector(".lds-spinner"),
+    }
+}
+
+const removeLoader = parentEl => {
+    elements.loader.remove();
+    unHiddenChildEls(parentEl);
+}
+
+const renderFile = (parentEl, file) => {
+    // console.log(file);
+    const markup = `
+    <div class="file" data-fid="${file.fid}" data-type="download">
+        <div class="file-icon">
+            <div class="cover select">
+                <div class="cover__border"></div>
+                <div class="cover__continue" data-coverId="${file.fid}">
+                    <div class="cover__sector--before"></div>
+                    <div class="cover__sector">
+                        <!-- <div class="cover__sector--before"></div>
+                        <div class="cover__sector--after"></div> -->
+                    </div>
+                    <div class="cover__sector--after"></div>
+                </div>
+                <div class="cover__pause">
+                    <div class="cover__pause--p1"></div>
+                    <div class="cover__pause--p2"></div>
+                </div>  
+                <div class="cover__select selected">
+                    <div class="cover__select--s1"></div>
+                    <div class="cover__select--s2"></div>
+                </div>     
+            </div>
+        </div>
+    
+        <div class="file-name">${file.fileName}</div>
+        <div class="file-size">${formatFileSize(file.fileSize)}</div>
+    </div>
+
+    <!-- <p class="file-name">螢幕快照 2019-03-19 上午9.04.16.png</p> -->
+    <!-- <p class="file-name">螢幕快照 ...04.16.png</p> -->
+    `;
+
+    parentEl.insertAdjacentHTML("beforeend", markup)
+}
+
+//================================================
+//================== UI Control ==================
 // UI Control v1
 const uploadFileControl = async evt => {
     const element = evt.target.closest(".file");
@@ -326,6 +526,56 @@ const uiControlFile = evt => {
 elements.fileList.addEventListener("click", evt => uploadFileControl(evt), false);
 // elements.fileList.addEventListener("click", evt => uiControlFile(evt), false);
 
+
+
+//================================================
+//================== Login View ==================
+
+// elements.downloadCheck.addEventListener("change", evt => document.querySelectorAll(".cover__select").toggle("selected"), false)
+const checkEmail = email => {
+    const regExp = new RegExp(/^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/);
+    return regExp.test(email);
+}
+
+const checkPassword = password => {
+    const regExp = new RegExp(/[\x21-\x7e]{8,}$/);
+    return regExp.test(password);
+}
+
+const inputValidation = type => {
+    console.log(evt)
+    const checkedEmail = checkEmail(elements.signInEmail.value);
+    if (checkedEmail) {
+        elements.signInEmail.classList.add("has-success")
+        elements.signInEmail.classList.remove("has-danger");
+    }
+    const checkedPassword = checkPassword(elements.signInPassword.value);
+    if (checkedPassword) {
+        elements.signInpassword.classList.add("has-success")
+        elements.signInpassword.classList.remove("has-danger");
+    }
+
+    if (type === "signup") {
+        // const checkedPassword2 = checkPassword(elements.passwordConfirm.value);
+        // if(checkedPassword2) {
+        //     elements.passwordConfirm.classList.add("has-success")
+        //     elements.passwordConfirm.classList.remove("has-danger");
+        // }
+        // if(checkedEmail && checkedPassword && checkedPassword2 && elements.signUpCheck.checked){
+        if (checkedEmail && checkedPassword && elements.signUpCheck.checked) {
+            // enable 
+        }
+    }
+    if (type === "signin") {
+        if (checkedEmail && checkedPassword) {
+
+        }
+    }
+
+}
+
+elements.signInEmail.addEventListener("change", () => inputValidation("signin"), false)
+elements.signInPassword.addEventListener("change", () => inputValidation("signin"), false)
 
 //================================================
 //================= Sending View =================
@@ -451,191 +701,6 @@ const doneWithSending = deleteFile => {
     return false;
 }
 
-// renderDropView();
-//================================================
-//================ Download View =================
-let isFetching = false;
-
-
-elements.downloadList.addEventListener("click", uiControlFile, false)
-
-const renderInputCard = () => {
-    // console.log(letter); // ?? for testing
-    if (window.location.hash.substr(1)) { // ??
-        elements.downloadList.innerText = "";
-        checkUrl();
-        return;
-    }
-    elements.inputCard.classList.add("active");
-    elements.downloadCard.classList.remove("active");
-}
-const renderDownloadCard = () => {
-    elements.inputCard.classList.remove("active");
-    elements.downloadCard.classList.add("active");
-}
-// const toggleInputOrDownloadCard = () => {
-//     elements.inputCard.classList.toggle("active");
-//     elements.downloadCard.classList.toggle("active");
-// }
-
-// let testEl;
-const hiddenChildEls = parentEl => {
-    // testEl = parentEl;
-    Array.from(parentEl.children).forEach(el => el.classList.add("u-hidden"));
-}
-
-const unHiddenChildEls = parentEl => {
-    Array.from(parentEl.children).forEach(el => el.classList.remove("u-hidden"));
-}
-
-const renderLoader = parentEl => {
-    // console.log(parentEl)  // elements.downloadCard
-    hiddenChildEls(parentEl);
-    const markup = `
-        <div class="lds-spinner">
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-        </div>
-    `;
-    parentEl.insertAdjacentHTML("afterbegin", markup);
-    elements = {
-        ...elements,
-        loader: document.querySelector(".lds-spinner"),
-    }
-}
-
-const removeLoader = parentEl => {
-    elements.loader.remove();
-    unHiddenChildEls(parentEl);
-}
-
-
-const renderEmptyFile = () => {
-    const markup = `
-        <div style="text-align: center;">
-            <p>
-                <span class="arrow_back">&larr;</span>
-                目前沒有檔案哦！
-            </p>
-            <div>
-                <i class="material-icons refresh" style="color: #ff2d55">
-                    refresh
-                </i>
-            </div>
-        </div>
-    `;
-    elements.downloadList.insertAdjacentHTML("afterbegin", markup);
-    document.querySelector(".arrow_back").addEventListener("click", () => {
-        elements.downloadList.innerText = "";
-        window.location.hash = "";
-        renderInputCard();
-    });
-    document.querySelector(".refresh").addEventListener("click", () => {
-        elements.downloadList.innerText = "";
-        checkUrl();
-    })
-}
-
-const renderDownloadFile = file => {
-    // console.log(file);
-    const markup = `
-    <div class="file" data-fid="${file.fid}" data-type="download">
-        <div class="file-icon">
-            <div class="cover select">
-                <div class="cover__border"></div>
-                <div class="cover__continue" data-coverId="${file.fid}">
-                    <div class="cover__sector--before"></div>
-                    <div class="cover__sector">
-                        <!-- <div class="cover__sector--before"></div>
-                        <div class="cover__sector--after"></div> -->
-                    </div>
-                    <div class="cover__sector--after"></div>
-                </div>
-                <div class="cover__pause">
-                    <div class="cover__pause--p1"></div>
-                    <div class="cover__pause--p2"></div>
-                </div>  
-                <div class="cover__select selected">
-                    <div class="cover__select--s1"></div>
-                    <div class="cover__select--s2"></div>
-                </div>     
-            </div>
-        </div>
-    
-        <div class="file-name">${file.fileName}</div>
-        <div class="file-size">${formatFileSize(file.fileSize)}</div>
-    </div>
-
-    <!-- <p class="file-name">螢幕快照 2019-03-19 上午9.04.16.png</p> -->
-    <!-- <p class="file-name">螢幕快照 ...04.16.png</p> -->
-    `;
-
-    elements.downloadList.insertAdjacentHTML("beforeend", markup)
-}
-
-
-
-
-//================================================
-//================== Login View ==================
-
-elements.downloadCheck.addEventListener("change", evt => document.querySelectorAll(".cover__select").toggle("selected"), false)
-const checkEmail = email => {
-    const regExp = new RegExp(/^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/);
-    return regExp.test(email);
-}
-
-const checkPassword = password => {
-    const regExp = new RegExp(/[\x21-\x7e]{8,}$/);
-    return regExp.test(password);
-}
-
-const inputValidation = type => {
-    console.log(evt)
-    const checkedEmail = checkEmail(elements.signInEmail.value);
-    if (checkedEmail) {
-        elements.signInEmail.classList.add("has-success")
-        elements.signInEmail.classList.remove("has-danger");
-    }
-    const checkedPassword = checkPassword(elements.signInPassword.value);
-    if (checkedPassword) {
-        elements.signInpassword.classList.add("has-success")
-        elements.signInpassword.classList.remove("has-danger");
-    }
-
-    if (type === "signup") {
-        // const checkedPassword2 = checkPassword(elements.passwordConfirm.value);
-        // if(checkedPassword2) {
-        //     elements.passwordConfirm.classList.add("has-success")
-        //     elements.passwordConfirm.classList.remove("has-danger");
-        // }
-        // if(checkedEmail && checkedPassword && checkedPassword2 && elements.signUpCheck.checked){
-        if (checkedEmail && checkedPassword && elements.signUpCheck.checked) {
-            // enable 
-        }
-    }
-    if (type === "signin") {
-        if (checkedEmail && checkedPassword) {
-
-        }
-    }
-
-}
-
-elements.signInEmail.addEventListener("change", () => inputValidation("signin"), false)
-elements.signInPassword.addEventListener("change", () => inputValidation("signin"), false)
-
-
 //================================================
 //================ UI renderView =================
 // routes = {
@@ -648,36 +713,35 @@ elements.signInPassword.addEventListener("change", () => inputValidation("signin
 //   };
 
 const renderSendingView = () => {
-    console.log(isSend);
-    if (!isSend) { // && !!uploadQueue.length
-        countdown(10);
-    }
-    isSend = true;
-
     // 1. according to "#send .active" to render differ sendingWays
     const type = document.querySelector("#send .active").innerText || "LINK";
+
     // css
     switch (type) {
         case "EMAIL":
             elements.sendingCard.classList.add("email");
             elements.sendingCard.classList.remove("link");
             elements.sendingCard.classList.remove("direct");
-            console.log(type)
+            console.log(type);
 
             break;
         case "LINK":
             elements.sendingCard.classList.remove("email");
             elements.sendingCard.classList.add("link");
             elements.sendingCard.classList.remove("direct");
-            console.log(type)
+            console.log(type);
 
             break;
         case "DIRECT":
             elements.sendingCard.classList.remove("email");
             elements.sendingCard.classList.remove("link");
             elements.sendingCard.classList.add("direct");
-            console.log(type)
-
+            console.log(type);
+            console.log(isSend);
+            if (!isSend) { // && !!uploadQueue.length
+                countdown(10);
+            }
+            isSend = true;
             break;
         default:
             throw new Error(`${type}`);
@@ -829,9 +893,14 @@ const openLoginPage = evt => {
 const closeLoginPage = evt => {
     if (evt.target.matches(".modal")) {
         elements.container.classList.remove("u-hidden");
-        window.location.hash = "send";
+        window.location.hash = "";
     }
 }
-elements.btnConfirmed.addEventListener("click", renderDropView, false);
+
+elements.downloadList.addEventListener("click", uiControlFile, false);
 elements.navLoginBtn.addEventListener("click", openLoginPage, false);
 elements.modal.addEventListener("click", closeLoginPage, false);
+
+elements.btnConfirmed.addEventListener("click", renderDropView, false);
+elements.btnBackToReceive.addEventListener("click", renderDownloadInput);
+// elements.btnRefresh.addEventListener("click", checkUrl, false);

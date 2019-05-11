@@ -15808,6 +15808,34 @@ select.selectpicker {
   justify-items: center;
   align-items: center; }
 
+.download-card {
+  position: relative; }
+  .download-card .btn-refresh > span {
+    display: inline-block;
+    -webkit-transform: translate(4px, -8px);
+            transform: translate(4px, -8px);
+    color: #6d6d6d;
+    font-weight: 400; }
+  .download-card .btn-back > .material-icons {
+    display: inline-block;
+    -webkit-transform: translate(0px, 3px);
+            transform: translate(0px, 3px);
+    font-size: 24px; }
+  .download-card .empty-file {
+    position: absolute;
+    overflow: scroll;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    top: 0;
+    left: 0; }
+    .download-card .empty-file > div {
+      position: absolute;
+      -webkit-transform: translate(-50%, -50%);
+              transform: translate(-50%, -50%);
+      top: 50%;
+      left: 50%; }
+
 .has-advanced-upload .box__dragndrop {
   display: inline; }
 
@@ -16163,7 +16191,7 @@ select.selectpicker {
   position: relative;
   width: 90%;
   text-align: center;
-  color: #e9e9e9; }
+  color: #ff2d55; }
 
 .countdown {
   text-align: right; }
@@ -16181,11 +16209,12 @@ select.selectpicker {
     margin: 3px;
     outline: 2px solid #efefef; }
 
-.gift {
+.material-icons.gift {
   position: absolute;
   font-size: 36px;
   -webkit-animation: drop 3s linear infinite;
           animation: drop 3s linear infinite;
+  color: #ff2d55;
   /* animation: drop; */ }
 
 @media screen and (max-width: 400px) {
