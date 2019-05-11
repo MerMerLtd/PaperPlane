@@ -1,21 +1,5 @@
-
 // =============================================================
-// Views
-let isCurrentIn = false;
-
-elements = {
-    ...elements,
-    // alertSuccess: document.querySelector(".alert"),
-
-    body: document.querySelector("body"),
-
-    page: document.querySelector(".login-page"),
-
-}
-
-// =============================================================
-// Modeals
-
+// Models
 const File = {
     files: [],
 }
@@ -42,8 +26,6 @@ const initialLetter = async () => {
     }
 }
 initialLetter();
-
-
 
 const state = {};
 
@@ -695,17 +677,15 @@ const renderDownloadZone = async letter => {
     elements.downloadList.innerText = "";
 
     // 4 filePaths.length = 0 沒有路徑
-    if (!filePaths.length) {
-        removeLoader(elements.emptyFileHint);
-        return;
-    };
+    if (!filePaths.length) return false;
 
     // 4. fetch files
     hiddenElement(elements.emptyFileHint, 0);
     Promise.all(filePaths.map(async filePath => fetchFile(filePath)))
         .then(files => {
-            console.log("renderDownloadZone",files);
+            // console.log("renderDownloadZone",files);
             // console.log(downloadQueue);
+            elements.filesInfo.innerHTML = `Total ${files.length} files &middot; ${formatFileSize(progressCalculator(files).totalSize)}`
             // 5. renderFiles
             files.forEach(file => renderFile(elements.downloadList, file));
         })

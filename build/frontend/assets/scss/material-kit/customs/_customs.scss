@@ -1007,7 +1007,7 @@ footer a {
     cursor: not-allowed;
 }
 
-.varification-page {
+.success-page ,.failed-page{
     position: fixed;
     top: 0;
     left: 0;
@@ -1119,3 +1119,19 @@ footer a {
     padding-top: 16px;
 }
 
+.varify-form{
+    display: none;
+    opacity: 0;
+    transform: translateY(-60vh);
+    transition: all 0.5s ease-in-out;
+}
+
+#open-varify-form:checked ~ .varify-form{
+    display: block;
+    opacity: 1;
+    transform: translateY(0vh);
+}
+
+#open-varify-form:checked + .failed-hint{
+    display: none;
+}

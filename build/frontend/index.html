@@ -257,7 +257,6 @@
             </div>
           </div>
           <div class="modal-body">
-
             <div class="card-body ">
               <p class="card-description text-center">Or Be Classical</p>
 
@@ -603,7 +602,7 @@
             </div>
             <div class="tab-pane" id="receive">
               <!-- digit input || download files zone -->
-              <div class="card input-card">
+              <div class="card input-card active">
                 <div class="card-body ">
                   <div class="input-group">
                     <div class="input-group-prepend">
@@ -652,9 +651,9 @@
                       </i>
                       <span>Refresh</span>
                     </div>
-                    <p class="tim-note small-text files-info">Total 1 files &middot; 34.45MB</p>
+                    <p class="tim-note small-text files-info">Total 0 files &middot; 0KB</p>
                   </div>
-                  <div class="btn btn-primary btn-block btn-receive">Receive</div>
+                  <div class="btn btn-primary btn-block btn-receive">Receive All</div>
                 </div>
               </div>
             </div>
@@ -698,8 +697,7 @@
   </div>
 
   <!-- <div class="page-header header-filter error-page" style="background-image: url('../assets/img/clint-mckoy.jpg')"> -->
-  <div class="page-header header-filter varification-page u-hidden"
-    style="background-image: url('../assets/img/dg2.jpg')">
+  <div class="page-header header-filter success-page u-hidden" style="background-image: url('../assets/img/dg2.jpg')">
     <!--   you can change the color of the filter page using: data-color="blue | green | orange | red | purple" -->
     <div class="container">
       <div class="row">
@@ -712,6 +710,77 @@
             Back to homepage <i class="material-icons">favorite</i>
             <!--innerHtml = Let's Try Again <i class="material-icons">favorite</i> -->
           </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-header header-filter failed-page u-hidden" style="background-image: url('../assets/img/dg2.jpg')">
+    <!--   you can change the color of the filter page using: data-color="blue | green | orange | red | purple" -->
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <input type="checkbox" id="open-varify-form" style="display: none;">
+          <div class="failed-hint ">
+            <h1 class="title">Failed :(</h1>
+            <!--innerText = 404-->
+            <h4 class="description">Ooooups! Email confirmation Failed.</h4>
+            <!--innerText = Ooooups! Email confirmation Failed.-->
+            <label for="open-varify-form" class="btn btn-primary btn-round btn-lg btn-confirmed"
+              style="text-transform: none; font-size: 1rem;">
+              Let's Try Again <i class="material-icons">favorite</i>
+              <!--innerHtml = Let's Try Again <i class="material-icons">favorite</i> -->
+            </label>
+          </div>
+          <div class="container varify-form">
+            <div class="row">
+              <div class="col-lg-4 col-md-6 col-sm-8 ml-auto mr-auto">
+                <div class="card card-login card-hidden">
+                  <div class="card-header card-header-primary text-center">
+                    <h4 class="card-title">Try Social Media Login</h4>
+                    <div class="social-line">
+                      <a href="#pablo" class="btn btn-just-icon btn-link btn-white">
+                        <i class="fa fa-facebook-square"></i>
+                      </a>
+                      <a href="#pablo" class="btn btn-just-icon btn-link btn-white">
+                        <i class="fa fa-twitter"></i>
+                      </a>
+                      <a href="#pablo" class="btn btn-just-icon btn-link btn-white">
+                        <i class="fa fa-google-plus"></i>
+                      </a>
+                    </div>
+                  </div>
+                  <div class="card-body ">
+                    <p class="card-description text-center">Or Still Go Classic</p>
+
+                    <span class="bmd-form-group">
+                      <div class="input-group">
+                        <div class="input-group-prepend">
+                          <span class="input-group-text">
+                            <i class="material-icons">email</i>
+                          </span>
+                        </div>
+                        <input type="email" class="form-control" placeholder="Email...">
+                      </div>
+                    </span>
+                    <span class="bmd-form-group">
+                      <div class="input-group">
+                        <div class="input-group-prepend">
+                          <span class="input-group-text">
+                            <i class="material-icons">lock_outline</i>
+                          </span>
+                        </div>
+                        <input type="password" class="form-control" placeholder="Password...">
+                      </div>
+                    </span>
+                  </div>
+                  <div class="card-footer justify-content-center">
+                    <a href="#send" class="btn btn-rose btn-link btn-lg btn-varify">Lets Go</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

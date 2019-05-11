@@ -16458,13 +16458,13 @@ footer a, footer a:active, footer a:visited {
 .email .btn-cancel {
   cursor: not-allowed; }
 
-.varification-page {
+.success-page, .failed-page {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   z-index: 1; }
-  .varification-page > .container {
+  .success-page > .container, .failed-page > .container {
     position: absolute !important;
     top: 50%;
     left: 50%;
@@ -16476,7 +16476,7 @@ footer a, footer a:active, footer a:visited {
     padding: 0 15px;
     width: 100%;
     max-width: 880px; }
-    .varification-page > .container .title {
+    .success-page > .container .title, .failed-page > .container .title {
       font-size: 5em; }
 
 #sign-up,
@@ -16543,6 +16543,22 @@ footer a, footer a:active, footer a:visited {
 
 .form-check .form-check-label {
   padding-top: 16px; }
+
+.varify-form {
+  display: none;
+  opacity: 0;
+  -webkit-transform: translateY(-60vh);
+          transform: translateY(-60vh);
+  transition: all 0.5s ease-in-out; }
+
+#open-varify-form:checked ~ .varify-form {
+  display: block;
+  opacity: 1;
+  -webkit-transform: translateY(0vh);
+          transform: translateY(0vh); }
+
+#open-varify-form:checked + .failed-hint {
+  display: none; }
 
 /**
  * Computes a CSS calc function that betweens a value from

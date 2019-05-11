@@ -133,7 +133,8 @@ let elements = {
     body: document.querySelector(".login-page"),
     navBarBrand: document.querySelector(".navbar-brand"),
     btnConfirmed: document.querySelector(".btn-confirmed"),
-    varificationPage: document.querySelector(".varification-page"),
+    successPage: document.querySelector(".success-page"),
+    failedPage: document.querySelector(".failed-page"),
     emptyFileHint: document.querySelector(".download-card .empty-file"),
     btnBackToReceive: document.querySelector(".download-card .btn-back"),
     btnRefresh: document.querySelector(".download-card .btn-refresh"),
@@ -266,6 +267,7 @@ const removeHintLocation = () => {
     // elements.fileList.classList.remove("invisible");
 }
 
+let isCurrentIn = false;
 // drag file in the pageHeader
 const handleDragInPageHeader = evt => {
     if (!isCurrentIn) {
@@ -342,7 +344,7 @@ const renderFile = (parentEl, file) => {
                     <div class="cover__pause--p1"></div>
                     <div class="cover__pause--p2"></div>
                 </div>  
-                <div class="cover__select selected">
+                <div class="cover__select "> <!-- selected -->
                     <div class="cover__select--s1"></div>
                     <div class="cover__select--s2"></div>
                 </div>     
@@ -603,7 +605,7 @@ const displayLink = (el, letter) => {
     el.firstElementChild.lastElementChild.innerText += `${letter}`;
 }
 
-const progressCalculator = () => {
+const progressCalculator = files => {
     // ?? Or setInterval check
     let completeCount = 0,
         totalCount = 0,
@@ -613,7 +615,7 @@ const progressCalculator = () => {
         totalProgress = 0;
     // marginLeft = 0;
 
-    if (!uploadQueue.length) return {
+    if (!files.length) return {
         totalProgress,
         totalSize,
         completeSize,
@@ -621,17 +623,17 @@ const progressCalculator = () => {
         // marginLeft,
     }
 
-    uploadQueue.forEach(file => {
+    files.forEach(file => {
         completeCount += file.sliceIndex;
         totalCount += file.sliceCount;
-        totalSize += file.size;
+        totalSize += file.fileSize;
     })
 
     totalProgress = (completeCount / totalCount).toFixed(2); // 0.??;
     completeSize = Math.round(totalProgress * totalSize);
     totalProgress *= 100; // ??
     // marginLeft = Math.round(totalProgress * 0.85);
-    fileCount = uploadQueue.length;
+    fileCount = files.length;
 
 
     if (totalProgress === 100) {
@@ -649,7 +651,7 @@ const progressCalculator = () => {
 
 // ?? if Choose EMAIL disable btnBack but can cancel uploading 問題在於什麼時候寄email
 const updateTotalProgress = () => {
-    const data = progressCalculator();
+    const data = progressCalculator(uploadQueue);
     elements.totalProgressBar.style.width = `${data.totalProgress}%`;
     elements.progressNum.style.marginLeft = `${5 + data.totalProgress *.8}%`;
     elements.progressNum.innerText = `${(data.totalProgress || 0 )}%`;
@@ -779,7 +781,8 @@ const closeLoginView = () => {
 //     '/#sign-in': signInView,
 //     '/#sign-up': signUpView,
 const renderLoginView = () => {
-    hiddenElement(elements.varificationPage, 0);
+    hiddenElement(elements.successPage, 0);
+    hiddenElement(elements.failedPage, 0);
     elements.html.classList.remove("nav-open");
     elements.navbarToggle.classList.remove("toggled");
     elements.container.classList.add("u-hidden");
@@ -795,7 +798,8 @@ const renderLoginView = () => {
 //     '/': dropView,
 //     '/#send': dropView,
 const renderDropView = () => {
-    hiddenElement(elements.varificationPage, 0);
+    hiddenElement(elements.successPage, 0);
+    hiddenElement(elements.failedPage, 0);
     closeLoginView();
 
     renderTabView1();
@@ -804,7 +808,8 @@ const renderDropView = () => {
 
 //  '/#receive/letter': downloadView,
 const renderDownloadView = () => {
-    hiddenElement(elements.varificationPage, 0);
+    hiddenElement(elements.successPage, 0);
+    hiddenElement(elements.failedPage, 0);
     closeLoginView();
 
     renderTabView2();
@@ -815,7 +820,8 @@ const renderDownloadView = () => {
 
 // '/#receive': downloadInput,
 const renderDownloadInput = () => {
-    hiddenElement(elements.varificationPage, 0);
+    hiddenElement(elements.successPage, 0);
+    hiddenElement(elements.failedPage, 0);
     closeLoginView();
 
     renderTabView2();
@@ -824,17 +830,18 @@ const renderDownloadInput = () => {
     elements.downloadCard.classList.remove("active");
 }
 
-//     '/#validation': validationView,
-const renderValidationView = result => {
+//     '/#varification': varificationView,
+const renderVarificationView = result => {
     closeLoginView(); 
     hiddenElement(elements.container, 0);
-    unhiddenElement(elements.varificationPage, 0);
     if(result){
     // result === true 👉 驗證成功
-
+        hiddenElement(elements.failedPage, 0);
+        unhiddenElement(elements.successPage, 0);
     }else{
     // result === false 👉 驗證失敗
-
+        hiddenElement(elements.successPage, 0);
+        unhiddenElement(elements.failedPage, 0);
     }
 }
 
