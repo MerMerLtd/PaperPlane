@@ -6,22 +6,6 @@ const to = promise => {
         .catch(err => [err, null]);
 }
 
-// polyfill for Element.closest from MDN
-if (!Element.prototype.matches)
-    Element.prototype.matches = Element.prototype.msMatchesSelector ||
-    Element.prototype.webkitMatchesSelector;
-
-if (!Element.prototype.closest)
-    Element.prototype.closest = function (s) {
-        var el = this;
-        if (!document.documentElement.contains(el)) return null;
-        do {
-            if (el.matches(s)) return el;
-            el = el.parentElement;
-        } while (el !== null);
-        return null;
-    };
-
 // =============================================================
 // base
 // XHR
@@ -155,6 +139,22 @@ let elements = {
     btnRefresh: document.querySelector(".download-card .btn-refresh"),
 }
 
+// polyfill for Element.closest from MDN
+if (!Element.prototype.matches)
+    Element.prototype.matches = Element.prototype.msMatchesSelector ||
+    Element.prototype.webkitMatchesSelector;
+
+if (!Element.prototype.closest)
+    Element.prototype.closest = function (s) {
+        var el = this;
+        if (!document.documentElement.contains(el)) return null;
+        do {
+            if (el.matches(s)) return el;
+            el = el.parentElement;
+        } while (el !== null);
+        return null;
+    };
+
 // 同一 element 監聽 || 不監聽多個event
 const addMultiListener = (element, events, func) => {
     events.split(" ").forEach(event => element.addEventListener(event, func, false));
@@ -172,6 +172,59 @@ const disableBtn = btn => {
 const enableBtn = btn => {
     if (!btn.classList.contains("disable")) return;
     btn.classList.remove("disable");
+}
+
+// hidden Child Elements
+const hiddenChildEls = parentEl => {
+    Array.from(parentEl.children).forEach(el => el.classList.add("u-hidden"));
+}
+
+const unHiddenChildEls = parentEl => {
+    Array.from(parentEl.children).forEach(el => el.classList.remove("u-hidden"));
+}
+
+// hidden Element
+const unhiddenElement = (element, delay) => {
+    setTimeout(() => {
+        element.classList.remove("u-hidden");
+    }, delay); 
+}
+const hiddenElement = (element, delay) => {
+    setTimeout(() => {
+        element.classList.add("u-hidden");
+    }, delay); 
+}
+
+// render Loader && remove Loader
+const renderLoader = parentEl => {
+    // console.log(parentEl)  // elements.downloadCard
+    hiddenChildEls(parentEl);
+    const markup = `
+        <div class="lds-spinner">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    `;
+    parentEl.insertAdjacentHTML("afterbegin", markup);
+    elements = {
+        ...elements,
+        loader: document.querySelector(".lds-spinner"),
+    }
+}
+
+const removeLoader = parentEl => {
+    elements.loader.remove();
+    unHiddenChildEls(parentEl);
 }
 
 // after file in the fileList
@@ -235,9 +288,6 @@ const handleDragoutPageHeader = evt => {
     }
 }
 
-//================================================
-//=================== Drop View ==================
-
 // 判斷瀏覽器是否支持拖拉上傳
 let isAdvancedUpload = function () {
     let div = document.createElement('div');
@@ -252,8 +302,9 @@ if (isAdvancedUpload) {
     addMultiListener(elements.pageHeader, "drop", evt => handleFilesSelected(evt));
 }
 
+
 //================================================
-//=========== Upload || download Files ===========
+//=========== render File ===========
 
 const formatFileSize = size => {
     let formatted, power;
@@ -270,120 +321,6 @@ const formatFileSize = size => {
 
     [formatted, power] = check(size);
     return `${formatted}${unit[power]}`
-}
-
-const renderFile_old_version = file => {
-    const markup = `
-            <div class="file" data-fid="${file.fid}" data-type="upload">
-                <div class="delete-button"></div>
-                <div class="file-icon">
-                    <div class="cover u-hidden">
-                        <div class="cover__border"></div>
-                        <div class="cover__continue">
-                            <div class="cover__sector--before"></div>
-                            <div class="cover__sector"></div>
-                            <div class="cover__sector--after"></div>
-                        </div>
-                        <div class="cover__pause">
-                            <div class="cover__pause--p1"></div>
-                            <div class="cover__pause--p2"></div>
-                        </div>  
-                        <div class="cover__select">
-                            <div class="cover__select--s1"></div>
-                            <div class="cover__select--s2"></div>
-                        </div>     
-                    </div>
-                </div>
-                <div class="progress">
-                    <div data-progressId="${file.fid}" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: ${(file.sliceIndex/file.sliceCount)*100}%"></div>
-                </div>
-                <div class="file-name">${file.name}</div>
-                <div class="file-size">${formatFileSize(file.size)}</div>
-            </div>  
-    
-            <!-- <p class="file-name">螢幕快照 2019-03-19 上午9.04.16.png</p> -->
-            <!-- <p class="file-name">螢幕快照 ...04.16.png</p> -->
-        `;
-    elements.fileList.insertAdjacentHTML("beforeend", markup);
-}
-
-const renderFiles = files => {
-    files.forEach(file => renderFile(file));
-}
-
-const showFileProgress = file => {
-    const progress = (file.sliceIndex / file.sliceCount).toFixed(2) * 100;
-    document.querySelector(`[data-progressid='${file.fid}']`).style.width = `${progress}%`;
-    // ??之後我想要改這裡的樣式
-}
-// renderDropView();
-
-
-//================================================
-//================ Download View =================
-let isFetching = false;
-
-
-
-
-const renderInputCard = () => {
-    // console.log(letter); // ?? for testing
-    if (window.location.hash.substr(1)) { // ??
-        elements.downloadList.innerText = "";
-        checkUrl();
-        return;
-    }
-    elements.inputCard.classList.add("active");
-    elements.downloadCard.classList.remove("active");
-}
-const renderDownloadCard = () => {
-    elements.inputCard.classList.remove("active");
-    elements.downloadCard.classList.add("active");
-}
-// const toggleInputOrDownloadCard = () => {
-//     elements.inputCard.classList.toggle("active");
-//     elements.downloadCard.classList.toggle("active");
-// }
-
-// let testEl;
-const hiddenChildEls = parentEl => {
-    // testEl = parentEl;
-    Array.from(parentEl.children).forEach(el => el.classList.add("u-hidden"));
-}
-
-const unHiddenChildEls = parentEl => {
-    Array.from(parentEl.children).forEach(el => el.classList.remove("u-hidden"));
-}
-
-const renderLoader = parentEl => {
-    // console.log(parentEl)  // elements.downloadCard
-    hiddenChildEls(parentEl);
-    const markup = `
-        <div class="lds-spinner">
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-        </div>
-    `;
-    parentEl.insertAdjacentHTML("afterbegin", markup);
-    elements = {
-        ...elements,
-        loader: document.querySelector(".lds-spinner"),
-    }
-}
-
-const removeLoader = parentEl => {
-    elements.loader.remove();
-    unHiddenChildEls(parentEl);
 }
 
 const renderFile = (parentEl, file) => {
@@ -421,6 +358,39 @@ const renderFile = (parentEl, file) => {
     `;
 
     parentEl.insertAdjacentHTML("beforeend", markup)
+}
+
+// deg: 0 ~ 360;
+// progress: 0 ~ 1;
+const renderProgress = (fid, progress, type) => { //?
+    let deg = progress * 360;
+
+    const el = document.querySelector(`${type ==="download"? ".download-card": ".drop-card"} [data-coverId=${fid}]`);
+    console.log(el, fid,type)
+    el.parentElement.classList.add("continue");
+    el.parentElement.classList.remove("select");
+    el.parentElement.classList.remove("pause");
+
+    if (deg >= 180) {
+        console.log(progress)
+        el.children.item(2).style.zIndex = 1;
+        el.children.item(0).style.transform = `rotate(90deg)`;
+        el.children.item(2).style.transform = `rotate(${deg + 90}deg)`;
+    } else {
+        console.log(progress)
+        el.children.item(0).style.transform = `rotate(${deg - 90}deg)`;
+        el.children.item(2).style.transform = `rotate(${deg + 90}deg)`;
+    }
+    // el.children.item(0).style.transform = `rotate(${deg-90}deg)`;
+
+    // if(deg >= 180){
+    //     el.children.item(2).style.opacity = 1;
+    //     el.children.item(1).style.overflow = "visible";
+    // }
+    if (deg === 360) {
+        el.parentNode.remove();
+        return;
+    }
 }
 
 //================================================
@@ -791,17 +761,6 @@ const renderTabView2 = () => {
     elements.tabReceive.classList.add("show");
     elements.tabPane2.classList.add("active");
     elements.tabPane2.classList.add("show");
-}
-
-const unhiddenElement = (element, delay) => {
-    setTimeout(() => {
-        element.classList.remove("u-hidden");
-    }, delay); 
-}
-const hiddenElement = (element, delay) => {
-    setTimeout(() => {
-        element.classList.add("u-hidden");
-    }, delay); 
 }
 
 const closeLoginView = () => {

@@ -471,6 +471,7 @@ if (window.File && window.FileReader && window.FileList && window.Blob) {
 
 // ======================================
 // ============= download ===============
+let isFetching = false;
 
 const downloadQueue = [];
 const downloadFiles = [];
@@ -562,51 +563,21 @@ const fetchFile = async (filePath) => {
         }, delay); //setTimeout(fetchFile, delay, filePath, newPointer);
 
         return data;
+        // console.log(data) {
+        // contentType: "video/quicktime"
+        // fid: "JOBSZn7dzir21Iys"
+        // fileName: "test_lg.mov"
+        // fileSize: 2704039688
+        // progress: 0.262015503875969
+        // slices: (645) ["/letter/628379/upload/JOBSZn7dzir21Iys/b00557b19172b883ca2a85470d88744543a011d3", "/letter/628379/upload/JOBSZn7dzir21Iys/04f6ee6e6bab53d775f804093bfd264a72781d0c", ...]
+        // totalSlice: 645
+        // waiting: []
+        // }
     }
 }
-// console.log(data) {
-// contentType: "video/quicktime"
-// fid: "JOBSZn7dzir21Iys"
-// fileName: "test_lg.mov"
-// fileSize: 2704039688
-// progress: 0.262015503875969
-// slices: (645) ["/letter/628379/upload/JOBSZn7dzir21Iys/b00557b19172b883ca2a85470d88744543a011d3", "/letter/628379/upload/JOBSZn7dzir21Iys/04f6ee6e6bab53d775f804093bfd264a72781d0c", ...]
-// totalSlice: 645
-// waiting: []
-// }
 
-// deg: 0 ~ 360;
-// progress: 0 ~ 1;
-const renderProgress = (fid, progress, type) => { //?
-    let deg = progress * 360;
 
-    const el = document.querySelector(`${type ==="download"? ".download-card": ".drop-card"} [data-coverId=${fid}]`);
-    console.log(el, fid,type)
-    el.parentElement.classList.add("continue");
-    el.parentElement.classList.remove("select");
-    el.parentElement.classList.remove("pause");
 
-    if (deg >= 180) {
-        console.log(progress)
-        el.children.item(2).style.zIndex = 1;
-        el.children.item(0).style.transform = `rotate(90deg)`;
-        el.children.item(2).style.transform = `rotate(${deg + 90}deg)`;
-    } else {
-        console.log(progress)
-        el.children.item(0).style.transform = `rotate(${deg - 90}deg)`;
-        el.children.item(2).style.transform = `rotate(${deg + 90}deg)`;
-    }
-    // el.children.item(0).style.transform = `rotate(${deg-90}deg)`;
-
-    // if(deg >= 180){
-    //     el.children.item(2).style.opacity = 1;
-    //     el.children.item(1).style.overflow = "visible";
-    // }
-    if (deg === 360) {
-        el.parentNode.remove();
-        return;
-    }
-}
 
 const toggleProgressIcon = target => { // ?
     elements.coverContinue.classList.toggle("u-hidden");
@@ -703,7 +674,7 @@ const startDownload = () => {
 
 const renderDownloadZone = async letter => {
 
-    renderDownloadCard();
+    renderDownloadView();
     // 2.2 render loader 
     renderLoader(elements.emptyFileHint);
 
@@ -713,9 +684,9 @@ const renderDownloadZone = async letter => {
     // 2.3.1 如果沒有要到，重新輸入inputKey
     if (!filePaths) {
         // ?? render custom alert downloadKey || inputKey is invalid
-        removeLoader(elements.downloadCard);
+        removeLoader(elements.emptyFileHint);
         window.location.hash = ""; //// window.location = window.location.origin;
-        renderInputCard();
+        renderDownloadInput();
         return false;
     };
     // 2.3.2 如果有要到filePaths，cleanLoader 
@@ -726,7 +697,10 @@ const renderDownloadZone = async letter => {
     elements.downloadList.innerText = "";
 
     // 4 filePaths.length = 0 沒有路徑
-    if (!filePaths.length) return;
+    if (!filePaths.length) {
+        removeLoader(elements.emptyFileHint);
+        return;
+    };
 
     // 4. fetch files
     hiddenElement(elements.emptyFileHint, 0);
