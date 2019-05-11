@@ -514,6 +514,7 @@ const fetchFile = async (filePath) => {
         filePath
     }; //http://www.javascriptkit.com/javatutors/trycatch2.shtml 還沒細看
     if (data) {
+        console.log(data);
         // console.log("fetchFile called: "+ i++ + " time", "data.progress: ",data.progress);
         let fileIndex = downloadQueue.findIndex(file => file.fid === data.fid); 
         if (fileIndex === -1) {
@@ -546,7 +547,7 @@ const fetchFile = async (filePath) => {
             })
             // console.log(pointer, pointer + i, "0~644");
         });
-        console.log(downloadQueue)
+        // console.log(downloadQueue)
         
         // if (newPointer === -1) downloadQueue[fileIndex].isCompleted === true;
         // console.log(downloadQueue[fileIndex].waiting)
@@ -561,7 +562,7 @@ const fetchFile = async (filePath) => {
         setTimeout(() => {
             fetchFile(filePath);
         }, delay); //setTimeout(fetchFile, delay, filePath, newPointer);
-
+        console.log("fetchFile", data)
         return data;
         // console.log(data) {
         // contentType: "video/quicktime"
@@ -575,9 +576,6 @@ const fetchFile = async (filePath) => {
         // }
     }
 }
-
-
-
 
 const toggleProgressIcon = target => { // ?
     elements.coverContinue.classList.toggle("u-hidden");
@@ -597,7 +595,7 @@ const assembleShard = (target, shard, index) => {
         fileIndex = downloadFiles.length - 1;
     }
     downloadFiles[fileIndex].slices[index] = shard;
-    console.log(downloadFiles[fileIndex].slices.filter((v) => !!v).length )
+    // console.log(downloadFiles[fileIndex].slices.filter((v) => !!v).length )
     downloadFiles[fileIndex].progress = downloadFiles[fileIndex].slices.filter((v) => !!v).length/ target.totalSlice;
     return downloadFiles[fileIndex];
 }
@@ -706,16 +704,16 @@ const renderDownloadZone = async letter => {
     hiddenElement(elements.emptyFileHint, 0);
     Promise.all(filePaths.map(async filePath => fetchFile(filePath)))
         .then(files => {
-            console.log(files);
-            console.log(downloadQueue);
+            console.log("renderDownloadZone",files);
+            // console.log(downloadQueue);
             // 5. renderFiles
             files.forEach(file => renderFile(elements.downloadList, file));
         })
 }
 
-// disable btnRecieve if 
+// disable btnReceive if 
 // 6. 開始下載
-elements.btnRecieve.addEventListener("click", startDownload, false);
+elements.btnReceive.addEventListener("click", startDownload, false);
 
 const checkValidity = inputKey => {
     // 1. if elements.inputKey.value is numbers || 1.2.1 if elements.inputKey.value is string (can be link)

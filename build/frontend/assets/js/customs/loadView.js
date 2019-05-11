@@ -125,7 +125,7 @@ let elements = {
     btnDownload: document.querySelector(".btn-download"),
     inputKey: document.querySelector(".input-key"),
     downloadCard: document.querySelector(".download-card "),
-    btnRecieve: document.querySelector(".btn-recieve"),
+    btnReceive: document.querySelector(".btn-receive"),
     downloadList: document.querySelector(".download-card .file-list"),
     downloadBody: document.querySelector(".download-card > .card-body"),
     expDate: document.querySelector(".download-card .exp-date "),
@@ -324,7 +324,7 @@ const formatFileSize = size => {
 }
 
 const renderFile = (parentEl, file) => {
-    // console.log(file);
+    console.log(parentEl, file);
     const markup = `
     <div class="file" data-fid="${file.fid}" data-type="download">
         <div class="file-icon">
@@ -366,18 +366,18 @@ const renderProgress = (fid, progress, type) => { //?
     let deg = progress * 360;
 
     const el = document.querySelector(`${type ==="download"? ".download-card": ".drop-card"} [data-coverId=${fid}]`);
-    console.log(el, fid,type)
+    // console.log(el, fid,type)
     el.parentElement.classList.add("continue");
     el.parentElement.classList.remove("select");
     el.parentElement.classList.remove("pause");
 
     if (deg >= 180) {
-        console.log(progress)
+        // console.log(progress)
         el.children.item(2).style.zIndex = 1;
         el.children.item(0).style.transform = `rotate(90deg)`;
         el.children.item(2).style.transform = `rotate(${deg + 90}deg)`;
     } else {
-        console.log(progress)
+        // console.log(progress)
         el.children.item(0).style.transform = `rotate(${deg - 90}deg)`;
         el.children.item(2).style.transform = `rotate(${deg + 90}deg)`;
     }
