@@ -250,7 +250,7 @@
 			"response": []
 		},
 		{
-			"name": "allow register",
+			"name": "exists",
 			"request": {
 				"method": "GET",
 				"header": [],
@@ -259,14 +259,14 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "localhost/member/luphia@mermer.cc/allowRegister",
+					"raw": "localhost/member/luphia@mermer.cc/exists",
 					"host": [
 						"localhost"
 					],
 					"path": [
 						"member",
 						"luphia@mermer.cc",
-						"allowRegister"
+						"exists"
 					]
 				}
 			},
