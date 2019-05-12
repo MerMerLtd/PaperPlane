@@ -90,6 +90,14 @@ class User {
     return true;
   }
 
+  verifyPassword({ password, hash, salt }) {
+    assert(password == this._.password.hash, 'Account Or Password Error');
+    if(typeof(hash) == 'string' && typeop(salt) == 'string') {
+      this.password = { hash, salt };
+    }
+    return true;
+  }
+
   verifyMobile(code) {
     const now = new Date().getTime();
     assert(this._.verification.mobile.expire > now, 'Verify Failed: Expired');
@@ -214,6 +222,10 @@ class Member extends Bot {
   }
 
   login({ account, password }) {
+    
+  }
+
+  createToken({  }) {
     
   }
 

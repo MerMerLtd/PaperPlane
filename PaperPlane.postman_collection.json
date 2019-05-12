@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "6fac0bcb-6456-4922-9d48-d3bcd0f54efb",
+		"_postman_id": "a498fc11-7550-45be-8ae7-2d276817e697",
 		"name": "PaperPlane",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -192,6 +192,130 @@
 						"letter",
 						"788037",
 						"send"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "regeister member",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"account\": \"luphia@mermer.cc\",\n\t\"password\": {\n\t\t\"hash\": \"asdf1234\",\n\t\t\"salt\": \"qwer0987\"\n\t}\n}"
+				},
+				"url": {
+					"raw": "localhost/member/",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"member",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "find user",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost/member/?email=luphia@mermer.cc",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"member",
+						""
+					],
+					"query": [
+						{
+							"key": "email",
+							"value": "luphia@mermer.cc"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "verify email",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost/verify/email?email=luphia@mermer.cc&code=02e8f03cd8a49c67cf49dd13089c2b55f300b7b3fbbb6068",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"verify",
+						"email"
+					],
+					"query": [
+						{
+							"key": "email",
+							"value": "luphia@mermer.cc"
+						},
+						{
+							"key": "code",
+							"value": "02e8f03cd8a49c67cf49dd13089c2b55f300b7b3fbbb6068"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "resend email",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost/resend/email?email=luphia@mermer.cc",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"resend",
+						"email"
+					],
+					"query": [
+						{
+							"key": "email",
+							"value": "luphia@mermer.cc"
+						}
 					]
 				}
 			},
