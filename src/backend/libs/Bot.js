@@ -52,9 +52,9 @@ class Bot {
   findOne({ key }) {
     const db = this.database.leveldb;
     return new Promise((resolve) => {
-      db.get('key', (err, value) => {
+      db.get(key, (err, value) => {
         if(err) {
-          reject(err);
+          resolve();
         } else {
           resolve(value);
         }

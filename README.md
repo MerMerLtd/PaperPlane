@@ -20,3 +20,7 @@ npm start
 - totalSlice
 - sliceIndex
 - sliceBuffer
+
+## Password
+- algorithm: HMACSHA256(password, salt)
+- salt: new Date().getTime.toString(16)

@@ -2,6 +2,7 @@ const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
+const assert = require('assert');
 
 const level = require('level');
 const mongodb = require('mongodb').MongoClient;
@@ -33,6 +34,17 @@ class Utils {
         });
       }
     });
+  }
+
+  static stringToBase64(input) {
+    assert(typeof(input) == 'string', 'Require String Input');
+    const result = Buffer.from(input).toString('base64');
+    return result;
+  }
+
+  static base64ToString(input) {
+    assert(typeof(input) == 'string', 'Require String Input');
+    return Buffer.from(input, 'base64').toString('utf8');
   }
 
   static jsonStableStringify(obj, opts) {

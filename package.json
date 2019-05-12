@@ -25,6 +25,7 @@
     "minimatch": ">=3.0.2",
     "mongodb": "^3.2.3",
     "ncp": "^2.0.0",
+    "node-rsa": "^1.0.5",
     "nodemailer": "^6.1.0",
     "nodemailer-smtp-transport": "^2.7.4",
     "pem": "^1.14.2",

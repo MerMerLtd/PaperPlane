@@ -12,6 +12,7 @@ const dvalue = require('dvalue');
 
 const Bot = require(path.resolve(__dirname, 'Bot.js'));
 const Utils = require(path.resolve(__dirname, 'Utils.js'));
+const JWT = require(path.resolve(__dirname, 'JWT.js'));
 
 const defaultHTTP = [5566, 80];
 const defaultHTTPS = [7788, 443];
@@ -20,6 +21,7 @@ class Receptor extends Bot {
   constructor() {
   	super();
     this.router = new Router();
+    this.name = 'Receptor';
   }
 
   init({ config, database, logger, i18n }) {

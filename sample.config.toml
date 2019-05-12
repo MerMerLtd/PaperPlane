@@ -13,6 +13,13 @@ type = "ethereum"
 [database]
 type = "firebase"
 
+[jwt]
+secret = "zeAdSm9ZFI8HvlEyWeGJSDLa7mr1GMD5"
+
+[verification]
+emailTimeout = 3600000
+mobileTimeout = 300000
+
 [mailer]
 host = "smtp.gmail.com"
 secure = true
@@ -33,5 +40,9 @@ pathname = [
   "post | /letter/:lid/upload/:fid/:hash | Bot.LFS.uploadSlice",
   "get | /letter/:lid/upload/:fid/:hash | Bot.LFS.getSlice",
   "get | /file/:rootHash | Bot.LFS.getMetadata",
-  "get | /file/:rootHash/:hash | Bot.LFS.getSlice"
+  "get | /file/:rootHash/:hash | Bot.LFS.getSlice",
+  "post | /member/ | Bot.Member.register",
+  "get | /member/ | Bot.Member.searchUser",
+  "get | /resend/email | Bot.Member.resendEmailVerification",
+  "get | /verify/email | Bot.Member.emailConfirm"
 ]
