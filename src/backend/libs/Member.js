@@ -191,14 +191,14 @@ class Member extends Bot {
     });
   }
 
-  allowRegister({ account }) {
+  checkExists({ account }) {
     const user = new User({ account });
     return this.checkUserNotExists({ user })
     .then(() => {
-      const result = { allow: true };
+      const result = { exists: false };
       return Promise.resolve(result);
     }, () => {
-      const result = { allow: false };
+      const result = { exists: true };
       return Promise.resolve(result);
     });
   }
