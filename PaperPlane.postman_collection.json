@@ -211,7 +211,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"account\": \"luphia@mermer.cc\",\n\t\"password\": {\n\t\t\"hash\": \"asdf1234\",\n\t\t\"salt\": \"qwer0987\"\n\t}\n}"
+					"raw": "{\n\t\"account\": \"luphic@mermer.cc\",\n\t\"password\": {\n\t\t\"hash\": \"asdf1234\",\n\t\t\"salt\": \"qwer0987\"\n\t}\n}"
 				},
 				"url": {
 					"raw": "localhost/member/",
@@ -327,6 +327,35 @@
 							"key": "email",
 							"value": "luphia@mermer.cc"
 						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "login",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"account\": \"luphia@mermer.cc\",\n\t\"password\": \"asdf1234\",\n\t\"hash\": \"hash with new salt\",\n\t\"salt\": \"new salt\"\n}"
+				},
+				"url": {
+					"raw": "localhost/member/login",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"member",
+						"login"
 					]
 				}
 			},

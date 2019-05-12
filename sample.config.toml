@@ -46,5 +46,6 @@ pathname = [
   "get | /member/:account/salt | Bot.Member.checkAccount",
   "get | /member/:account/allowRegister | Bot.Member.allowRegister",
   "get | /resend/email | Bot.Member.resendEmailVerification",
-  "get | /verify/email | Bot.Member.emailConfirm"
+  "get | /verify/email | Bot.Member.emailConfirm",
+  "post | /member/login | Bot.Member.login"
 ]

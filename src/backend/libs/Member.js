@@ -99,7 +99,7 @@ class User {
 
   verifyPassword({ password, hash, salt }) {
     assert(password == this._.password.hash, 'Username And Password Not Accepted');
-    if(typeof(hash) == 'string' && typeop(salt) == 'string') {
+    if(typeof(hash) == 'string' && typeof(salt) == 'string') {
       this.password = { hash, salt };
     }
     return true;
@@ -148,7 +148,7 @@ class Member extends Bot {
 
   start() {
     const secret = this.config.jwt.secret;
-    const token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjoia3duQWgyb3pXTlZHM0hOTFIzVE1VeVpsckFpK3JocU5wWldFZDdpeWYyN2Z1WnlVN1Z6TDVVN1BYcjZDZWVIL3llb3laUk5sUUh6RkRjTTFDbEdxZnVubUEraDcrUE0xNy9iSlFySHk4NE9YVHdqL0QxbzB2V1lRdnhkc1owQW9kRVg5SHByNWJ2QWFvMTg0NUJGLy9yMWpUQnlQQUFWKzJVbTU0aHI2T0szOG1NM08zbTJYN2d2ZU1xamFNN05mcytuSnJjQjIxNE1MK1hnemVPemw4dXo0ZitWYlVsUGxDeWlnTWdvWFdpM3dzR0FGQTVxZDBuVmViR0l5UkVscithWkdkZVlWbzlBclQ4SGJIc096dE9lWnJRU1BLUFNmR1FLaTk5Tm1pMFZWMFYzNnZTL3ZpZnU4alExSXBuM1MrcTkrVTlyMVpGV29iTitySTFPSmhnPT0iLCJleHAiOjE1NTQ5OTc3MzgsImlhdCI6MTU1NDk1NDUzOH0.QAWDOIv3He9TjifQ14VprCk1oF5icWLWStV_AIuXI6IVxAYepT6A7RHTiXsZ8WFt-1xNlM8FLeQhRNLkd52GTpcElGkTia0ZJF8HZLsa2QN76WLW1rI_FDgx0cUnnMgUY52ohEXFBtNd3NoV7uVB2OFAgzvItYfuxq39K-71Bctd6Bq0T9zOYzYlSX6PHC2Vc3H3JzX7y8DhU3k_edR0pqUF7pK7znZRpN1dBzECxAJLZYYtez7519HUTA8TegonzjlHOm7PYB2q9BHPfKtKmBwkeFTCiabkJQR_s2cQD2q4D2fNS1ByF5jXwwtrleFBt6_P0Ulbb03TWSk8oKiOiQ";
+    const token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTc2NjIzMjE1NjAsImlhcCI6MTU1NzY2MDUyMTU2MCwiaWQiOiI0MWJmNWNjMGE4NmIzNzQ3NGFlZmFjNGZkYjg4Y2JlNTg0MWE4MzgwIn0=.b2DAGsJZRoCUymzcBA+q3aUJ4pcTPaKPoeeQtJOnHsI";
     console.log(JWT.jwtParser({ token }));
     return super.start();
   }
@@ -211,7 +211,7 @@ class Member extends Bot {
       this.emailVerification({ user })
       return Promise.resolve(true);
     })
-    .then(() => user.toJSON());
+    .then(() => this.createToken({ user }));
   }
 
   emailVerification({ user }) {
@@ -251,14 +251,31 @@ class Member extends Bot {
     });
   }
 
-  async login({ account, password }) {
+  async login({ account, password, salt, hash }) {
     const userData = await this.searchUser({ email: account });
     userData.config = this.config;
     const user = new User(userData);
+    user.verifyPassword({ password, salt, hash });
+    return this.saveUser({ user })
+    .then(() => this.createToken({ user }));
   }
 
-  createToken({  }) {
-    
+  createToken({ user }) {
+    const iap = new Date().getTime();
+    const exp = iap + 1800000;
+    const header = {
+      alg: 'RS256',
+      typ: 'JWT'
+    };
+    const body = {
+      id: user.id,
+      exp,
+      iap 
+    };
+    const secret = this.config.jwt.secret;
+    return {
+      token: JWT.jwtFormater({ header, body, secret })
+    };
   }
 
   renew({ token, secret }) {
