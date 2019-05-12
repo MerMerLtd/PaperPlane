@@ -227,35 +227,46 @@
 			"response": []
 		},
 		{
-			"name": "find user",
+			"name": "get salt",
 			"request": {
 				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"name": "Content-Type",
-						"value": "application/json",
-						"type": "text"
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": ""
 				},
 				"url": {
-					"raw": "localhost/member/?email=luphia@mermer.cc",
+					"raw": "localhost/member/luphia999@mermer.cc/salt",
 					"host": [
 						"localhost"
 					],
 					"path": [
 						"member",
-						""
+						"luphia999@mermer.cc",
+						"salt"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "allow register",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost/member/luphia@mermer.cc/allowRegister",
+					"host": [
+						"localhost"
 					],
-					"query": [
-						{
-							"key": "email",
-							"value": "luphia@mermer.cc"
-						}
+					"path": [
+						"member",
+						"luphia@mermer.cc",
+						"allowRegister"
 					]
 				}
 			},
@@ -310,6 +321,41 @@
 					"path": [
 						"resend",
 						"email"
+					],
+					"query": [
+						{
+							"key": "email",
+							"value": "luphia@mermer.cc"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "find user (for debug)",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost/member/?email=luphia@mermer.cc",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"member",
+						""
 					],
 					"query": [
 						{

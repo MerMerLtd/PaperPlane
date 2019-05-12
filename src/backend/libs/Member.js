@@ -69,6 +69,9 @@ class User {
       });
     }
   }
+  get salt() {
+    return this._.password.salt;
+  }
   get code() {
     const code = {
       email: this._.verification.email.code,
@@ -77,9 +80,13 @@ class User {
     return code;
   }
 
-  get level() {
-    const lv = (this._.emailVerified + this._.phoneVerified * 2 + this._.idVerified * 4);
-    return lv;
+  get verified() {
+    const result = {
+      email: !!this._.verification.email.checked,
+      mobile: !!this._.verification.mobile.checked,
+      id: !!this._.verification.id.checked
+    }
+    return result;
   }
 
   verifyEmail(code) {
@@ -91,7 +98,7 @@ class User {
   }
 
   verifyPassword({ password, hash, salt }) {
-    assert(password == this._.password.hash, 'Account Or Password Error');
+    assert(password == this._.password.hash, 'Username And Password Not Accepted');
     if(typeof(hash) == 'string' && typeop(salt) == 'string') {
       this.password = { hash, salt };
     }
@@ -107,7 +114,6 @@ class User {
 
   resetEmailVerification() {
     const now = new Date().getTime();
-    console.log(this._)
     this._.verification.email = {
       checked: false,
       code: crypto.randomBytes(24).toString('hex'),
@@ -115,12 +121,18 @@ class User {
     };
   }
 
-  toJSON() {
+  toJSON(privateData) {
     const json = dvalue.clone(this._);
     json.id = this.id;
-    json.salt = json.password.salt;
+    json.salt = this.salt;
+    json.verified = this.verified;
     delete json.password;
     delete json.verification;
+    // remove private data
+    if(!privateData) {
+      delete json.email;
+      delete json.verified;
+    }
     return json;
   }
   toStaticString() {
@@ -163,6 +175,12 @@ class Member extends Bot {
     });
   }
 
+  async checkAccount({ account }) {
+    const tmpUser = new User({ account });
+    const user = await this.findUser({ user: tmpUser });
+    return Promise.resolve(user.toJSON());
+  }
+
   checkUserNotExists({ user }) {
     const key = `LFS.USERS.${user.id}`;
     return this.find({ key })
@@ -170,6 +188,18 @@ class Member extends Bot {
       return data.length > 0 ?
         Promise.reject(new Error(`User Exists: ${user.account}`)) :
         Promise.resolve(true);
+    });
+  }
+
+  allowRegister({ account }) {
+    const user = new User({ account });
+    return this.checkUserNotExists({ user })
+    .then(() => {
+      const result = { allow: true };
+      return Promise.resolve(result);
+    }, () => {
+      const result = { allow: false };
+      return Promise.resolve(result);
     });
   }
 
@@ -221,8 +251,10 @@ class Member extends Bot {
     });
   }
 
-  login({ account, password }) {
-    
+  async login({ account, password }) {
+    const userData = await this.searchUser({ email: account });
+    userData.config = this.config;
+    const user = new User(userData);
   }
 
   createToken({  }) {
