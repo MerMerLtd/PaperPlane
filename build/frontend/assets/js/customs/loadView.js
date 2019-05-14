@@ -2,7 +2,7 @@
 if (window.performance) {
     console.info("window.performance works fine on this browser");
 }
-if (performance.navigation.type == 1) {
+if (performance.navigation.type === 1) {
     console.info("This page is reloaded");
 
 } else {
@@ -749,14 +749,7 @@ const doneWithSending = deleteFile => {
 
 //================================================
 //================ UI renderView =================
-// routes = {
-//     '/': dropView,
-//     '/#send': dropView,
-//     '/#receive/letter': downloadView,
-//     '/#sign-in': signInView,
-//     '/#sign-up': signUpView,
-//     '/#validation': validationView,
-//   };
+
 
 const renderSendingView = () => {
     // 1. according to "#send .active" to render differ sendingWays
@@ -844,7 +837,8 @@ const closeNavbar = () => {
 
 //     '/#sign-in': signInView,
 //     '/#sign-up': signUpView,
-const renderLoginView = () => {
+const renderLoginView = target => {
+    window.location.hash = target;
     closeNavbar();
     hiddenElement(elements.confirmPage, 0);
     hiddenElement(elements.successPage, 0);
@@ -864,6 +858,7 @@ const changeView = (currViewEl, nextViewEl) => {
 //     '/': dropView,
 //     '/#send': dropView,
 const renderDropView = () => {
+    window.location.hash = "send";
     closeNavbar();
     hiddenElement(elements.signinPage, 0);
     hiddenElement(elements.confirmPage, 0);
@@ -874,22 +869,9 @@ const renderDropView = () => {
     renderTabView1();
 }
 
-//  '/#receive/letter': downloadView,
-const renderDownloadView = () => {
-    closeNavbar();
-    hiddenElement(elements.signinPage, 0);
-    hiddenElement(elements.confirmPage, 0);
-    hiddenElement(elements.successPage, 0);
-    hiddenElement(elements.failedPage, 0);
-
-    unhiddenElement(elements.mainPage, 0); // ++
-    renderTabView2();
-    elements.inputCard.classList.remove("active");
-    elements.downloadCard.classList.add("active");
-}
-
 // '/#receive': downloadInput,
 const renderDownloadInput = () => {
+    window.location.hash = "receive";    
     closeNavbar();
     hiddenElement(elements.signinPage, 0);
     hiddenElement(elements.confirmPage, 0);
@@ -903,6 +885,7 @@ const renderDownloadInput = () => {
 }
 
 const renderConfirmPage = () => {
+    window.location.hash = "sign-up/confirm";    
     closeNavbar();
     hiddenElement(elements.signinPage, 0);
     hiddenElement(elements.successPage, 0);
@@ -921,10 +904,12 @@ const renderVarificationView = result => {
 
     if (result) {
         // result === true 👉 驗證成功
+        window.location.hash = "varification/success";    
         hiddenElement(elements.failedPage, 0);
         unhiddenElement(elements.successPage, 0);
     } else {
         // result === false 👉 驗證失敗
+        window.location.hash = "varification/fail";    
         hiddenElement(elements.successPage, 0);
         unhiddenElement(elements.failedPage, 0);
     }
