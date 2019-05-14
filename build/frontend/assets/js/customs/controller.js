@@ -304,10 +304,11 @@ const uploadShard = async target => {
             })}`);
         }
     } else {
-        console.log(data);
+        // console.log(data);
         target.progress = data.progress
         if(data.progress < 1 ) uploadShard(target);
         // target.sliceIndex < target.sliceCount ? uploadShard(target) : null; // ?? popUploadQueue(target); 需要嗎？
+        // console.log("call renderProgress")
         renderProgress(target, "upload");
         updateTotalProgress();
     }
@@ -428,7 +429,7 @@ const fetchFile = async (filePath) => {
         filePath
     }; //http://www.javascriptkit.com/javatutors/trycatch2.shtml 還沒細看
     if (data) {
-        console.log(data);
+        // console.log(data);
         // console.log("fetchFile called: "+ i++ + " time", "data.progress: ",data.progress);
         let fileIndex = downloadQueue.findIndex(file => file.fid === data.fid); 
         if (fileIndex === -1) {
@@ -540,7 +541,9 @@ const downloadShard = async target => {
         // 組裝
         const file = assembleShard(target, data, shardInfo.index);
         // render progress
+        // console.log("call renderProgress")
         renderProgress(file, "download");
+        
         if(file.progress === 1 && !file.download){
             // 合併檔案並賦予檔案型別
             const blob = new Blob(file.slices, {type: file.contentType});
@@ -620,7 +623,7 @@ const renderDownloadZone = async letter => {
 
 // disable btnReceive if 
 // 6. 開始下載
-elements.btnReceive.addEventListener("click", downloadAll, false);
+
 
 const checkValidity = inputKey => {
     // 1. if elements.inputKey.value is numbers || 1.2.1 if elements.inputKey.value is string (can be link)
@@ -655,7 +658,7 @@ checkUrl();
 elements.boxFile.addEventListener("change", evt => handleFilesSelected(evt), false);
 elements.btnRefresh.addEventListener("click", checkUrl, false);
 elements.btnDownload.addEventListener("click", () => checkValidity(elements.inputKey.value), false);
-
+elements.btnReceive.addEventListener("click", downloadAll, false);
 
 // const inputHint
 // window.onbeforeunload = evt => {

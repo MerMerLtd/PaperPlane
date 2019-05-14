@@ -183,6 +183,7 @@
 .download-card{
     position: relative;
     .btn-refresh{
+        cursor: pointer;
         
         & > span{
             display: inline-block;
@@ -1007,7 +1008,7 @@ footer a {
     cursor: not-allowed;
 }
 
-.success-page ,.failed-page{
+.success-page ,.failed-page, .confirm-page{
     position: fixed;
     top: 0;
     left: 0;

@@ -164,6 +164,8 @@ let elements = {
     signUpEmail: document.querySelector("#sign-up input[type=email]"),
     signInPassword: document.querySelector("#sign-in input[type=password]"),
     signUpPassword: document.querySelector("#sign-up input[type=password]"),
+    btnSignUp: document.querySelector("#sign-up .modal-footer .btn:last-child"),
+    btnSignIn: document.querySelector("#sign-in .modal-footer .btn:last-child"),
     passwordConfirm: document.querySelector("#sign-up input[name^=password2]"),
     signInCheck: document.querySelector("#sign-in input[type=checkbox]"),
     signUpCheck: document.querySelector("#sign-up input[type=checkbox]"),
@@ -208,12 +210,15 @@ let elements = {
     btnConfirmed: document.querySelector(".btn-confirmed"),
     successPage: document.querySelector(".success-page"),
     failedPage: document.querySelector(".failed-page"),
+    confirmPage: document.querySelector(".confirm-page"),
     emptyFileHint: document.querySelector(".download-card .empty-file"),
     btnBackToReceive: document.querySelector(".download-card .btn-back"),
     btnRefresh: document.querySelector(".download-card .btn-refresh"),
+    btnConfirmOK: document.querySelector(".confirm-page .btn-ok"),
 }
 
 let letter;
+
 const initialLetter = async () => {
     let err, data;
     [err, data] = await to(makeRequest({
@@ -222,18 +227,19 @@ const initialLetter = async () => {
     }));
     if (err) {
         console.trace(err)
-    } else {
-        letter = data.lid;
+    }
+    if (data) return data.lid;
+}
 
-        console.log("letter", letter);
-
+initialLetter()
+    .then(lid => {
+        letter = lid;
         displayDigit(elements.displayDigit, letter);
         displayLink(elements.displayLink, letter);
         genQRCode(elements.displayQRCode1, letter);
         genQRCode(elements.displayQRCode2, letter);
-    }
-}
-initialLetter();
+    });
+
 
 // 判斷瀏覽器是否支持拖拉上傳
 let isAdvancedUpload = function () {
@@ -370,7 +376,7 @@ const renderFile = (parentEl, file) => {
     <div class="file" data-fid="${file.fid}" data-type="${isDownload?"download":"upload"}">
         <div class="delete-button" style="display:${isDownload?"none":"block"}"></div>    
         <div class="file-icon">
-            <div class="cover select">
+            <div class="cover ${isDownload?"select":"continue"}" style="display:${file.progress === 1?"none":"block"}">
                 <div class="cover__border"></div>
                 <div class="cover__continue" data-coverId="${file.fid}">
                     <div class="cover__sector--before"></div>
@@ -410,12 +416,6 @@ const renderProgress = (file, type) => { //?
     let deg = progress * 360;
 
     const el = document.querySelector(`${type ==="download"? ".download-card": ".drop-card"} [data-coverId=${fid}]`);
-    if(!file.isPaused){
-        console.log(file.isPaused)
-        el.parentElement.classList.add("continue");
-        el.parentElement.classList.remove("select");
-        el.parentElement.classList.remove("pause");
-    }
 
     if (deg >= 180) {
         // console.log(progress)
@@ -441,56 +441,14 @@ const renderProgress = (file, type) => { //?
 
 //================================================
 //================== UI Control ==================
-// UI Control v1
-const uploadFileControl = async evt => {
-    const element = evt.target.closest(".file");
-    const fid = element.dataset.fid; // UI onClickedFid
-    const type = element.dataset.type;
-    const index = uploadQueue.findIndex(file => file.fid === fid);
-    const file = uploadQueue[index];
-
-    if (evt.target.matches(".delete-button, .delete-button *")) {
-        isSend = false;
-        element.parentElement.removeChild(element);
-        uploadQueue.splice(index, 1);
-        updateTotalProgress();
-        if (!elements.fileList.childElementCount) handleOutFileList();
-        const res = await makeRequest({
-            method: "DELETE",
-            url: `/letter/${letter}/upload/${fid}`
-        })
-        console.log(res);
-    } else if (evt.target.closest(".file")) {
-        // if (type === "upload") {
-        // isSend = false;
-        if (file.sliceIndex === file.sliceCount) return;
-        file.isPaused = !file.isPaused;
-        console.log("uploadFileControl/ isPaused: ", file.fid, file.isPaused);
-        if (!file.isPaused) {
-            uploadShard(file);
-        }
-        // }
-        // if(type === "download"){
-        //     if(file.progress === 1 || file.isDownloaded) return;
-        //     file.isPaused = !file.isPaused;
-        //     if(!file.isPasused){
-        //         downloadShard(file);
-        //     }
-        // }
-    }
-}
-
-// UI Control v2
 const uiControlFile = evt => {
     const element = evt.target.closest(".file");
     const elementCover = evt.target.closest(".cover");
     const fid = element.dataset.fid;
-    // console.log("fileControl", evt.target.closest(".file"), evt.target.matches(`.cover, .cover > *`))
     const type = element.dataset.type;
     const file = type === "upload" ?
         uploadQueue[uploadQueue.findIndex(file => file.fid === fid)] :
         downloadQueue[downloadQueue.findIndex(file => file.fid === fid)];
-
     if (evt.target.matches(".delete-button, .delete-button *")) {
         isSend = false;
         element.parentElement.removeChild(element);
@@ -501,11 +459,7 @@ const uiControlFile = evt => {
             url: `/letter/${letter}/upload/${fid}`
         })
     }
-
     if (evt.target.closest(".file")) {
-        // console.log("match!", file);
-        // console.log(file.progress)
-        if (file.progress === 1 || file.isDownloaded) return;
         file.isPaused = !file.isPaused;
         if (file.isPaused) {
             elementCover.classList.remove("continue");
@@ -529,50 +483,124 @@ const uiControlFile = evt => {
 //================== Login View ==================
 
 // elements.downloadCheck.addEventListener("change", evt => document.querySelectorAll(".cover__select").toggle("selected"), false)
-const checkEmail = email => {
+
+// listen to change focus & ...
+const checkAvailability = async (el, isRequire) => {
+    console.trace("call checkAvailabity");
+    let err, data;
+    const opts = {
+        method: "GET",
+        // url: `/member/${el.value}/exists`,
+        url: `/member/luphia@mermer.cc/exists`,
+    };
+    [err, data] = await to(makeRequest(opts));
+    console.log(err, data)
+    if (err) throw new Error(err);
+    if (data.exists && isRequire) {
+        // setTimeout remove loader
+        // el.classList.add("has-success")
+        return true;
+    } else {
+        return false;
+    }
+
+}
+
+const varifyEmail = el => {
     const regExp = new RegExp(/^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/);
-    return regExp.test(email);
+    if (regExp.test(el.value)) {
+        el.parentNode.classList.remove("has-danger");
+        el.parentNode.classList.remove("has-success");
+        return true;
+    } else {
+        el.parentNode.classList.add("has-danger");
+        return false;
+    }
 }
-
-const checkPassword = password => {
+const varifyPassword = el => {
     const regExp = new RegExp(/[\x21-\x7e]{8,}$/);
-    return regExp.test(password);
+    if (regExp.test(el.value)) {
+        el.parentNode.classList.remove("has-danger");
+        el.parentNode.classList.add("has-success");
+        return true;
+    } else {
+        el.parentNode.classList.add("has-danger");
+        el.parentNode.classList.remove("has-success");
+        return false;
+    }
 }
 
-const inputValidation = type => {
-    console.log(evt)
-    const checkedEmail = checkEmail(elements.signInEmail.value);
-    if (checkedEmail) {
-        elements.signInEmail.classList.add("has-success")
-        elements.signInEmail.classList.remove("has-danger");
+const signInValidation = async () => {
+    console.log("called");
+    const e = varifyEmail(elements.signInEmail);
+    if (e) {
+        const ec = await checkAvailability(elements.signUpEmail, true);
     }
-    const checkedPassword = checkPassword(elements.signInPassword.value);
-    if (checkedPassword) {
-        elements.signInpassword.classList.add("has-success")
-        elements.signInpassword.classList.remove("has-danger");
+    const pc = varifyPassword(elements.signInPassword);
+    //    if(ec && pc){
+    //        enableBtn(elements.btnSignIn);
+    //    }
+    //test 👇 formal 👆
+    console.log(e, pc);
+    if (e && pc) {
+        enableBtn(elements.btnSignIn);
+        console.log(elements.btnSignIn)
     }
-
-    if (type === "signup") {
-        // const checkedPassword2 = checkPassword(elements.passwordConfirm.value);
-        // if(checkedPassword2) {
-        //     elements.passwordConfirm.classList.add("has-success")
-        //     elements.passwordConfirm.classList.remove("has-danger");
-        // }
-        // if(checkedEmail && checkedPassword && checkedPassword2 && elements.signUpCheck.checked){
-        if (checkedEmail && checkedPassword && elements.signUpCheck.checked) {
-            // enable 
-        }
-    }
-    if (type === "signin") {
-        if (checkedEmail && checkedPassword) {
-
-        }
-    }
-
 }
 
-elements.signInEmail.addEventListener("change", () => inputValidation("signin"), false)
-elements.signInPassword.addEventListener("change", () => inputValidation("signin"), false)
+const signUpValidation = async () => {
+    console.trace("signUpValidation")
+    const e = varifyEmail(elements.signUpEmail);
+    if (e) {
+        const ec = await checkAvailability(elements.signUpEmail, false);
+    }
+    const pc = varifyPassword(elements.signUpPassword);
+    const pc2 = elements.signUpPassword.value === elements.passwordConfirm.value;
+    // if(ec && pc && pc2 && elements.signUpCheck.checked){
+    //     enableBtn(elements.btnSignUp);
+    // }
+    //test 👇 formal 👆
+    if (e && pc && pc2 && elements.signUpCheck.checked) {
+        enableBtn(elements.btnSignUp);
+    }
+}
+
+const signUp = () => {
+    const salt = new Date().getTime.toString(16);
+    const email = elements.signUpEmail.value;
+    const password = HMACSHA256(elements.signUpEmail.value, salt).toString(16);
+    let err, data;
+    [err, data] = to(makeRequest({
+        method: "POST",
+        url: "/member",
+        payload: {
+            "account": email,
+            "password": {
+                "hash": password,
+                "salt": salt,
+            }
+        },
+    }))
+    if (err) {
+        throw new Error(err);
+    }
+    if (data) {
+        // 跳轉提示到email驗證email
+
+        // 按 OK btn後 render Sign in UI
+        // Sign in btn 按下後會先 問後端是否有驗證 
+        // 有驗證的話 renderDropView && render 登入的樣式
+        // 沒有驗證的話 shake 登入畫面的form， // 跟出現提示帶入輸入email的input
+        elements.signinCard.classList.add("shake");
+    }
+}
+
+elements.signInEmail.addEventListener("change", () => signInValidation(), false);
+elements.signInPassword.addEventListener("change", () => signInValidation(), false);
+elements.signUpEmail.addEventListener("change", () => signUpValidation(), false);
+elements.signUpPassword.addEventListener("change", () => signUpValidation(), false);
+elements.passwordConfirm.addEventListener("change", () => signUpValidation(), false);
+
 
 //================================================
 //================= Sending View =================
@@ -803,6 +831,7 @@ const closeLoginView = () => {
 //     '/#sign-in': signInView,
 //     '/#sign-up': signUpView,
 const renderLoginView = () => {
+    hiddenElement(elements.confirmPage, 0);
     hiddenElement(elements.successPage, 0);
     hiddenElement(elements.failedPage, 0);
     elements.html.classList.remove("nav-open");
@@ -820,6 +849,7 @@ const renderLoginView = () => {
 //     '/': dropView,
 //     '/#send': dropView,
 const renderDropView = () => {
+    hiddenElement(elements.confirmPage, 0);
     hiddenElement(elements.successPage, 0);
     hiddenElement(elements.failedPage, 0);
     closeLoginView();
@@ -830,6 +860,7 @@ const renderDropView = () => {
 
 //  '/#receive/letter': downloadView,
 const renderDownloadView = () => {
+    hiddenElement(elements.confirmPage, 0);
     hiddenElement(elements.successPage, 0);
     hiddenElement(elements.failedPage, 0);
     closeLoginView();
@@ -842,6 +873,7 @@ const renderDownloadView = () => {
 
 // '/#receive': downloadInput,
 const renderDownloadInput = () => {
+    hiddenElement(elements.confirmPage, 0);
     hiddenElement(elements.successPage, 0);
     hiddenElement(elements.failedPage, 0);
     closeLoginView();
@@ -850,6 +882,15 @@ const renderDownloadInput = () => {
     unhiddenElement(elements.container, 300);
     elements.inputCard.classList.add("active");
     elements.downloadCard.classList.remove("active");
+}
+
+const renderConfirmPage = () => {
+    hiddenElement(elements.successPage, 0);
+    hiddenElement(elements.failedPage, 0);
+    hiddenElement(elements.container, 0);
+    closeLoginView();
+
+    unhiddenElement(elements.confirmPage, 0);
 }
 
 //     '/#varification': varificationView,
@@ -890,7 +931,8 @@ elements.sendingCard.addEventListener("click", evt => sendingViewControl(evt));
 elements.navLoginBtn.addEventListener("click", openLoginPage, false);
 elements.modal.addEventListener("click", closeLoginPage, false);
 elements.btnConfirmed.addEventListener("click", renderDropView, false);
-elements.btnBackToReceive.addEventListener("click", renderDownloadInput);
+elements.btnBackToReceive.addEventListener("click", renderDownloadInput, false);
+elements.btnConfirmOK.addEventListener("click", renderLoginView, false);
 // elements.btnRefresh.addEventListener("click", checkUrl, false);
 
 elements.downloadList.addEventListener("click", evt => uiControlFile(evt), false);
