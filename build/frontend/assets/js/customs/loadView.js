@@ -145,6 +145,11 @@ const makeRequest = opts => {
 }
 
 let elements = {
+    mainPage: document.querySelector(".main-page"),
+    successPage: document.querySelector(".success-page"),
+    failedPage: document.querySelector(".failed-page"),
+    confirmPage: document.querySelector(".confirm-page"),
+    signinPage: document.querySelector(".signin-page"),
     tabSend: document.querySelector(".main-page a[href$='send']"),
     tabReceive: document.querySelector(".main-page a[href$='receive']"),
     tabPane1: document.querySelector(".main-page #send"), // same div 👉 dropCard: document.querySelector(".drop-card"),
@@ -158,20 +163,20 @@ let elements = {
     navLoginBtn: document.querySelector("li[data-toggle='modal'] > .btn"),
     navbarToggle: document.querySelector(".navbar-toggler"),
     html: document.querySelector("html"),
-    modal: document.querySelector(".modal"),
-    container: document.querySelector(".page-header > .container"),
+    // modal: document.querySelector(".modal"),
+    container: document.querySelector(".main-page > .page-header > .container"),
     signInEmail: document.querySelector("#sign-in input[type=email]"),
     signUpEmail: document.querySelector("#sign-up input[type=email]"),
     signInPassword: document.querySelector("#sign-in input[type=password]"),
     signUpPassword: document.querySelector("#sign-up input[type=password]"),
-    btnSignUp: document.querySelector("#sign-up .modal-footer .btn:last-child"),
-    btnSignIn: document.querySelector("#sign-in .modal-footer .btn:last-child"),
+    btnSignUp: document.querySelector("#sign-up .card-footer .btn:last-child"),
+    btnSignIn: document.querySelector("#sign-in .card-footer .btn:last-child"),
     passwordConfirm: document.querySelector("#sign-up input[name^=password2]"),
     signInCheck: document.querySelector("#sign-in input[type=checkbox]"),
     signUpCheck: document.querySelector("#sign-up input[type=checkbox]"),
     downloadCheck: document.querySelector(".download-card input[type=checkbox]"),
     agreeTerms: document.querySelector(".agree-terms"),
-    pageHeader: document.querySelector(".page-header"),
+    pageHeader: document.querySelector(".main-page > .page-header"),
     addIcon: document.querySelector(".add__icon"),
     addText: document.querySelector(".add__text"),
     dropndDropText: document.querySelector(".box__dragndrop"), //text
@@ -208,9 +213,6 @@ let elements = {
     body: document.querySelector(".login-page"),
     navBarBrand: document.querySelector(".navbar-brand"),
     btnConfirmed: document.querySelector(".btn-confirmed"),
-    successPage: document.querySelector(".success-page"),
-    failedPage: document.querySelector(".failed-page"),
-    confirmPage: document.querySelector(".confirm-page"),
     emptyFileHint: document.querySelector(".download-card .empty-file"),
     btnBackToReceive: document.querySelector(".download-card .btn-back"),
     btnRefresh: document.querySelector(".download-card .btn-refresh"),
@@ -834,17 +836,17 @@ const renderTabView2 = () => {
     elements.tabPane2.classList.add("show");
 }
 
-const closeLoginView = () => {
+const closeNavbar = () => {
     elements.html.classList.remove("nav-open");
     elements.navbarToggle.classList.remove("toggled");
-    elements.modal.classList.remove("show");
-    setTimeout(() => {
-        elements.body.classList.remove("modal-open");
-        elements.modal.setAttribute("aria-hidden", false);
-        elements.modal.style.display = "none";
-        elements.modal.style.pointerEvents = "auto";
-        elements.modal.style.zIndex = "1050";
-    }, 300);
+    // elements.modal.classList.remove("show");
+    // setTimeout(() => {
+    //     elements.body.classList.remove("modal-open");
+        // elements.modal.setAttribute("aria-hidden", false);
+        // elements.modal.style.display = "none";
+        // elements.modal.style.pointerEvents = "auto";
+        // elements.modal.style.zIndex = "1050";
+    // }, 300);
 }
 
 //     '/#sign-in': signInView,
@@ -855,67 +857,74 @@ const renderLoginView = () => {
     hiddenElement(elements.failedPage, 0);
     elements.html.classList.remove("nav-open");
     elements.navbarToggle.classList.remove("toggled");
-    elements.container.classList.add("u-hidden");
+    closeNavbar();
 
-    elements.body.classList.add("modal-open");
-    elements.modal.removeAttribute("aria-hidden");
-    elements.modal.style.display = "block";
-    elements.modal.style.pointerEvents = "none";
-    elements.modal.style.zIndex = "2";
-    setTimeout(() => elements.modal.classList.add("show"), 100);
+    // elements.body.classList.add("modal-open");
+    // elements.modal.removeAttribute("aria-hidden");
+    // elements.modal.style.display = "block";
+    // elements.modal.style.pointerEvents = "none";
+    // elements.modal.style.zIndex = "2";
+    // setTimeout(() => elements.modal.classList.add("show"), 100);
 }
 
 //     '/': dropView,
 //     '/#send': dropView,
 const renderDropView = () => {
+    closeNavbar();
+    hiddenElement(elements.signinPage, 0);
     hiddenElement(elements.confirmPage, 0);
     hiddenElement(elements.successPage, 0);
     hiddenElement(elements.failedPage, 0);
-    closeLoginView();
 
+    unhiddenElement(elements.mainPage, 0); // ++
     renderTabView1();
-    unhiddenElement(elements.container, 300);
 }
 
 //  '/#receive/letter': downloadView,
 const renderDownloadView = () => {
+    closeNavbar();
+    hiddenElement(elements.signinPage, 0);
     hiddenElement(elements.confirmPage, 0);
     hiddenElement(elements.successPage, 0);
     hiddenElement(elements.failedPage, 0);
-    closeLoginView();
 
+    unhiddenElement(elements.mainPage, 0); // ++
     renderTabView2();
-    unhiddenElement(elements.container, 300);
     elements.inputCard.classList.remove("active");
     elements.downloadCard.classList.add("active");
 }
 
 // '/#receive': downloadInput,
 const renderDownloadInput = () => {
+    closeNavbar();
+    hiddenElement(elements.signinPage, 0);
     hiddenElement(elements.confirmPage, 0);
     hiddenElement(elements.successPage, 0);
     hiddenElement(elements.failedPage, 0);
-    closeLoginView();
 
+    unhiddenElement(elements.mainPage, 0); //++
     renderTabView2();
-    unhiddenElement(elements.container, 300);
     elements.inputCard.classList.add("active");
     elements.downloadCard.classList.remove("active");
 }
 
 const renderConfirmPage = () => {
+    closeNavbar();
+    hiddenElement(elements.signinPage, 0);
     hiddenElement(elements.successPage, 0);
     hiddenElement(elements.failedPage, 0);
-    hiddenElement(elements.container, 0);
-    closeLoginView();
+    hiddenElement(elements.mainPage, 0);
 
     unhiddenElement(elements.confirmPage, 0);
 }
 
 //     '/#varification': varificationView,
 const renderVarificationView = result => {
-    closeLoginView();
-    hiddenElement(elements.container, 0);
+    closeNavbar();
+    hiddenElement(elements.signinPage, 0);
+    hiddenElement(elements.confirmPage, 0);
+    hiddenElement(elements.mainPage, 0);
+
     if (result) {
         // result === true 👉 驗證成功
         hiddenElement(elements.failedPage, 0);
@@ -927,28 +936,12 @@ const renderVarificationView = result => {
     }
 }
 
-// renderValidationView();
 
-// open && close by modal
-const openLoginPage = evt => {
-    // close Nav && change url
-    elements.html.classList.remove("nav-open");
-    elements.navbarToggle.classList.remove("toggled");
-    elements.container.classList.add("u-hidden");
-
-    // add 
-}
-const closeLoginPage = evt => {
-    if (evt.target.matches(".modal")) {
-        elements.container.classList.remove("u-hidden");
-        window.location.hash = "";
-    }
-}
 
 elements.btnSend.addEventListener("click", renderSendingView, false);
 elements.sendingCard.addEventListener("click", evt => sendingViewControl(evt));
-elements.navLoginBtn.addEventListener("click", openLoginPage, false);
-elements.modal.addEventListener("click", closeLoginPage, false);
+// elements.navLoginBtn.addEventListener("click", openLoginPage, false);
+// elements.modal.addEventListener("click", closeLoginPage, false);
 elements.btnConfirmed.addEventListener("click", renderDropView, false);
 elements.btnBackToReceive.addEventListener("click", renderDownloadInput, false);
 elements.btnConfirmOK.addEventListener("click", renderLoginView, false);

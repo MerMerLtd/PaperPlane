@@ -180,24 +180,28 @@
     align-items: center;
 
 }
-.download-card{
+
+.download-card {
     position: relative;
-    .btn-refresh{
+
+    .btn-refresh {
         cursor: pointer;
-        
-        & > span{
+
+        &>span {
             display: inline-block;
             transform: translate(4px, -8px);
             color: #6d6d6d;
             font-weight: 400;
         }
     }
-    .btn-back > .material-icons{
+
+    .btn-back>.material-icons {
         display: inline-block;
         transform: translate(0px, 3px);
         font-size: 24px;
     }
-    .empty-file{
+
+    .empty-file {
         position: absolute;
         overflow: scroll;
         width: 100%;
@@ -205,7 +209,8 @@
         text-align: center;
         top: 0;
         left: 0;
-        & > div{
+
+        &>div {
             position: absolute;
             transform: translate(-50%, -50%);
             top: 50%;
@@ -958,36 +963,6 @@ footer a {
     height: 100vh;
 }
 
-.modal-body>.card-body>.form-check a {
-    font-size: 14px;
-    // color: $purple-700;
-    display: inline-block;
-}
-
-.modal-body>.card-body>.form-check input[type=checkbox]~a {
-    color: $purple-700;
-    font-weight: 500;
-    text-decoration: underline;
-    display: inline;
-}
-
-.modal .card>.btn-box {
-    padding: 20px 24px;
-
-    p {
-        margin: 0 0 4px;
-    }
-
-    a {
-        color: $purple-700;
-        font-weight: 500;
-        text-decoration: underline;
-        cursor: pointer;
-        display: inline-block;
-        font-size: 14px;
-    }
-}
-
 .sending-ways>* {
     display: none;
 }
@@ -1008,14 +983,16 @@ footer a {
     cursor: not-allowed;
 }
 
-.success-page ,.failed-page, .confirm-page{
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    z-index: 1;
+.success-page,
+.failed-page,
+.confirm-page {
+    // position: fixed;
+    // top: 0;
+    // left: 0;
+    // width: 100vw;
+    // z-index: 1;
 
-    &>.container {
+    &>.page-header>.container {
         position: absolute !important;
         top: 50%;
         left: 50%;
@@ -1035,14 +1012,73 @@ footer a {
     }
 }
 
+.signin-page {
+    > .page-header>.container {
+        padding-top: 18vh;
+    }
+    .card {
+        max-width: 360px;
+        margin: 0 auto;
+        // margin: 12vh auto;
+    }
+
+    .row>:first-child {
+        padding: 0px;
+    }
+
+    .card>.btn-box {
+        padding: 20px 24px;
+
+        p {
+            margin: 0 0 4px;
+        }
+
+        a {
+            color: $purple-700;
+            font-weight: 500;
+            text-decoration: underline;
+            cursor: pointer;
+            display: inline-block;
+            font-size: 14px;
+        }
+    }
+
+    .card-body>.form-check input[type=checkbox]~a {
+        color: $purple-700;
+        font-weight: 500;
+        text-decoration: underline;
+        display: inline;
+    }
+
+    .card-body>.form-check a {
+        font-size: 14px;
+        // color: $purple-700;
+        display: inline-block;
+    }
+    // & #sign-up::before{
+    //     width: 100%;
+    //     height: 100%;
+    //     content: "";
+    // }
+}
+
+
+
 #sign-up,
 #sign-in {
     display: none;
+    // transform: translateY(-60vh);
+    // opacity: 0;
+    // transition: all 1s ease-out;
 }
 
 #sign-in:target,
 #sign-up:target {
     display: block;
+    // transform: translateY(0vh);
+    // opacity: 1;
+    // transition: all 1s ease-out;
+
 }
 
 #popup {
@@ -1067,15 +1103,17 @@ footer a {
         border-radius: 5px;
         background-color: #fff;
     }
-   
-    & >.row .col-md-8 .tab-content .tab-pane {
+
+    &>.row .col-md-8 .tab-content .tab-pane {
         height: 74vh;
         overflow: scroll !important;
-        div{
+
+        div {
             position: relative;
             padding-bottom: 45px;
         }
-        a:last-child.btn{
+
+        a:last-child.btn {
             margin: 1rem;
             text-align: center;
             position: absolute;
@@ -1094,7 +1132,8 @@ footer a {
     .popup>.row>.container {
         margin-top: 1rem;
     }
-    #popup >.row .col-md-8 .tab-content .tab-pane {
+
+    #popup>.row .col-md-8 .tab-content .tab-pane {
         height: 60vh;
         padding: 1rem;
     }
@@ -1112,37 +1151,38 @@ footer a {
     }
 }
 
-#popup:target{
+#popup:target {
     display: block;
 }
 
-.form-check .form-check-label{
+.form-check .form-check-label {
     padding-top: 16px;
 }
 
-.varify-form{
+.varify-form {
     display: none;
     opacity: 0;
     transform: translateY(-60vh);
     transition: all 0.5s ease-in-out;
 }
 
-#open-varify-form:checked ~ .varify-form{
+#open-varify-form:checked~.varify-form {
     display: block;
     opacity: 1;
     transform: translateY(0vh);
 }
 
-#open-varify-form:checked + .failed-hint{
+#open-varify-form:checked+.failed-hint {
     display: none;
 }
 
 .footer {
-    & .argee-terms{
+    & .argee-terms {
         font-size: 1rem;
         padding: 0px;
     }
-    & .copyright{
+
+    & .copyright {
         padding: 0px;
     }
 }
