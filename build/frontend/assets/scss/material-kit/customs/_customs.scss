@@ -1104,11 +1104,11 @@ footer a {
         background-color: #fff;
     }
 
-    &>.row .col-md-8 .tab-content .tab-pane {
+    &>.row .col-md-8 > .tab-content >.tab-pane {
         height: 74vh;
         overflow: scroll !important;
 
-        div {
+        >div {
             position: relative;
             padding-bottom: 45px;
         }
@@ -1176,7 +1176,8 @@ footer a {
     display: none;
 }
 
-.footer {
+.login-page footer.footer {
+    z-index: 10;
     & .argee-terms {
         font-size: 1rem;
         padding: 0px;

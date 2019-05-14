@@ -839,32 +839,26 @@ const renderTabView2 = () => {
 const closeNavbar = () => {
     elements.html.classList.remove("nav-open");
     elements.navbarToggle.classList.remove("toggled");
-    // elements.modal.classList.remove("show");
-    // setTimeout(() => {
-    //     elements.body.classList.remove("modal-open");
-        // elements.modal.setAttribute("aria-hidden", false);
-        // elements.modal.style.display = "none";
-        // elements.modal.style.pointerEvents = "auto";
-        // elements.modal.style.zIndex = "1050";
-    // }, 300);
+   
 }
 
 //     '/#sign-in': signInView,
 //     '/#sign-up': signUpView,
 const renderLoginView = () => {
+    closeNavbar();
     hiddenElement(elements.confirmPage, 0);
     hiddenElement(elements.successPage, 0);
     hiddenElement(elements.failedPage, 0);
-    elements.html.classList.remove("nav-open");
-    elements.navbarToggle.classList.remove("toggled");
-    closeNavbar();
+    hiddenElement(elements.mainPage, 0);
 
-    // elements.body.classList.add("modal-open");
-    // elements.modal.removeAttribute("aria-hidden");
-    // elements.modal.style.display = "block";
-    // elements.modal.style.pointerEvents = "none";
-    // elements.modal.style.zIndex = "2";
-    // setTimeout(() => elements.modal.classList.add("show"), 100);
+    unhiddenElement(elements.signinPage, 0); //
+}
+
+
+const changeView = (currViewEl, nextViewEl) => {
+    closeNavbar();
+    hiddenElement(currViewEl);
+    unhiddenElement(nextViewEl);
 }
 
 //     '/': dropView,
@@ -939,15 +933,9 @@ const renderVarificationView = result => {
 
 
 elements.btnSend.addEventListener("click", renderSendingView, false);
-elements.sendingCard.addEventListener("click", evt => sendingViewControl(evt));
-// elements.navLoginBtn.addEventListener("click", openLoginPage, false);
-// elements.modal.addEventListener("click", closeLoginPage, false);
 elements.btnConfirmed.addEventListener("click", renderDropView, false);
 elements.btnBackToReceive.addEventListener("click", renderDownloadInput, false);
 elements.btnConfirmOK.addEventListener("click", renderLoginView, false);
-// elements.btnRefresh.addEventListener("click", checkUrl, false);
-
 elements.downloadList.addEventListener("click", evt => uiFileControl(evt), false);
-// elements.downloadList.addEventListener("click", evt => uploadFileControl(evt), false);
-// elements.fileList.addEventListener("click", evt => uploadFileControl(evt), false);
 elements.fileList.addEventListener("click", evt => uiFileControl(evt), false);
+elements.sendingCard.addEventListener("click", evt => sendingViewControl(evt));
