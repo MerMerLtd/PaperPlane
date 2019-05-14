@@ -376,7 +376,7 @@ const renderFile = (parentEl, file) => {
     <div class="file" data-fid="${file.fid}" data-type="${isDownload?"download":"upload"}">
         <div class="delete-button" style="display:${isDownload?"none":"block"}"></div>    
         <div class="file-icon">
-            <div class="cover ${isDownload?"select":"continue"}" style="display:${file.progress === 1?"none":"block"}">
+            <div class="cover ${isDownload?"select":"continue"}" style="opacity:${file.progress === 1?"0":"1"}">
                 <div class="cover__border"></div>
                 <div class="cover__continue" data-coverId="${file.fid}">
                     <div class="cover__sector--before"></div>
