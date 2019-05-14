@@ -1137,3 +1137,12 @@ footer a {
     display: none;
 }
 
+.footer {
+    & .argee-terms{
+        font-size: 1rem;
+        padding: 0px;
+    }
+    & .copyright{
+        padding: 0px;
+    }
+}
