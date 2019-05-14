@@ -14,8 +14,8 @@
   &.focus,
   &:hover{
     color: $color;
-    background-color: #ff2d55;
-    border-color: #ff2d55;
+    background-color: $focus-background;//#ff2d55;
+    border-color: $focus-border;// #ff2d55;
   }
 
   &:active,
