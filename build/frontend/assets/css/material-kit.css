@@ -9945,14 +9945,17 @@ select, select.form-control {
   .has-danger .form-control-feedback {
     color: #f44336;
     opacity: 1; }
-  .sign-up .has-danger input[name="password"] + .form-control-feedback > :first-child {
+  #sign-up .has-danger input[name="password"] + .form-control-feedback > :first-child {
     left: -25px; }
-  .sign-up .has-danger input[name="password"] + .form-control-feedback > :last-child {
+  #sign-up .has-danger input[name="password"] + .form-control-feedback > :last-child {
     left: -20px; }
-  .sign-up .has-success input[name="password"] + .form-control-feedback > :first-child {
+  #sign-up .has-success input[name="password"] + .form-control-feedback > :first-child {
     left: -25px; }
-  .sign-up .has-success input[name="password"] + .form-control-feedback > :last-child {
-    left: -20px; }
+  #sign-up .has-success input[name="password"] + .form-control-feedback > :last-child {
+    left: -18px; }
+
+.has-danger ~ .bmd-hint {
+  opacity: 1; }
 
 .form-group {
   position: relative; }

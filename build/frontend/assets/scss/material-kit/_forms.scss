@@ -2,9 +2,10 @@ form {
   // ensure enough room at the bottom of any form to display a one-line bmd-help
   margin-bottom: ($bmd-help-size-ratio * $font-size-base) * $line-height-base;
 
-  .card &{
-      margin: 0;
+  .card & {
+    margin: 0;
   }
+
   // reverse the above for navbars (no help expected in a navbar form)
   .navbar & {
     margin-bottom: 0; // only adjust bottom so that pull-xs-right flexed margin-left: auto works
@@ -46,15 +47,15 @@ form {
   }
 
   @include material-placeholder() {
-      color: $mdb-input-placeholder-color;
-      font-weight: 400;
-      font-size: $mdb-input-font-size-base;
-}
+    color: $mdb-input-placeholder-color;
+    font-weight: 400;
+    font-size: $mdb-input-font-size-base;
+  }
 
-  .has-white &{
-      @include material-placeholder(){
-          color: $white-color;
-      }
+  .has-white & {
+    @include material-placeholder() {
+      color: $white-color;
+    }
   }
 }
 
@@ -83,7 +84,7 @@ form {
     padding-top: 1rem; // the first one requires top padding to push it below the first one which is absolute positioned
   }
 
-  + .bmd-help {
+  +.bmd-help {
     position: relative;
     margin-bottom: 0;
   }
@@ -103,14 +104,14 @@ form {
   @include bmd-form-color($brand-info, $brand-info, $brand-info, $input-border-color);
 }
 
-.has-white{
+.has-white {
   @include bmd-form-color($white-color, $white-color, $white-color, $input-border-color-white);
 
-    .form-control{
-        &:focus{
-            color: $white-color;
-        }
+  .form-control {
+    &:focus {
+      color: $white-color;
     }
+  }
 }
 
 .has-warning {
@@ -140,14 +141,16 @@ form {
   // Reference http://www.google.com/design/spec/components/text-fields.html
   // MDL implementation: http://www.getmdl.io/components/index.html#textfields-section
 
-    &:not(.has-success):not(.has-danger){
-        [class^='bmd-label'],
-        [class*=' bmd-label']{
-            &.bmd-label-floating{
-                color: $mdb-input-placeholder-color;
-            }
-        }
+  &:not(.has-success):not(.has-danger) {
+
+    [class^='bmd-label'],
+    [class*=' bmd-label'] {
+      &.bmd-label-floating {
+        color: $mdb-input-placeholder-color;
+      }
     }
+  }
+
   [class^='bmd-label'],
   [class*=' bmd-label'] {
     position: absolute;
@@ -182,6 +185,7 @@ form {
     .collapse {
       flex: 1;
       display: none;
+
       &.show {
         // This is an unfortunate hack. Animating between widths in percent (%)
         // in many browsers (Chrome, Firefox) only animates the inner visual style
@@ -227,7 +231,7 @@ form {
   margin: -10px 35px;
 }
 
-.has-danger .bmd-hint{
+.has-danger .bmd-hint {
   opacity: 1;
 }
 
@@ -235,6 +239,7 @@ form {
 @include bmd-form-size-variant($font-size-base, $bmd-label-top-margin-base, $input-padding-y, $bmd-form-line-height);
 
 select {
+
   &,
   &.form-control {
     // Use vendor prefixes as `appearance` isn't part of the CSS spec. OSX doesn't obey the border-radius: 0 without this.
@@ -291,94 +296,103 @@ select {
   }
 }
 
-.form-control-feedback{
+.form-control-feedback {
+  position: absolute;
+  top: 7px; // --
+  right: 0;
+  z-index: 2;
+  display: block;
+  width: 34px;
+  height: 34px;
+  line-height: 34px;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+
+  .has-success & {
+    color: $green;
+    opacity: 1;
+  }
+
+  .has-success &> :first-child,
+  .has-success &> :last-child {
+    top: 16px;
+    left: 10px;
     position: absolute;
-    top: 7px; // --
-    right: 0;
-    z-index: 2;
-    display: block;
-    width: 34px;
-    height: 34px;
-    line-height: 34px;
-    text-align: center;
-    pointer-events: none;
-    opacity: 0;
+    width: 8px;
+    height: 2px;
+    background-color: $green;
+    transform-origin: right;
+    transform: rotate(45deg);
+    opacity: 1;
+  }
 
-    .has-success &{
-        color: $green;
-        opacity: 1;
-    }
+  .has-success &> :last-child {
+    left: 17px;
+    width: 16px;
+    transform-origin: left;
+    transform: rotate(-45deg);
+  }
 
-    .has-success  & > :first-child,
-    .has-success  & > :last-child{
-      top: 16px;
-      left: 10px;
-      position: absolute;
-      width: 8px;
-      height: 2px;
-      background-color: $green;
-      transform-origin: right;
-      transform: rotate(45deg);
-      opacity: 1;
-    }
-    .has-success  & > :last-child{
-      left: 17px;
-      width: 16px;
-      transform-origin: left;
-      transform: rotate(-45deg);
-    }
-   
 
-    .has-danger  & > :first-child,
-    .has-danger  & > :last-child{
-      top: 16px;
-      left: 10px;
-      position: absolute;
-      width: 16px;
-      height: 2px;
-      background-color: $red;
-      transform-origin: right;
-      transform: rotate(45deg);
-      opacity: 1;
-    }
-    .has-danger  & > :last-child{
-      left: 15px;
-      transform-origin: left;
-      transform: rotate(-45deg);
-    }
+  .has-danger &> :first-child,
+  .has-danger &> :last-child {
+    top: 16px;
+    left: 10px;
+    position: absolute;
+    width: 16px;
+    height: 2px;
+    background-color: $red;
+    transform-origin: right;
+    transform: rotate(45deg);
+    opacity: 1;
+  }
 
-    .has-danger &{
-        color: $red;
-        opacity: 1;
-    }
+  .has-danger &> :last-child {
+    left: 15px;
+    transform-origin: left;
+    transform: rotate(-45deg);
+  }
 
-    .sign-up .has-danger input[name="password"] + & > :first-child{
-      left: -25px;
-    }
-    .sign-up .has-danger input[name="password"] + & > :last-child{
-      left: -20px;
-    }
+  .has-danger & {
+    color: $red;
+    opacity: 1;
+  }
 
-    .sign-up .has-success input[name="password"] + & > :first-child{
-      left: -25px;
-    }
-    .sign-up .has-success input[name="password"] + & > :last-child{
-      left: -20px;
-    }
+  #sign-up .has-danger input[name="password"]+&> :first-child {
+    left: -25px;
+  }
 
+  #sign-up .has-danger input[name="password"]+&> :last-child {
+    left: -20px;
+  }
+
+  #sign-up .has-success input[name="password"]+&> :first-child {
+    left: -25px;
+  }
+
+  #sign-up .has-success input[name="password"]+&> :last-child {
+    left: -18px;
+  }
+
+}
+
+.has-danger ~ .bmd-hint {
+  opacity: 1;
 }
 
 
 
-.form-group{
-    // margin-bottom: 17px;
-    position: relative;
+
+.form-group {
+  // margin-bottom: 17px;
+  position: relative;
 }
 
-textarea{
-    height: auto !important;
-    resize: none;
-    line-height: $bmd-line-height !important;
+textarea {
+  height: auto !important;
+  resize: none;
+  line-height: $bmd-line-height !important;
 }
 
 .form-group input[type=file] {
@@ -393,37 +407,38 @@ textarea{
   z-index: -1;
 }
 
-.form-newsletter{
-    .input-group,
-    .form-group{
-        float: left;
-        width: 78%;
-        margin-right: 2%;
-        margin-top: 9px;
-        padding-top: 5px;
-    }
+.form-newsletter {
 
-    .btn{
-        float: left;
-        width: 20%;
-        margin: 9px 0 0;
-    }
+  .input-group,
+  .form-group {
+    float: left;
+    width: 78%;
+    margin-right: 2%;
+    margin-top: 9px;
+    padding-top: 5px;
+  }
+
+  .btn {
+    float: left;
+    width: 20%;
+    margin: 9px 0 0;
+  }
 }
 
-.form-file-upload{
-    .input-group-btn:last-child>.btn-round{
-        border-radius: 30px;
-    }
+.form-file-upload {
+  .input-group-btn:last-child>.btn-round {
+    border-radius: 30px;
+  }
 
-    .input-group-btn .btn{
-        margin: 0;
-    }
+  .input-group-btn .btn {
+    margin: 0;
+  }
 
-    .input-group{
-        width: 100%;
-    }
+  .input-group {
+    width: 100%;
+  }
 }
 
-.input-group .input-group-btn{
-    padding: 0 12px;
+.input-group .input-group-btn {
+  padding: 0 12px;
 }

@@ -441,7 +441,7 @@ const renderProgress = (file, type) => { //?
 
 //================================================
 //================== UI Control ==================
-const uiControlFile = evt => {
+const uiFileControl = evt => {
     const element = evt.target.closest(".file");
     const elementCover = evt.target.closest(".cover");
     const fid = element.dataset.fid;
@@ -459,19 +459,19 @@ const uiControlFile = evt => {
             url: `/letter/${letter}/upload/${fid}`
         })
     }
-    if (evt.target.closest(".file")) {
+    if (evt.target.closest(".cover")) {
         file.isPaused = !file.isPaused;
         if (file.isPaused) {
             elementCover.classList.remove("continue");
             elementCover.classList.remove("select");
             elementCover.classList.add("pause");
-            console.log("uiControlFile/ isPaused: ", file.fid, file.isPaused);
+            console.log("uiFileControl/ isPaused: ", file.fid, file.isPaused);
 
         } else {
             elementCover.classList.add("continue");
             elementCover.classList.remove("select");
             elementCover.classList.remove("pause");
-            console.log("uiControlFile/ isPaused: ", file.fid, file.isPaused);
+            console.log("uiFileControl/ isPaused: ", file.fid, file.isPaused);
             type === "upload" ? uploadShard(file) : downloadShard(file);
         }
     }
@@ -507,6 +507,7 @@ const checkAvailability = async (el, isRequire) => {
 }
 
 const varifyEmail = el => {
+    if(!el.value) return;
     const regExp = new RegExp(/^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/);
     if (regExp.test(el.value)) {
         el.parentNode.classList.remove("has-danger");
@@ -518,8 +519,22 @@ const varifyEmail = el => {
     }
 }
 const varifyPassword = el => {
+    if(!el.value) return;
     const regExp = new RegExp(/[\x21-\x7e]{8,}$/);
     if (regExp.test(el.value)) {
+        el.parentNode.classList.remove("has-danger");
+        el.parentNode.classList.add("has-success");
+        return true;
+    } else {
+        el.parentNode.classList.add("has-danger");
+        el.parentNode.classList.remove("has-success");
+        return false;
+    }
+}
+
+const confirmPassword = el => {
+    if(!el.value) return;
+    if(elements.signUpPassword.value === el.value){
         el.parentNode.classList.remove("has-danger");
         el.parentNode.classList.add("has-success");
         return true;
@@ -544,7 +559,9 @@ const signInValidation = async () => {
     console.log(e, pc);
     if (e && pc) {
         enableBtn(elements.btnSignIn);
-        console.log(elements.btnSignIn)
+        // console.log(elements.btnSignIn)
+    }else{
+        disableBtn(elements.btnSignIn);
     }
 }
 
@@ -555,13 +572,15 @@ const signUpValidation = async () => {
         const ec = await checkAvailability(elements.signUpEmail, false);
     }
     const pc = varifyPassword(elements.signUpPassword);
-    const pc2 = elements.signUpPassword.value === elements.passwordConfirm.value;
+    const pc2 = confirmPassword(elements.passwordConfirm);
     // if(ec && pc && pc2 && elements.signUpCheck.checked){
     //     enableBtn(elements.btnSignUp);
     // }
     //test 👇 formal 👆
     if (e && pc && pc2 && elements.signUpCheck.checked) {
         enableBtn(elements.btnSignUp);
+    }else{
+        disableBtn(elements.btnSignUp);
     }
 }
 
@@ -595,11 +614,11 @@ const signUp = () => {
     }
 }
 
-elements.signInEmail.addEventListener("change", () => signInValidation(), false);
-elements.signInPassword.addEventListener("change", () => signInValidation(), false);
-elements.signUpEmail.addEventListener("change", () => signUpValidation(), false);
-elements.signUpPassword.addEventListener("change", () => signUpValidation(), false);
-elements.passwordConfirm.addEventListener("change", () => signUpValidation(), false);
+elements.signInEmail.addEventListener("input", () => signInValidation(), false);
+elements.signInPassword.addEventListener("input", () => signInValidation(), false);
+elements.signUpEmail.addEventListener("input", () => signUpValidation(), false);
+elements.signUpPassword.addEventListener("input", () => signUpValidation(), false);
+elements.passwordConfirm.addEventListener("input", () => signUpValidation(), false);
 
 
 //================================================
@@ -935,7 +954,7 @@ elements.btnBackToReceive.addEventListener("click", renderDownloadInput, false);
 elements.btnConfirmOK.addEventListener("click", renderLoginView, false);
 // elements.btnRefresh.addEventListener("click", checkUrl, false);
 
-elements.downloadList.addEventListener("click", evt => uiControlFile(evt), false);
+elements.downloadList.addEventListener("click", evt => uiFileControl(evt), false);
 // elements.downloadList.addEventListener("click", evt => uploadFileControl(evt), false);
 // elements.fileList.addEventListener("click", evt => uploadFileControl(evt), false);
-elements.fileList.addEventListener("click", evt => uiControlFile(evt), false);
+elements.fileList.addEventListener("click", evt => uiFileControl(evt), false);

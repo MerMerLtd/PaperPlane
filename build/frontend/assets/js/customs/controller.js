@@ -454,6 +454,7 @@ const fetchFile = async (filePath) => {
         const list = data.slices.slice(pointer);
         // console.log(pointer, list)
         const newPointer = list.findIndex((shardPath, i) => {
+        // if (downloadFiles[downloadFiles.findIndex(file => file.fid === data.fid)].progress === 1 || shardPath.includes("false")) return true;
             if (shardPath.includes("false")) return true;
             downloadQueue[fileIndex].waiting.push({
                 path: shardPath,
@@ -511,7 +512,7 @@ const assembleShard = (target, shard, index) => {
 }
 
 const downloadShard = async target => {
-    console.log(target);
+    console.trace(target);
     if (target.isPaused || !target.waiting.length) return;
     const shardInfo = target.waiting.pop();
 
@@ -542,7 +543,6 @@ const downloadShard = async target => {
         const file = assembleShard(target, data, shardInfo.index);
         // render progress
         // console.log("call renderProgress")
-        renderProgress(file, "download");
         if(file.progress === 1 && !file.download){
             // 合併檔案並賦予檔案型別
             const blob = new Blob(file.slices, {type: file.contentType});
@@ -560,7 +560,10 @@ const downloadShard = async target => {
             window.URL.revokeObjectURL(url);
              // 標注檔案已下載
             file.downloaded = true;
+
+            return;
         }
+        renderProgress(file, "download");
         // 繼續下載下一個碎片
         // console.log(target)
         if(!!target.waiting.length) downloadShard(target);
