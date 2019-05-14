@@ -511,7 +511,7 @@ const assembleShard = (target, shard, index) => {
 }
 
 const downloadShard = async target => {
-    // console.log(target);
+    console.log(target);
     if (target.isPaused || !target.waiting.length) return;
     const shardInfo = target.waiting.pop();
 
@@ -543,7 +543,6 @@ const downloadShard = async target => {
         // render progress
         // console.log("call renderProgress")
         renderProgress(file, "download");
-        
         if(file.progress === 1 && !file.download){
             // 合併檔案並賦予檔案型別
             const blob = new Blob(file.slices, {type: file.contentType});
@@ -572,7 +571,7 @@ const downloadAll = () => {
     console.log(downloadQueue);
     if (!downloadQueue.length) return;
     downloadQueue.forEach(file => {
-        if(!file.isPaused) file.isPaused = false;
+        if(file.isPaused) file.isPaused = false;
         if (connection >= maxConnection) {
             queue.push(downloadShard.bind(this, file));
             return false;
