@@ -392,8 +392,8 @@ const handleFilesSelected = evt => {
 // ============= download ===============
 let isFetching = false;
 
-const downloadQueue = [];
-const downloadFiles = [];
+const downloadQueue = []; // 以file為單位存儲用來取得碎片的地址
+const downloadFiles = []; // 以file為單位存儲已獲取碎片
 
 const fetchFilePath = async letter => {
     let err, data;
@@ -432,26 +432,42 @@ const fetchFile = async (filePath) => {
         filePath
     }; //http://www.javascriptkit.com/javatutors/trycatch2.shtml 還沒細看
     if (data) {
-        // console.log(data);
+        console.log(data);
         // console.log("fetchFile called: "+ i++ + " time", "data.progress: ",data.progress);
-        let fileIndex = downloadQueue.findIndex(file => file.fid === data.fid);
-        if (fileIndex === -1) {
+        let qIndex = downloadQueue.findIndex(file => file.fid === data.fid);
+        // console.log(downloadQueue)
+        if (qIndex === -1) {
+            // console.log("439")
             downloadQueue.push({
                 ...data,
                 isPaused: true,
-                isSelected: true,
+                // isSelected: true,
                 pointer: 0,
                 // waiting: [],
                 // isCompleted: false
             });
-            fileIndex = downloadQueue.length - 1;
+            qIndex = downloadQueue.length - 1;
         }
-        // console.log(downloadQueue[fileIndex].waiting)
+        // console.log(downloadFiles)
+        let fIndex = downloadFiles.findIndex(file => file.fid === data.fid);
+        // console.log(downloadFiles)
+        // let waitingLength = target.waiting;
+        if (fIndex === -1) {
+            // console.log("453")
+            // delete target.waiting;
+            downloadFiles.push({
+                ...data,
+                slices: [],
+                progress: 0,
+                downloaded: false,
+            });
+        }
+        // console.log(downloadQueue[qIndex].waiting)
 
-        if (downloadQueue[fileIndex].pointer === -1) return data;
+        if (downloadQueue[qIndex].pointer === -1) return data;
 
-        const pointer = downloadQueue[fileIndex].pointer;
-        // if(pointer < downloadQueue[fileIndex].waiting.length) pointer = downloadQueue[fileIndex].waiting.length;
+        const pointer = downloadQueue[qIndex].pointer;
+        // if(pointer < downloadQueue[qIndex].waiting.length) pointer = downloadQueue[qIndex].waiting.length;
         // console.log(pointer);
 
         const list = data.slices.slice(pointer);
@@ -459,7 +475,7 @@ const fetchFile = async (filePath) => {
         const newPointer = list.findIndex((shardPath, i) => {
             // if (downloadFiles[downloadFiles.findIndex(file => file.fid === data.fid)].progress === 1 || shardPath.includes("false")) return true;
             if (shardPath.includes("false")) return true;
-            downloadQueue[fileIndex].waiting.push({
+            downloadQueue[qIndex].waiting.push({
                 path: shardPath,
                 index: pointer + i,
                 fid: data.fid
@@ -468,10 +484,10 @@ const fetchFile = async (filePath) => {
         });
         // console.log(downloadQueue)
 
-        // if (newPointer === -1) downloadQueue[fileIndex].isCompleted === true;
-        // console.log(downloadQueue[fileIndex].waiting)
+        // if (newPointer === -1) downloadQueue[qIndex].isCompleted === true;
+        // console.log(downloadQueue[qIndex].waiting)
 
-        downloadQueue[fileIndex].pointer = pointer + newPointer
+        downloadQueue[qIndex].pointer = pointer + newPointer
         // console.log(`data.slices[${newPointer}]為下一次起點`);
 
         if (data.progress === 1 || newPointer === -1) {
@@ -481,7 +497,7 @@ const fetchFile = async (filePath) => {
         setTimeout(() => {
             fetchFile(filePath);
         }, delay); //setTimeout(fetchFile, delay, filePath, newPointer);
-        console.log("fetchFile", data)
+        // console.log("fetchFile", data)
         return data;
         // console.log(data) {
         // contentType: "video/quicktime"
@@ -496,27 +512,47 @@ const fetchFile = async (filePath) => {
     }
 }
 
+const createDownloadFile = file => {
+    // 合併檔案並賦予檔案型別
+    const blob = new Blob(file.slices, {
+        type: file.contentType
+    });
+    // 建立檔案物件
+    const url = window.URL.createObjectURL(blob);
+    // 建立下載 a Tag 以觸發下載事件
+    const a = document.createElement("a");
+    document.body.appendChild(a);
+    //a.style = "display: none";
+    a.href = url;
+    a.download = file.fileName;
+    // 觸發下載
+    a.click();
+    // 移除物件與 a Tag ??
+    window.URL.revokeObjectURL(url);
+    // 標注檔案已下載
+    file.downloaded = true;
+}
+
 const assembleShard = (target, shard, index) => {
     let fileIndex = downloadFiles.findIndex(file => file.fid === target.fid);
     // let waitingLength = target.waiting;
-    if (fileIndex === -1) {
-        // delete target.waiting;
-        downloadFiles.push({
-            ...target,
-            slices: [],
-            progress: 0,
-            downloaded: false,
-        });
-        fileIndex = downloadFiles.length - 1;
-    }
+    // if (fileIndex === -1) {
+    //     // delete target.waiting;
+    //     downloadFiles.push({
+    //         ...target,
+    //         slices: [],
+    //         progress: 0,
+    //         downloaded: false,
+    //     });
+    //     fileIndex = downloadFiles.length - 1;
+    // }
     downloadFiles[fileIndex].slices[index] = shard;
     // console.log(downloadFiles[fileIndex].slices.filter((v) => !!v).length )
     downloadFiles[fileIndex].progress = downloadFiles[fileIndex].slices.filter((v) => !!v).length / target.totalSlice;
     return downloadFiles[fileIndex];
 }
 
-const downloadShard = async target => {
-    console.trace(target);
+const fetchShard = async target => {
     if (target.isPaused || !target.waiting.length) return;
     const shardInfo = target.waiting.pop();
 
@@ -526,13 +562,13 @@ const downloadShard = async target => {
         url: shardInfo.path,
         responseType: "arraybuffer",
     }));
-    // console.log(err, data, "in downloadShard");
+    // console.log(err, data, "in fetchShard");
     if (err) {
         target.retry = target.retry ? (target.retry + 1) : 1;
         if (target.retry <= maxRetry) {
             target.waiting.reverse().push(shardInfo);
             target.waiting.reverse()
-            downloadShard(target);
+            fetchShard(target);
             return false;
         } else {
             throw new Error(`can not download shard: ${ ({
@@ -546,33 +582,16 @@ const downloadShard = async target => {
         // 組裝
         const file = assembleShard(target, data, shardInfo.index);
         // render progress
+        renderProgress(file, "download");
         // console.log("call renderProgress")
-        if (file.progress === 1 && !file.download) {
-            // 合併檔案並賦予檔案型別
-            const blob = new Blob(file.slices, {
-                type: file.contentType
-            });
-            // 建立檔案物件
-            const url = window.URL.createObjectURL(blob);
-            // 建立下載 a Tag 以觸發下載事件
-            const a = document.createElement("a");
-            document.body.appendChild(a);
-            //a.style = "display: none";
-            a.href = url;
-            a.download = file.fileName;
-            // 觸發下載
-            a.click();
-            // 移除物件與 a Tag ??
-            window.URL.revokeObjectURL(url);
-            // 標注檔案已下載
-            file.downloaded = true;
-
+        if (file.progress === 1) {
+            // if (file.progress === 1 && !file.download) {
+            createDownloadFile(file);
             return;
         }
-        renderProgress(file, "download");
         // 繼續下載下一個碎片
         // console.log(target)
-        if (!!target.waiting.length) downloadShard(target);
+        if (!!target.waiting.length) fetchShard(target);
     }
 }
 
@@ -582,21 +601,24 @@ const downloadAll = () => {
     downloadQueue.forEach(file => {
         if (file.isPaused) file.isPaused = false;
         if (connection >= maxConnection) {
-            queue.push(downloadShard.bind(this, file));
+            queue.push(fetchShard.bind(this, file));
             return false;
         }
         console.log(file, "download all Files")
-        downloadShard(file);
+        fetchShard(file);
     });
 }
 
 const renderDownloadFiles = async letter => {
-    // 2.2 render loader 
+    Array.from(document.querySelectorAll(".download-list > .file")).forEach(el => el.remove());
+    
+    // 2. render loader 
     renderLoader(elements.emptyFileHint);
 
     // 2.3 fetch data 👉 use elements.inputKey.value 跟backend要資料
     const filePaths = await fetchFilePath(letter);
 
+    // console.log(filePaths)
     // 2.3.1 如果沒有要到，重新輸入inputKey
     if (!filePaths) {
         // ?? render custom alert downloadKey || inputKey is invalid
@@ -604,35 +626,73 @@ const renderDownloadFiles = async letter => {
         // window.location.hash = ""; //// window.location = window.location.origin;
         renderDownloadInput();
         elements.inputCard.classList.add("shake");
-        setTimeout(() => elements.inputCard.classList.remove("shake"), 1000);
+        setTimeout(() => elements.inputCard.classList.remove("shake"), 500);
         return false;
     };
+
+    // 4 filePaths.length = 0 沒有路徑
+    if (!filePaths.length) {
+        setTimeout(() => {
+            removeLoader(elements.emptyFileHint);
+            unhiddenElement(elements.emptyFileHint, 0);
+        }, 500);
+        return false;
+    }
     // 2.3.2 如果有要到filePaths，cleanLoader 
     // console.log(filePaths); //["/letter/505404/upload/JOB75mvKpyhcTerX", ...]
     setTimeout(removeLoader, 500, elements.emptyFileHint);
-    // 3. change url
-    // window.location.hash = `receive/${letter}`;
-
-
-    // 4 filePaths.length = 0 沒有路徑
-    if (!filePaths.length) return false;
-
+    // console.log(filePaths)
     // 4. fetch files
     hiddenElement(elements.emptyFileHint, 0);
     Promise.all(filePaths.map(async filePath => fetchFile(filePath)))
-        .then(files => {
-            // console.log("renderDownloadZone",files);
-            // console.log(downloadQueue);
-            elements.filesInfo.innerHTML = `Total ${files.length} files &middot; ${formatFileSize(progressCalculator(files).totalSize)}`
+        .then(resArr => {
+            // console.log(downloadFiles)
+            if (!downloadFiles.length) {
+                downloadFiles = downloadFiles.filter(f => resArr.findIndex(file => file.fid === f.fid) !== -1)
+            }
+            // console.log(downloadFiles)
+            elements.filesInfo.innerHTML = `Total ${downloadFiles.length} files &middot; ${formatFileSize(progressCalculator(downloadFiles).totalSize)}`;
+
             // 5. renderFiles
-            files.forEach(file => renderFile(elements.downloadList, file));
-        })
+            downloadFiles.forEach(file => {
+                renderFile(elements.downloadList, file)
+            });
+        });
 }
+
+
+const checkValidity = inputKey => {
+    // 1. if elements.inputKey.value is numbers || 1.2.1 if elements.inputKey.value is string (can be link)
+    if (dataType.isURL(inputKey)) {
+        // 如果是URL
+        // case1: 作為網址打開 www.drophere.io/#123456
+        // return false;
+    };
+    // if not digit or digit.length !== 6
+    if (!dataType.isDigit(inputKey) || inputKey.length !== 6) return false
+    // else
+    return inputKey;
+}
+
 
 //  '/#receive/letter': downloadView,
 const renderDownloadView = () => {
+    // 1. get letter from download input or url
     const letter = window.location.hash.replace("#receive/", "");
+    // console.log(letter)
+  
+    // 2. if url is inValid 👉 return
+    if (!checkValidity(letter)) {
+        // return to downloadinputView
+        renderDownloadInput();
+        // add shake effect as a hint
+        elements.inputCard.classList.add("shake");
+        // remove class after animation end 👈 except using setTimeout, can also listen to animationend event
+        setTimeout(() => elements.inputCard.classList.remove("shake"), 500);
+        return false;
+    }
 
+    // else 
     closeNavbar();
     hiddenElement(elements.signinPage, 0);
     hiddenElement(elements.confirmPage, 0);
@@ -646,39 +706,33 @@ const renderDownloadView = () => {
     renderDownloadFiles(letter);
 }
 
-// disable btnReceive if 
-// 6. 開始下載
-
-
-const checkValidity = inputKey => {
-    console.log(inputKey)
-    // 1. if elements.inputKey.value is numbers || 1.2.1 if elements.inputKey.value is string (can be link)
-    elements.inputKey.value = "";
-
-    const regExp = new RegExp(/^\d+$/);
-
-    if (!regExp.test(inputKey)) {
-        // 如果不是數字
-        // case1: 作為網址打開 www.drophere.io/#123456
-        // case2: 直接返回
-        // return false;
-    };
-    if (!regExp.test(inputKey) || inputKey.length !== 6) {
-        elements.inputCard.classList.add("shake");
-        setTimeout(() => elements.inputCard.classList.remove("shake"), 1000);
-        return false;
-    };
-
-    window.location.hash = `receive/${inputKey}`
-    renderDownloadView();
-    return;
-}
-
-
 
 elements.boxFile.addEventListener("change", evt => handleFilesSelected(evt), false);
-elements.btnRefresh.addEventListener("click", () => checkValidity(elements.inputKey.value.trim()), false);
-elements.btnDownload.addEventListener("click", () => checkValidity(elements.inputKey.value.trim()), false);
+
+elements.btnDownload.addEventListener("click", () => {
+    const v = elements.inputKey.value.trim();
+    // console.log(v);
+    elements.inputKey.value = "";
+    // 2. if url is inValid 👉 return
+    if (!checkValidity(v)) {
+        // console.log(v)
+        // return to downloadinputView
+        renderDownloadInput();
+        // add shake effect as a hint
+        elements.inputCard.classList.add("shake");
+        // remove class after animation end 👈 except using setTimeout, can also listen to animationend event
+        setTimeout(() => elements.inputCard.classList.remove("shake"), 500);
+        return false;
+    }else {
+        // console.log(v)
+        window.location.hash = `receive/${v}`;
+        tabViewLocation = `receive/${v}`;
+        renderDownloadView();
+        // console.log(v)
+
+    }
+}, false);
+elements.btnRefresh.addEventListener("click", renderDownloadView, false);
 elements.btnReceive.addEventListener("click", downloadAll, false);
 
 
@@ -709,8 +763,8 @@ window.addEventListener('hashchange', (e) => {
 }, false);
 // Or, to listen to all URL changes:
 window.addEventListener('popstate', (e) => {
-    const route = `/${window.location.hash}`;
-    routes[route]();
+    // const route = `/${window.location.hash}`;
+    // routes[route]();
 }, false);
 
 // elements.downloadList.addEventListener("click", evt => {

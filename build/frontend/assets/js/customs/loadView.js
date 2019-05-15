@@ -66,6 +66,7 @@ const unhiddenElement = (element, delay) => {
     }, delay);
 }
 const hiddenElement = (element, delay) => {
+    // console.log(element);
     setTimeout(() => {
         element.classList.add("u-hidden");
     }, delay);
@@ -143,6 +144,31 @@ const makeRequest = opts => {
         });
     }
 }
+
+// https://github.com/Luphia/TexType/blob/master/index.js
+const DataType = function(){}
+
+const regExp = {
+    email: new RegExp(/^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/),
+    password8: new RegExp(/[\x21-\x7e]{8,}$/),
+    digit: new RegExp(/^-?\d+\.?\d*$/), //new RegExp(/^\d+$/);
+    internalIP: new RegExp(/(^127\.)|(^10\.)|(^172\.1[6-9]\.)|(^172\.2[0-9]\.)|(^172\.3[0-1]\.)|(^192\.168\.)/),
+    URL: new RegExp(/https?:\/\/(?:www\.|(?!www))[^\s\.]+\.[^\s]{2,}|www\.[^\s]+\.[^\s]{2,}/),
+}
+
+DataType.prototype = {
+    is: (data, type) => {
+       if(regExp[type] && typeof(regExp[type].test) === "function"){
+           return  regExp[type].test(data);
+       }
+    },
+    isEmail: data => regExp.email.test(data),
+    isPassword8: data => regExp.password8.test(data),
+    isURL: data => regExp.URL.test(data),
+    isDigit: data => regExp.digit.test(data),
+}
+
+const dataType = new DataType();
 
 let elements = {
     mainPage: document.querySelector(".main-page"),
@@ -372,7 +398,7 @@ const formatFileSize = size => {
 }
 
 const renderFile = (parentEl, file) => {
-    // console.log(parentEl, file);
+    console.log(parentEl, file);
     const isDownload = parentEl.classList.contains("download-list");
     const markup = `
     <div class="file" data-fid="${file.fid}" data-type="${isDownload?"download":"upload"}">
@@ -416,6 +442,9 @@ const renderProgress = (file, type) => { //?
     let progress = file.progress;
     let fid = file.fid;
     let deg = progress * 360;
+    if(type ==="download"){
+        console.log(file)
+    }
 
     const el = document.querySelector(`${type ==="download"? ".download-card": ".drop-card"} [data-coverId=${fid}]`);
 
@@ -461,6 +490,7 @@ const uiFileControl = evt => {
             url: `/letter/${letter}/upload/${fid}`
         })
     }
+    // console.log(evt.target,evt.target.matches(".file"), evt.target.closest(".cover"))
     if (evt.target.closest(".cover")) {
         file.isPaused = !file.isPaused;
         if (file.isPaused) {
@@ -473,9 +503,26 @@ const uiFileControl = evt => {
             elementCover.classList.add("continue");
             elementCover.classList.remove("select");
             elementCover.classList.remove("pause");
-            console.log("uiFileControl/ isPaused: ", file.fid, file.isPaused);
-            type === "upload" ? uploadShard(file) : downloadShard(file);
+            console.log("uiFileControl/ isPaused: ", file, type);
+            type === "upload" ? uploadShard(file) : fetchShard(file);
+            // if(type === "upload"){
+            //     uploadShard(file)
+            // }else{
+            //     if(downloadFiles.length){
+            //         const index = downloadFiles.findIndex(f => f.fid === file.fid);
+            //         if(index !== -1 && downloadFiles[index].progress === 1){
+            //             // ?? trigger download the file
+            //             createDownloadFile(downloadFiles[index]);
+            //             return;
+            //         }
+            //         // else
+            //         fetchShard(file);
+            //         return;
+            //     }
+            // }
         }
+    }else if(evt.target.closest(".file")){
+        createDownloadFile(downloadFiles[downloadFiles.findIndex(f => f.fid === fid)]);
     }
     return;
 }
@@ -510,8 +557,9 @@ const checkAvailability = async (el, isRequire) => {
 
 const varifyEmail = el => {
     if(!el.value) return;
-    const regExp = new RegExp(/^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/);
-    if (regExp.test(el.value)) {
+    // const regExp = new RegExp(/^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/);
+    if (dataType.isEmail(el.value)) {
+    // if (regExp.test(el.value)) {
         el.parentNode.classList.remove("has-danger");
         el.parentNode.classList.remove("has-success");
         return true;
@@ -522,8 +570,9 @@ const varifyEmail = el => {
 }
 const varifyPassword = el => {
     if(!el.value) return;
-    const regExp = new RegExp(/[\x21-\x7e]{8,}$/);
-    if (regExp.test(el.value)) {
+    // const regExp = new RegExp(/[\x21-\x7e]{8,}$/);
+    if (dataType.isPassword8(el.value)) {
+    // if (regExp.test(el.value)) {
         el.parentNode.classList.remove("has-danger");
         el.parentNode.classList.add("has-success");
         return true;
@@ -817,7 +866,11 @@ const renderTabView1 = () => {
     elements.tabReceive.classList.remove("show");
     elements.tabPane2.classList.remove("active");
     elements.tabPane2.classList.remove("show");
+    window.location.hash = "send";
 }
+
+let tabViewLocation = "receive";
+
 const renderTabView2 = () => {
     elements.tabSend.classList.remove("active");
     elements.tabSend.classList.remove("show");
@@ -827,6 +880,8 @@ const renderTabView2 = () => {
     elements.tabReceive.classList.add("show");
     elements.tabPane2.classList.add("active");
     elements.tabPane2.classList.add("show");
+    window.location.hash = tabViewLocation;
+    // console.log(window.location.hash)
 }
 
 const closeNavbar = () => {
@@ -915,7 +970,8 @@ const renderVarificationView = result => {
     }
 }
 
-
+elements.tabSend.addEventListener("click", renderTabView1, false);
+elements.tabReceive.addEventListener("click", renderTabView2, false);
 
 elements.btnSend.addEventListener("click", renderSendingView, false);
 elements.btnConfirmed.addEventListener("click", renderDropView, false);
