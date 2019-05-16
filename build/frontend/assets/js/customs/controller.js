@@ -553,7 +553,8 @@ const assembleShard = (target, shard, index) => {
 }
 
 const fetchShard = async target => {
-    if (target.isPaused || !target.waiting.length) return;
+    if (target.isPaused) return false;
+    if (!target.waiting.length) createDownloadFile(downloadFiles[downloadFiles.findIndex(f => f.fid === target.fid)]);
     const shardInfo = target.waiting.pop();
 
     let err, data;
@@ -604,7 +605,7 @@ const downloadAll = () => {
             queue.push(fetchShard.bind(this, file));
             return false;
         }
-        console.log(file, "download all Files")
+        // console.log(file, "download all Files")
         fetchShard(file);
     });
 }
@@ -612,34 +613,18 @@ const downloadAll = () => {
 const renderDownloadFiles = async filePaths => {
     Array.from(document.querySelectorAll(".download-list > .file")).forEach(el => el.remove());
     // 2. render loader 
-    console.log("renderLoader")
     renderLoader(elements.emptyFileHint);
-    // // 2.3 fetch data 👉 use elements.inputKey.value 跟backend要資料
-    // const filePaths = await fetchFilePath(letter);
 
-    // // console.log(filePaths)
-    // // 2.3.1 如果沒有要到，重新輸入inputKey
-    // if (!filePaths) {
-    //     // ?? render custom alert downloadKey || inputKey is invalid
-    //     removeLoader(elements.emptyFileHint);
-    //     // window.location.hash = ""; //// window.location = window.location.origin;
-    //     renderDownloadInput();
-    //     elements.inputCard.classList.add("shake");
-    //     setTimeout(() => elements.inputCard.classList.remove("shake"), 500);
-    //     return false;
-    // };
-
-    // 4 filePaths.length = 0 沒有路徑
+    // 3. filePaths.length = 0 沒有路徑
     if (!filePaths.length) {
         setTimeout(() => {
-            console.log("removeLoader")
             removeLoader(elements.emptyFileHint);
         }, 500);
         return false;
     }
-    // console.log(filePaths)
+
     // 4. fetch files
-    hiddenElement(elements.emptyFileHint, 0);
+    hiddenElement(elements.emptyFileHint);
 
     Promise.all(filePaths.map(async filePath => fetchFile(filePath)))
         .then(resArr => {
@@ -672,8 +657,7 @@ const checkValidity = inputKey => {
     return inputKey;
 }
 
-//  '/#receive/letter': downloadView,
-const renderDownloadView = async () => {
+const checkURL = async () => {
     // 1. if url not contain 6 digits 👉 return
     if (!window.location.hash.match(/\d{6}/)) {
         // return to downloadinputView
@@ -687,6 +671,7 @@ const renderDownloadView = async () => {
 
     // 2. else get letter from url
     const letter = window.location.hash.match(/\d{6}/)[0]
+    tabView2Location = `receive/${letter}`
     // console.log(letter)
 
     // 3 fetch data 👉 use letter 跟backend要資料
@@ -703,21 +688,26 @@ const renderDownloadView = async () => {
         return false;
     };
 
-    // else 
-    closeNavbar();
-    hiddenElement(elements.signinPage, 0);
-    hiddenElement(elements.confirmPage, 0);
-    hiddenElement(elements.successPage, 0);
-    hiddenElement(elements.failedPage, 0);
+    renderDownloadView(filePaths);
+    return false;
+}
 
-    unhiddenElement(elements.mainPage, 0); // ++
+//  '/#receive/letter': downloadView,
+const renderDownloadView = filePaths => {
+    closeNavbar();
+    hiddenElement(elements.signinPage);
+    hiddenElement(elements.confirmPage);
+    hiddenElement(elements.successPage);
+    hiddenElement(elements.failedPage);
+
+    unhiddenElement(elements.mainPage); // ++
     renderTabView2();
     elements.inputCard.classList.remove("active");
     elements.downloadCard.classList.add("active");
     renderDownloadFiles(filePaths);
 }
 
-const openDownloadView = () => {
+const openDownloadView = async () => {
     const v = elements.inputKey.value.trim();
     // console.log(v);
     elements.inputKey.value = "";
@@ -733,34 +723,36 @@ const openDownloadView = () => {
         return false;
     } else {
         // console.log(v)
+        tabView2Location = `receive/${v}`;
         window.location.hash = `receive/${v}`;
-        tabViewLocation = `receive/${v}`;
-        renderDownloadView();
+        checkURL()
+        // console.log(result, !!result)
     }
 }
 
-elements.btnDownload.addEventListener("click", openDownloadView, false);
-
 const Router = function () {};
 
-Router.prototype.route = hash => {
-    // console.log(hash)
+Router.prototype.route = async hash => {
+    console.log(hash)
     switch (true) {
         case hash.startsWith("#drop"):
             renderDropView();
             break;
         case hash.startsWith("#receive"):
-            if (regExp.hasDigit.test(hash)) {
-                renderDownloadView();
+            console.log("render receive")
+            if (window.location.hash.match(/\d{6}/)) {
+                checkURL();
             } else {
+                console.log("render renderDownloadInput")
                 renderDownloadInput();
             }
             break;
         case hash.startsWith("#sign-in"):
-        console.log("render signin")
+            console.log("render signin")
             renderLoginView("sign-in");
             break;
         case hash.startsWith("#sign-up"):
+            console.log("render signin")
             renderLoginView("sign-up");
             break;
         case hash.startsWith("#verification-success"):
@@ -818,8 +810,6 @@ Router.prototype.route = hash => {
 
 const router = new Router();
 
-elements.btnRefresh.addEventListener("click", renderDownloadView, false);
-elements.btnReceive.addEventListener("click", downloadAll, false);
 
 
 // routes = {
@@ -870,3 +860,21 @@ if (performance.navigation.type === 1) {
     console.info("This page is not reloaded");
     router.route(window.location.hash);
 }
+
+
+elements.tabSend.addEventListener("click", renderTabView1, false);
+elements.tabReceive.addEventListener("click", renderTabView2, false);
+
+elements.navBarBrand.addEventListener("click", renderDropView, false);
+elements.navLoginBtn.addEventListener("click", renderLoginView, false);
+elements.btnSend.addEventListener("click", renderSendingView, false);
+
+elements.btnRefresh.addEventListener("click", checkURL, false);
+elements.btnBackToReceive.addEventListener("click", renderDownloadInput, false);
+elements.btnDownload.addEventListener("click", openDownloadView, false);
+elements.btnReceive.addEventListener("click", downloadAll, false);
+
+
+elements.btnConfirmed.addEventListener("click", renderDropView, false);
+elements.btnConfirmOK.addEventListener("click", () => renderLoginView("sign-up"), false);
+

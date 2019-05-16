@@ -61,15 +61,15 @@ const unHiddenChildEls = parentEl => {
 
 // hidden Element
 const unhiddenElement = (element, delay) => {
-    setTimeout(() => {
-        element.classList.remove("u-hidden");
-    }, delay);
+    element.classList.remove("u-hidden");
+    // setTimeout(() => {
+    // }, delay);
 }
 const hiddenElement = (element, delay) => {
     // console.log(element);
-    setTimeout(() => {
-        element.classList.add("u-hidden");
-    }, delay);
+    element.classList.add("u-hidden");
+    // setTimeout(() => {
+    // }, delay);
 }
 
 // https://blog.grossman.io/how-to-write-async-await-without-try-catch-blocks-in-javascript/
@@ -400,7 +400,7 @@ const formatFileSize = size => {
 }
 
 const renderFile = (parentEl, file) => {
-    console.log(parentEl, file);
+    // console.log(parentEl, file);
     const isDownload = parentEl.classList.contains("download-list");
     const markup = `
     <div class="file" data-fid="${file.fid}" data-type="${isDownload?"download":"upload"}">
@@ -524,7 +524,7 @@ const uiFileControl = evt => {
             //     }
             // }
         }
-    }else if(evt.target.closest(".file")){
+    }else if(type === "download" && evt.target.closest(".file")){
         createDownloadFile(downloadFiles[downloadFiles.findIndex(f => f.fid === fid)]);
     }
     return;
@@ -861,6 +861,7 @@ const sendingViewControl = evt => {
 }
 
 const renderTabView1 = () => {
+    window.location.hash = "send";
     elements.tabSend.classList.add("active");
     elements.tabSend.classList.add("show");
     elements.tabPane1.classList.add("active");
@@ -869,12 +870,11 @@ const renderTabView1 = () => {
     elements.tabReceive.classList.remove("show");
     elements.tabPane2.classList.remove("active");
     elements.tabPane2.classList.remove("show");
-    window.location.hash = "send";
 }
 
-let tabViewLocation = "receive";
-
 const renderTabView2 = () => {
+    if(!window.location.hash.includes("receive"))
+    window.location.hash = "receive"
     elements.tabSend.classList.remove("active");
     elements.tabSend.classList.remove("show");
     elements.tabPane1.classList.remove("active");
@@ -883,7 +883,7 @@ const renderTabView2 = () => {
     elements.tabReceive.classList.add("show");
     elements.tabPane2.classList.add("active");
     elements.tabPane2.classList.add("show");
-    window.location.hash = tabViewLocation;
+    // window.location.hash = tabViewLocation;
     // console.log(window.location.hash)
 }
 
@@ -898,12 +898,12 @@ const closeNavbar = () => {
 const renderLoginView = target => {
     window.location.hash = target;
     closeNavbar();
-    hiddenElement(elements.confirmPage, 0);
-    hiddenElement(elements.successPage, 0);
-    hiddenElement(elements.failedPage, 0);
-    hiddenElement(elements.mainPage, 0);
+    hiddenElement(elements.confirmPage);
+    hiddenElement(elements.successPage);
+    hiddenElement(elements.failedPage);
+    hiddenElement(elements.mainPage);
 
-    unhiddenElement(elements.signinPage, 0); //
+    unhiddenElement(elements.signinPage); //
 }
 
 
@@ -918,12 +918,12 @@ const changeView = (currViewEl, nextViewEl) => {
 const renderDropView = () => {
     window.location.hash = "send";
     closeNavbar();
-    hiddenElement(elements.signinPage, 0);
-    hiddenElement(elements.confirmPage, 0);
-    hiddenElement(elements.successPage, 0);
-    hiddenElement(elements.failedPage, 0);
+    hiddenElement(elements.signinPage);
+    hiddenElement(elements.confirmPage);
+    hiddenElement(elements.successPage);
+    hiddenElement(elements.failedPage);
 
-    unhiddenElement(elements.mainPage, 0); // ++
+    unhiddenElement(elements.mainPage); // ++
     renderTabView1();
 }
 
@@ -933,12 +933,12 @@ const renderDownloadInput = () => {
     tabViewLocation = "receive";
       
     closeNavbar();
-    hiddenElement(elements.signinPage, 0);
-    hiddenElement(elements.confirmPage, 0);
-    hiddenElement(elements.successPage, 0);
-    hiddenElement(elements.failedPage, 0);
+    hiddenElement(elements.signinPage);
+    hiddenElement(elements.confirmPage);
+    hiddenElement(elements.successPage);
+    hiddenElement(elements.failedPage);
 
-    unhiddenElement(elements.mainPage, 0); //++
+    unhiddenElement(elements.mainPage); //++
     renderTabView2();
     elements.inputCard.classList.add("active");
     elements.downloadCard.classList.remove("active");
@@ -948,42 +948,36 @@ const renderDownloadInput = () => {
 const renderConfirmPage = () => {
     window.location.hash = "verification";    
     closeNavbar();
-    hiddenElement(elements.signinPage, 0);
-    hiddenElement(elements.successPage, 0);
-    hiddenElement(elements.failedPage, 0);
-    hiddenElement(elements.mainPage, 0);
+    hiddenElement(elements.signinPage);
+    hiddenElement(elements.successPage);
+    hiddenElement(elements.failedPage);
+    hiddenElement(elements.mainPage);
 
-    unhiddenElement(elements.confirmPage, 0);
+    unhiddenElement(elements.confirmPage);
 }
 
 //     '/#verification-success': verifyResultView(true),
 //     '/#verification-fail': verifyResultView(false),
 const renderVerifyResultView = result => {
     closeNavbar();
-    hiddenElement(elements.signinPage, 0);
-    hiddenElement(elements.confirmPage, 0);
-    hiddenElement(elements.mainPage, 0);
+    hiddenElement(elements.signinPage);
+    hiddenElement(elements.confirmPage);
+    hiddenElement(elements.mainPage);
 
     if (result) {
         // result === true 👉 驗證成功
         window.location.hash = "verification-success";    
-        hiddenElement(elements.failedPage, 0);
-        unhiddenElement(elements.successPage, 0);
+        hiddenElement(elements.failedPage);
+        unhiddenElement(elements.successPage);
     } else {
         // result === false 👉 驗證失敗
         window.location.hash = "verification-fail";    
-        hiddenElement(elements.successPage, 0);
-        unhiddenElement(elements.failedPage, 0);
+        hiddenElement(elements.successPage);
+        unhiddenElement(elements.failedPage);
     }
 }
 
-elements.tabSend.addEventListener("click", renderTabView1, false);
-elements.tabReceive.addEventListener("click", renderTabView2, false);
-
-elements.btnSend.addEventListener("click", renderSendingView, false);
-elements.btnConfirmed.addEventListener("click", renderDropView, false);
-elements.btnBackToReceive.addEventListener("click", renderDownloadInput, false);
-elements.btnConfirmOK.addEventListener("click", renderLoginView, false);
+elements.boxFile.addEventListener("change", evt => handleFilesSelected(evt), false);
 elements.downloadList.addEventListener("click", evt => uiFileControl(evt), false);
 elements.fileList.addEventListener("click", evt => uiFileControl(evt), false);
-elements.sendingCard.addEventListener("click", evt => sendingViewControl(evt));
+elements.sendingCard.addEventListener("click", evt => sendingViewControl(evt), false);
