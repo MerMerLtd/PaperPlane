@@ -634,7 +634,6 @@ const renderDownloadFiles = async filePaths => {
         setTimeout(() => {
             console.log("removeLoader")
             removeLoader(elements.emptyFileHint);
-            unhiddenElement(elements.emptyFileHint, 0);
         }, 500);
         return false;
     }

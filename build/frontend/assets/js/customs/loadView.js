@@ -306,13 +306,13 @@ const renderLoader = parentEl => {
         </div>
     `;
     parentEl.insertAdjacentHTML("afterbegin", markup);
+}
+
+const removeLoader = parentEl => {
     elements = {
         ...elements,
         loader: document.querySelector(".lds-spinner"),
     }
-}
-
-const removeLoader = parentEl => {
     elements.loader.remove();
     unHiddenChildEls(parentEl);
 }
