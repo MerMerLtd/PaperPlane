@@ -547,17 +547,20 @@ const checkAvailability = async (el, isRequire) => {
     let err, data;
     const opts = {
         method: "GET",
-        // url: `/member/${el.value}/exists`,
-        url: `/member/luphia@mermer.cc/exists`,
+        url: `/member/${el.value}/exists`,
+        // url: `/member/luphia@mermer.cc/exists`,
     };
     [err, data] = await to(makeRequest(opts));
     console.log(err, data)
     if (err) throw new Error(err);
     if (data.exists && isRequire) {
         // setTimeout remove loader
-        // el.classList.add("has-success")
+        el.classList.add("has-success")
         return true;
     } else {
+        // ?? 
+        el.classList.add("not-allow");
+        // css && html && isRequire? html.inner = "..." : html.inner = "...";
         return false;
     }
 
@@ -728,8 +731,10 @@ const signIn = async evt => {
 elements.btnSignUp.addEventListener("click", evt => signUp(evt), false);
 elements.btnSignIn.addEventListener("click", evt => signIn(evt), false);
 elements.signInEmail.addEventListener("input", () => signInValidation(), false);
+elements.signInEmail.addEventListener("change", () => checkAvailability(elements.signInEmail, true), false);
 elements.signInPassword.addEventListener("input", () => signInValidation(), false);
 elements.signUpEmail.addEventListener("input", () => signUpValidation(), false);
+elements.signUpEmail.addEventListener("change", () => checkAvailability(elements.signUpEmail, false), false);
 elements.signUpPassword.addEventListener("input", () => signUpValidation(), false);
 elements.passwordConfirm.addEventListener("input", () => signUpValidation(), false);
 
@@ -873,7 +878,7 @@ const renderSendingView = () => {
             elements.sendingCard.classList.remove("link");
             elements.sendingCard.classList.remove("direct");
             console.log(type);
-
+            
             break;
         case "LINK":
             elements.sendingCard.classList.remove("email");
