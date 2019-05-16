@@ -25,7 +25,7 @@ host = "smtp.gmail.com"
 secure = true
 port = 465
 user = "contact@mermer.cc"
-password = ""
+password = "anA129HMtbzbzF5p"
 
 [api]
 url = "localhost"

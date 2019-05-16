@@ -15437,7 +15437,8 @@ select.selectpicker {
     right: 230px;
     content: "";
     z-index: 1029;
-    overflow-x: hidden; }
+    overflow-x: hidden;
+    pointer-events: none; }
   #navbar .navbar-collapse,
   #navigation .navbar-collapse {
     display: none !important; } }
@@ -16240,7 +16241,6 @@ select.selectpicker {
   margin: 20px 0; }
 
 a,
-a:active,
 a:visited {
   display: block;
   text-decoration: none;

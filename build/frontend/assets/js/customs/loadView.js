@@ -1,6 +1,11 @@
+let token;
 //check for Navigation Timing API support
 if (window.performance) {
     console.info("window.performance works fine on this browser");
+    if (!!window.location.search) {
+        token = window.location.search; // ??
+        window.location = window.location.origin; // ??
+    }
 }
 if (performance.navigation.type === 1) {
     console.info("This page is reloaded");
@@ -146,7 +151,7 @@ const makeRequest = opts => {
 }
 
 // https://github.com/Luphia/TexType/blob/master/index.js
-const DataType = function(){}
+const DataType = function () {}
 
 const regExp = {
     email: /^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/,
@@ -160,9 +165,9 @@ const regExp = {
 
 DataType.prototype = {
     is: (data, type) => {
-       if(regExp[type] && typeof(regExp[type].test) === "function"){
-           return  regExp[type].test(data);
-       }
+        if (regExp[type] && typeof (regExp[type].test) === "function") {
+            return regExp[type].test(data);
+        }
     },
     isEmail: data => regExp.email.test(data),
     isPassword8: data => regExp.password8.test(data),
@@ -444,12 +449,12 @@ const renderProgress = (file, type) => { //?
     let progress = file.progress;
     let fid = file.fid;
     let deg = progress * 360;
-    if(type ==="download"){
+    if (type === "download") {
         console.log(file)
     }
 
     const el = document.querySelector(`${type ==="download"? ".download-card": ".drop-card"} [data-coverId=${fid}]`);
-
+    if (!el) return;
     if (deg >= 180) {
         // console.log(progress)
         el.children.item(2).style.zIndex = 1;
@@ -524,7 +529,7 @@ const uiFileControl = evt => {
             //     }
             // }
         }
-    }else if(type === "download" && evt.target.closest(".file")){
+    } else if (type === "download" && evt.target.closest(".file")) {
         createDownloadFile(downloadFiles[downloadFiles.findIndex(f => f.fid === fid)]);
     }
     return;
@@ -559,10 +564,10 @@ const checkAvailability = async (el, isRequire) => {
 }
 
 const varifyEmail = el => {
-    if(!el.value) return;
+    if (!el.value) return;
     // const regExp = new RegExp(/^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/);
     if (dataType.isEmail(el.value)) {
-    // if (regExp.test(el.value)) {
+        // if (regExp.test(el.value)) {
         el.parentNode.classList.remove("has-danger");
         el.parentNode.classList.remove("has-success");
         return true;
@@ -572,10 +577,10 @@ const varifyEmail = el => {
     }
 }
 const varifyPassword = el => {
-    if(!el.value) return;
+    if (!el.value) return;
     // const regExp = new RegExp(/[\x21-\x7e]{8,}$/);
     if (dataType.isPassword8(el.value)) {
-    // if (regExp.test(el.value)) {
+        // if (regExp.test(el.value)) {
         el.parentNode.classList.remove("has-danger");
         el.parentNode.classList.add("has-success");
         return true;
@@ -587,8 +592,8 @@ const varifyPassword = el => {
 }
 
 const confirmPassword = el => {
-    if(!el.value) return;
-    if(elements.signUpPassword.value === el.value){
+    if (!el.value) return;
+    if (elements.signUpPassword.value === el.value) {
         el.parentNode.classList.remove("has-danger");
         el.parentNode.classList.add("has-success");
         return true;
@@ -614,7 +619,7 @@ const signInValidation = async () => {
     if (e && pc) {
         enableBtn(elements.btnSignIn);
         // console.log(elements.btnSignIn)
-    }else{
+    } else {
         disableBtn(elements.btnSignIn);
     }
 }
@@ -633,24 +638,27 @@ const signUpValidation = async () => {
     //test 👇 formal 👆
     if (e && pc && pc2 && elements.signUpCheck.checked) {
         enableBtn(elements.btnSignUp);
-    }else{
+    } else {
         disableBtn(elements.btnSignUp);
     }
 }
 
-const signUp = () => {
+const signUp = async evt => {
+    console.log("called")
+    evt.preventDefault();
+    if (elements.btnSignUp.classList.contains("disable")) return;
     const salt = new Date().getTime.toString(16);
     const email = elements.signUpEmail.value;
-    const password = HMACSHA256(elements.signUpEmail.value, salt).toString(16);
+    const hash = CryptoJS.enc.Hex.stringify(CryptoJS.HmacSHA256(elements.signUpPassword.value, salt));
     let err, data;
-    [err, data] = to(makeRequest({
+    [err, data] = await to(makeRequest({
         method: "POST",
         url: "/member",
         payload: {
             "account": email,
             "password": {
-                "hash": password,
-                "salt": salt,
+                hash,
+                salt,
             }
         },
     }))
@@ -659,15 +667,66 @@ const signUp = () => {
     }
     if (data) {
         // 跳轉提示到email驗證email
-
-        // 按 OK btn後 render Sign in UI
-        // Sign in btn 按下後會先 問後端是否有驗證 
-        // 有驗證的話 renderDropView && render 登入的樣式
-        // 沒有驗證的話 shake 登入畫面的form， // 跟出現提示帶入輸入email的input
-        elements.signinCard.classList.add("shake");
+        window.location.hash = "verifiction";
     }
 }
 
+const signIn = async evt => {
+    console.log("called signIN")
+    evt.preventDefault();
+    if (elements.btnSignIn.classList.contains("disable")) return;
+    const salt = new Date().getTime.toString(16);
+    const email = elements.signInEmail.value;
+    const password = elements.signInPassword.value;
+    const hash = CryptoJS.enc.Hex.stringify(CryptoJS.HmacSHA256(passworde, salt));
+    let err, data;
+    [err, data] = await to(makeRequest({
+        method: "POST",
+        url: "/member/login",
+        payload: {
+            "account": email,
+            password: {
+                hash,
+                salt,
+            }
+        },
+    }))
+    if (err) {
+        throw new Error(err);
+    }
+    if (data) {
+        if (data.token) token = data.token;
+
+        // 驗證未通過寄新的link給他
+        if (data.error) { // ??
+            switch (data.error.code) {
+                case 123:
+                    // 跳轉提示到email驗證email
+                    window.location.hash = "verifiction";
+                    break;
+                case 122:
+                    // 帳號密碼錯誤
+                    elements.signinCard.classList.remove("shake");
+                    elements.signinCard.classList.add("shake");
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+}
+
+// 按 OK btn後 render Sign in UI
+// Sign in btn 按下後會先 問後端是否有驗證 
+
+// 有驗證的話 renderDropView && render 登入的樣式
+// 沒有驗證的話 shake 登入畫面的form， // 跟出現提示帶入輸入email的input
+// elements.signinCard.classList.add("shake");
+// () => renderLoginView("sign-in")
+
+
+elements.btnSignUp.addEventListener("click", evt => signUp(evt), false);
+elements.btnSignIn.addEventListener("click", evt => signIn(evt), false);
 elements.signInEmail.addEventListener("input", () => signInValidation(), false);
 elements.signInPassword.addEventListener("input", () => signInValidation(), false);
 elements.signUpEmail.addEventListener("input", () => signUpValidation(), false);
@@ -872,9 +931,9 @@ const renderTabView1 = () => {
     elements.tabPane2.classList.remove("show");
 }
 
+let tabView2Location = "receive"
 const renderTabView2 = () => {
-    if(!window.location.hash.includes("receive"))
-        window.location.hash = "receive";
+
     elements.tabSend.classList.remove("active");
     elements.tabSend.classList.remove("show");
     elements.tabPane1.classList.remove("active");
@@ -883,14 +942,14 @@ const renderTabView2 = () => {
     elements.tabReceive.classList.add("show");
     elements.tabPane2.classList.add("active");
     elements.tabPane2.classList.add("show");
-    // window.location.hash = tabViewLocation;
+    window.location.hash = tabView2Location;
     // console.log(window.location.hash)
 }
 
 const closeNavbar = () => {
     elements.html.classList.remove("nav-open");
     elements.navbarToggle.classList.remove("toggled");
-   
+
 }
 
 //     '/#sign-in': signInView,
@@ -929,9 +988,9 @@ const renderDropView = () => {
 
 // '/#receive': downloadInput,
 const renderDownloadInput = () => {
-    window.location.hash = "receive";  
-    tabViewLocation = "receive";
-      
+    window.location.hash = "receive";
+    tabView2Location = "receive";
+
     closeNavbar();
     hiddenElement(elements.signinPage);
     hiddenElement(elements.confirmPage);
@@ -944,9 +1003,9 @@ const renderDownloadInput = () => {
     elements.downloadCard.classList.remove("active");
 }
 
-// '/#verification
+// '/#confirm
 const renderConfirmPage = () => {
-    window.location.hash = "verification";    
+    window.location.hash = "confirm";
     closeNavbar();
     hiddenElement(elements.signinPage);
     hiddenElement(elements.successPage);
@@ -966,12 +1025,12 @@ const renderVerifyResultView = result => {
 
     if (result) {
         // result === true 👉 驗證成功
-        window.location.hash = "verification-success";    
+        window.location.hash = "verification-success";
         hiddenElement(elements.failedPage);
         unhiddenElement(elements.successPage);
     } else {
         // result === false 👉 驗證失敗
-        window.location.hash = "verification-fail";    
+        window.location.hash = "verification-fail";
         hiddenElement(elements.successPage);
         unhiddenElement(elements.failedPage);
     }

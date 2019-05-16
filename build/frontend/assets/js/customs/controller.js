@@ -252,7 +252,6 @@ const uploadQueue = [];
 let isDone = false;
 let isSend = false; // 用來判斷現在是顯示 dropZone Or Sending View
 
-
 const deleteUploadFile = fid => ({
     method: "DELETE",
     url: `/letter/${letter}/upload/${fid}`
@@ -554,7 +553,16 @@ const assembleShard = (target, shard, index) => {
 
 const fetchShard = async target => {
     if (target.isPaused) return false;
-    if (!target.waiting.length) createDownloadFile(downloadFiles[downloadFiles.findIndex(f => f.fid === target.fid)]);
+    if (!target.waiting.length) {
+        const i = downloadFiles.findIndex(f => f.fid === target.fid);
+        if(downloadFiles[i].progress === 1 ){
+            createDownloadFile(downloadFiles[i]);
+            return;
+        }
+        // else
+        // : document.querySelector(`.download-card .file[data-fid=${target.fid}] .cover`).classList.value = "cover pause";
+        return;
+    }
     const shardInfo = target.waiting.pop();
 
     let err, data;
@@ -733,10 +741,9 @@ const openDownloadView = async () => {
         return false;
     } else {
         // console.log(v)
-        // tabView2Location = `receive/${v}`;
+        tabView2Location = `receive/${v}`;
         window.location.hash = `receive/${v}`;
         // checkURL()
-        // console.log(result, !!result)
     }
 }
 
@@ -771,7 +778,7 @@ Router.prototype.route = async hash => {
         case hash.startsWith("#verification-fail"):
             renderVerifyResultView(false);
             break;
-        case hash.startsWith("#verification"):
+        case hash.startsWith("#confirm"):
             renderConfirmPage();
             break;
         case hash.startsWith("#deposit"):
@@ -790,68 +797,7 @@ Router.prototype.route = async hash => {
     // verification-success
     // verification-fail
 }
-
-// Router.prototype.route = hash => {
-//     console.trace(hash)
-//     if (hash.startsWith("#drop")) {
-//         renderDropView();
-//     } else if (hash.startsWith("#receive")) {
-//         if (regExp.hasDigit.test(hash)) {
-//             renderDownloadView();
-//         } else {
-//             renderDownloadInput();
-//         }
-//     } else if (hash.startsWith("#sign-in")) {
-//         renderLoginView("sign-in");
-//     } else if (hash.startsWith("#sign-up")) {
-//         renderLoginView("sign-up");
-//     } else if (hash.startsWith("#verification-success")) {
-//         renderVerifyResultView(true);
-//     } else if (hash.startsWith("#verification-fail")) {
-//         renderVerifyResultView(false);
-//     } else if (hash.startsWith("#verification")) {
-//         renderConfirmPage();
-//     } else if (hash.startsWith("#deposit")) {
-//         // renderDropView();
-//     } else {
-//         renderDropView();
-//     }
-// }
-
 const router = new Router();
-
-
-
-// routes = {
-//     '/': renderDropView,
-//     '/#send': renderDropView,
-//     '/#receive': renderDownloadInput,
-//     // '/#receive/:letter': () => renderDownloadView(),
-//     '/#sign-in': () => renderLoginView("sign-in"),
-//     '/#sign-up': () => renderLoginView("sign-up"),
-//     '/#verification': renderConfirmPage,
-//     '/#verification-success': () => renderVerifyResultView(true),
-//     '/#verification-fail': () => renderVerifyResultView(false),
-//     // '/#deposit': depositView,
-// };
-
-
-// const inputHint
-// window.onbeforeunload = evt => {
-//     return "false";
-// } //https://stackoverflow.com/questions/3527041/prevent-any-form-of-page-refresh-using-jquery-javascript
-
-// https://stackoverflow.com/questions/6390341/how-to-detect-url-change-in-javascript
-// Add a hash change event listener!
-// window.addEventListener('hashchange', (e) => {
-//     console.log(window.location.hash)
-//     routes[window.location.hash]();
-// }, false);
-// Or, to listen to all URL changes:
-// window.addEventListener('popstate', (e) => {
-//     const route = `/${window.location.hash}`;
-//     routes[route]();
-// }, false);
 
 window.addEventListener('popstate', (e) => {
         router.route(window.location.hash);
@@ -885,5 +831,61 @@ elements.btnReceive.addEventListener("click", downloadAll, false);
 
 
 elements.btnConfirmed.addEventListener("click", renderDropView, false);
-elements.btnConfirmOK.addEventListener("click", () => renderLoginView("sign-up"), false);
+elements.btnConfirmOK.addEventListener("click", checkEmailVerification, false);
 
+// Router.prototype.route = hash => {
+//     console.trace(hash)
+//     if (hash.startsWith("#drop")) {
+//         renderDropView();
+//     } else if (hash.startsWith("#receive")) {
+//         if (regExp.hasDigit.test(hash)) {
+//             renderDownloadView();
+//         } else {
+//             renderDownloadInput();
+//         }
+//     } else if (hash.startsWith("#sign-in")) {
+//         renderLoginView("sign-in");
+//     } else if (hash.startsWith("#sign-up")) {
+//         renderLoginView("sign-up");
+//     } else if (hash.startsWith("#verification-success")) {
+//         renderVerifyResultView(true);
+//     } else if (hash.startsWith("#verification-fail")) {
+//         renderVerifyResultView(false);
+//     } else if (hash.startsWith("#verification")) {
+//         renderConfirmPage();
+//     } else if (hash.startsWith("#deposit")) {
+//         // renderDropView();
+//     } else {
+//         renderDropView();
+//     }
+// }
+
+// routes = {
+//     '/': renderDropView,
+//     '/#send': renderDropView,
+//     '/#receive': renderDownloadInput,
+//     // '/#receive/:letter': () => renderDownloadView(),
+//     '/#sign-in': () => renderLoginView("sign-in"),
+//     '/#sign-up': () => renderLoginView("sign-up"),
+//     '/#verification': renderConfirmPage,
+//     '/#verification-success': () => renderVerifyResultView(true),
+//     '/#verification-fail': () => renderVerifyResultView(false),
+//     // '/#deposit': depositView,
+// };
+
+// const inputHint
+// window.onbeforeunload = evt => {
+//     return "false";
+// } //https://stackoverflow.com/questions/3527041/prevent-any-form-of-page-refresh-using-jquery-javascript
+
+// https://stackoverflow.com/questions/6390341/how-to-detect-url-change-in-javascript
+// Add a hash change event listener!
+// window.addEventListener('hashchange', (e) => {
+//     console.log(window.location.hash)
+//     routes[window.location.hash]();
+// }, false);
+// Or, to listen to all URL changes:
+// window.addEventListener('popstate', (e) => {
+//     const route = `/${window.location.hash}`;
+//     routes[route]();
+// }, false);
