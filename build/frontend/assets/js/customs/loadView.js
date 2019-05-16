@@ -149,11 +149,13 @@ const makeRequest = opts => {
 const DataType = function(){}
 
 const regExp = {
-    email: new RegExp(/^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/),
-    password8: new RegExp(/[\x21-\x7e]{8,}$/),
-    digit: new RegExp(/^-?\d+\.?\d*$/), //new RegExp(/^\d+$/);
-    internalIP: new RegExp(/(^127\.)|(^10\.)|(^172\.1[6-9]\.)|(^172\.2[0-9]\.)|(^172\.3[0-1]\.)|(^192\.168\.)/),
-    URL: new RegExp(/https?:\/\/(?:www\.|(?!www))[^\s\.]+\.[^\s]{2,}|www\.[^\s]+\.[^\s]{2,}/),
+    email: /^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/,
+    password8: /[\x21-\x7e]{8,}$/,
+    digit: /^-?\d+\.?\d*$/, //  /^\d+$/;
+    hasDigit: /\d{6}/,
+    internalIP: /(^127\.)|(^10\.)|(^172\.1[6-9]\.)|(^172\.2[0-9]\.)|(^172\.3[0-1]\.)|(^192\.168\.)/,
+    URL: /http(s)?:\/\/([\w-]+\.)+[\w-]+(\/[\w- ./?%&=]*)?/,
+    // URL: new RegExp('http(s)?://([\\w-]+\\.)+[\\w-]+(/[\\w- ./?%&=]*)?'),
 }
 
 DataType.prototype = {
@@ -927,7 +929,9 @@ const renderDropView = () => {
 
 // '/#receive': downloadInput,
 const renderDownloadInput = () => {
-    window.location.hash = "receive";    
+    window.location.hash = "receive";  
+    tabViewLocation = "receive";
+      
     closeNavbar();
     hiddenElement(elements.signinPage, 0);
     hiddenElement(elements.confirmPage, 0);
@@ -940,8 +944,9 @@ const renderDownloadInput = () => {
     elements.downloadCard.classList.remove("active");
 }
 
+// '/#verification
 const renderConfirmPage = () => {
-    window.location.hash = "sign-up/confirm";    
+    window.location.hash = "verification";    
     closeNavbar();
     hiddenElement(elements.signinPage, 0);
     hiddenElement(elements.successPage, 0);
@@ -951,8 +956,9 @@ const renderConfirmPage = () => {
     unhiddenElement(elements.confirmPage, 0);
 }
 
-//     '/#varification': varificationView,
-const renderVarificationView = result => {
+//     '/#verification-success': verifyResultView(true),
+//     '/#verification-fail': verifyResultView(false),
+const renderVerifyResultView = result => {
     closeNavbar();
     hiddenElement(elements.signinPage, 0);
     hiddenElement(elements.confirmPage, 0);
@@ -960,12 +966,12 @@ const renderVarificationView = result => {
 
     if (result) {
         // result === true 👉 驗證成功
-        window.location.hash = "varification/success";    
+        window.location.hash = "verification-success";    
         hiddenElement(elements.failedPage, 0);
         unhiddenElement(elements.successPage, 0);
     } else {
         // result === false 👉 驗證失敗
-        window.location.hash = "varification/fail";    
+        window.location.hash = "verification-fail";    
         hiddenElement(elements.successPage, 0);
         unhiddenElement(elements.failedPage, 0);
     }

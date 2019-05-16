@@ -609,47 +609,47 @@ const downloadAll = () => {
     });
 }
 
-const renderDownloadFiles = async letter => {
+const renderDownloadFiles = async filePaths => {
     Array.from(document.querySelectorAll(".download-list > .file")).forEach(el => el.remove());
-    
     // 2. render loader 
+    console.log("renderLoader")
     renderLoader(elements.emptyFileHint);
+    // // 2.3 fetch data 👉 use elements.inputKey.value 跟backend要資料
+    // const filePaths = await fetchFilePath(letter);
 
-    // 2.3 fetch data 👉 use elements.inputKey.value 跟backend要資料
-    const filePaths = await fetchFilePath(letter);
-
-    // console.log(filePaths)
-    // 2.3.1 如果沒有要到，重新輸入inputKey
-    if (!filePaths) {
-        // ?? render custom alert downloadKey || inputKey is invalid
-        removeLoader(elements.emptyFileHint);
-        // window.location.hash = ""; //// window.location = window.location.origin;
-        renderDownloadInput();
-        elements.inputCard.classList.add("shake");
-        setTimeout(() => elements.inputCard.classList.remove("shake"), 500);
-        return false;
-    };
+    // // console.log(filePaths)
+    // // 2.3.1 如果沒有要到，重新輸入inputKey
+    // if (!filePaths) {
+    //     // ?? render custom alert downloadKey || inputKey is invalid
+    //     removeLoader(elements.emptyFileHint);
+    //     // window.location.hash = ""; //// window.location = window.location.origin;
+    //     renderDownloadInput();
+    //     elements.inputCard.classList.add("shake");
+    //     setTimeout(() => elements.inputCard.classList.remove("shake"), 500);
+    //     return false;
+    // };
 
     // 4 filePaths.length = 0 沒有路徑
     if (!filePaths.length) {
         setTimeout(() => {
+            console.log("removeLoader")
             removeLoader(elements.emptyFileHint);
             unhiddenElement(elements.emptyFileHint, 0);
         }, 500);
         return false;
     }
-    // 2.3.2 如果有要到filePaths，cleanLoader 
-    // console.log(filePaths); //["/letter/505404/upload/JOB75mvKpyhcTerX", ...]
-    setTimeout(removeLoader, 500, elements.emptyFileHint);
     // console.log(filePaths)
     // 4. fetch files
     hiddenElement(elements.emptyFileHint, 0);
+
     Promise.all(filePaths.map(async filePath => fetchFile(filePath)))
         .then(resArr => {
             // console.log(downloadFiles)
             if (!downloadFiles.length) {
                 downloadFiles = downloadFiles.filter(f => resArr.findIndex(file => file.fid === f.fid) !== -1)
             }
+            // removeLoader
+            setTimeout(removeLoader, 500, elements.emptyFileHint);
             // console.log(downloadFiles)
             elements.filesInfo.innerHTML = `Total ${downloadFiles.length} files &middot; ${formatFileSize(progressCalculator(downloadFiles).totalSize)}`;
 
@@ -659,7 +659,6 @@ const renderDownloadFiles = async letter => {
             });
         });
 }
-
 
 const checkValidity = inputKey => {
     // 1. if elements.inputKey.value is numbers || 1.2.1 if elements.inputKey.value is string (can be link)
@@ -674,15 +673,10 @@ const checkValidity = inputKey => {
     return inputKey;
 }
 
-
 //  '/#receive/letter': downloadView,
-const renderDownloadView = () => {
-    // 1. get letter from download input or url
-    const letter = window.location.hash.replace("#receive/", "");
-    // console.log(letter)
-  
-    // 2. if url is inValid 👉 return
-    if (!checkValidity(letter)) {
+const renderDownloadView = async () => {
+    // 1. if url not contain 6 digits 👉 return
+    if (!window.location.hash.match(/\d{6}/)) {
         // return to downloadinputView
         renderDownloadInput();
         // add shake effect as a hint
@@ -691,6 +685,24 @@ const renderDownloadView = () => {
         setTimeout(() => elements.inputCard.classList.remove("shake"), 500);
         return false;
     }
+
+    // 2. else get letter from url
+    const letter = window.location.hash.match(/\d{6}/)[0]
+    // console.log(letter)
+
+    // 3 fetch data 👉 use letter 跟backend要資料
+    const filePaths = await fetchFilePath(letter);
+    // console.log(filePaths)
+    // 3.1 如果沒有要到，重新輸入inputKey
+    if (!filePaths) {
+        // return to downloadinputView
+        renderDownloadInput();
+        // add shake effect as a hint
+        elements.inputCard.classList.add("shake");
+        // remove class after animation end 👈 except using setTimeout, can also listen to animationend event
+        setTimeout(() => elements.inputCard.classList.remove("shake"), 500);
+        return false;
+    };
 
     // else 
     closeNavbar();
@@ -703,13 +715,10 @@ const renderDownloadView = () => {
     renderTabView2();
     elements.inputCard.classList.remove("active");
     elements.downloadCard.classList.add("active");
-    renderDownloadFiles(letter);
+    renderDownloadFiles(filePaths);
 }
 
-
-elements.boxFile.addEventListener("change", evt => handleFilesSelected(evt), false);
-
-elements.btnDownload.addEventListener("click", () => {
+const openDownloadView = () => {
     const v = elements.inputKey.value.trim();
     // console.log(v);
     elements.inputKey.value = "";
@@ -723,31 +732,109 @@ elements.btnDownload.addEventListener("click", () => {
         // remove class after animation end 👈 except using setTimeout, can also listen to animationend event
         setTimeout(() => elements.inputCard.classList.remove("shake"), 500);
         return false;
-    }else {
+    } else {
         // console.log(v)
         window.location.hash = `receive/${v}`;
         tabViewLocation = `receive/${v}`;
         renderDownloadView();
-        // console.log(v)
-
     }
-}, false);
+}
+
+elements.btnDownload.addEventListener("click", openDownloadView, false);
+
+const Router = function () {};
+
+Router.prototype.route = hash => {
+    // console.log(hash)
+    switch (true) {
+        case hash.startsWith("#drop"):
+            renderDropView();
+            break;
+        case hash.startsWith("#receive"):
+            if (regExp.hasDigit.test(hash)) {
+                renderDownloadView();
+            } else {
+                renderDownloadInput();
+            }
+            break;
+        case hash.startsWith("#sign-in"):
+        console.log("render signin")
+            renderLoginView("sign-in");
+            break;
+        case hash.startsWith("#sign-up"):
+            renderLoginView("sign-up");
+            break;
+        case hash.startsWith("#verification-success"):
+            renderVerifyResultView(true);
+            break;
+        case hash.startsWith("#verification-fail"):
+            renderVerifyResultView(false);
+            break;
+        case hash.startsWith("#verification"):
+            renderConfirmPage();
+            break;
+        case hash.startsWith("#deposit"):
+            renderConfirmPage();
+            break;
+        default:
+            renderDropView();
+            break;
+    }
+    // send
+    // receive
+    // receive/242231
+    // sign-in
+    // sign-up
+    // verification
+    // verification-success
+    // verification-fail
+}
+
+// Router.prototype.route = hash => {
+//     console.trace(hash)
+//     if (hash.startsWith("#drop")) {
+//         renderDropView();
+//     } else if (hash.startsWith("#receive")) {
+//         if (regExp.hasDigit.test(hash)) {
+//             renderDownloadView();
+//         } else {
+//             renderDownloadInput();
+//         }
+//     } else if (hash.startsWith("#sign-in")) {
+//         renderLoginView("sign-in");
+//     } else if (hash.startsWith("#sign-up")) {
+//         renderLoginView("sign-up");
+//     } else if (hash.startsWith("#verification-success")) {
+//         renderVerifyResultView(true);
+//     } else if (hash.startsWith("#verification-fail")) {
+//         renderVerifyResultView(false);
+//     } else if (hash.startsWith("#verification")) {
+//         renderConfirmPage();
+//     } else if (hash.startsWith("#deposit")) {
+//         // renderDropView();
+//     } else {
+//         renderDropView();
+//     }
+// }
+
+const router = new Router();
+
 elements.btnRefresh.addEventListener("click", renderDownloadView, false);
 elements.btnReceive.addEventListener("click", downloadAll, false);
 
 
-routes = {
-    '/': renderDropView,
-    '/#send': renderDropView,
-    '/#receive': renderDownloadInput,
-    // '/#receive/:letter': () => renderDownloadView(),
-    '/#sign-in': () => renderLoginView("sign-in"),
-    '/#sign-up': () => renderLoginView("sign-up"),
-    '/#sign-up/confirm': renderConfirmPage,
-    '/#varification/success': () => renderVarificationView(true),
-    '/#varification/fail': () => renderVarificationView(false),
-    // '/#deposit': depositView,
-};
+// routes = {
+//     '/': renderDropView,
+//     '/#send': renderDropView,
+//     '/#receive': renderDownloadInput,
+//     // '/#receive/:letter': () => renderDownloadView(),
+//     '/#sign-in': () => renderLoginView("sign-in"),
+//     '/#sign-up': () => renderLoginView("sign-up"),
+//     '/#verification': renderConfirmPage,
+//     '/#verification-success': () => renderVerifyResultView(true),
+//     '/#verification-fail': () => renderVerifyResultView(false),
+//     // '/#deposit': depositView,
+// };
 
 
 // const inputHint
@@ -757,21 +844,30 @@ routes = {
 
 // https://stackoverflow.com/questions/6390341/how-to-detect-url-change-in-javascript
 // Add a hash change event listener!
-window.addEventListener('hashchange', (e) => {
-    // console.log(window.location.hash)
-    // routes[window.location.hash]();
-}, false);
+// window.addEventListener('hashchange', (e) => {
+//     console.log(window.location.hash)
+//     routes[window.location.hash]();
+// }, false);
 // Or, to listen to all URL changes:
+// window.addEventListener('popstate', (e) => {
+//     const route = `/${window.location.hash}`;
+//     routes[route]();
+// }, false);
+
 window.addEventListener('popstate', (e) => {
-    const route = `/${window.location.hash}`;
-    routes[route]();
+    if (!!window.location.hash.match(/\d{6}/))
+        router.route(window.location.hash);
 }, false);
 
-// elements.downloadList.addEventListener("click", evt => {
-//     console.log(evt.target.closest(".cover"));
-//     if(evt.target.matches("[data-coverId=JOBmd21NuEUGoOIk]")){
-//         console.log("match!")
-//         return;
-//     }
-//     return;
-// },false)
+//check for Navigation Timing API support
+if (window.performance) {
+    console.info("window.performance works fine on this browser");
+    router.route(window.location.hash);
+}
+if (performance.navigation.type === 1) {
+    console.info("This page is reloaded");
+    router.route(window.location.hash);
+} else {
+    console.info("This page is not reloaded");
+    router.route(window.location.hash);
+}

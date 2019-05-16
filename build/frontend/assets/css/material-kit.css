@@ -16238,12 +16238,7 @@ select.selectpicker {
 a,
 a:active,
 a:visited {
-  display: block;
-  text-decoration: none;
-  color: #6d6d6d;
-  margin: 10px 0;
-  padding: 5px;
-  font-size: 18px; }
+  margin: 10px 0; }
 
 .form-control > .tooltip, .form-control > .tooltip:active, .form-control > .tooltip:visited {
   margin: 0; }
@@ -16472,7 +16467,7 @@ footer a, footer a:active, footer a:visited {
   padding: 0px; }
 
 .signin-page .card > .btn-box {
-  padding: 0px 24px; }
+  padding: 10px 24px; }
   .signin-page .card > .btn-box p {
     margin: 0 0 4px; }
   .signin-page .card > .btn-box a {
