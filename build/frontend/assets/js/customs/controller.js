@@ -432,7 +432,7 @@ const fetchFile = async (filePath) => {
         filePath
     }; //http://www.javascriptkit.com/javatutors/trycatch2.shtml 還沒細看
     if (data) {
-        console.log(data);
+        // console.log(data);
         // console.log("fetchFile called: "+ i++ + " time", "data.progress: ",data.progress);
         let qIndex = downloadQueue.findIndex(file => file.fid === data.fid);
         // console.log(downloadQueue)
@@ -611,26 +611,31 @@ const downloadAll = () => {
 }
 
 const renderDownloadFiles = async filePaths => {
-    Array.from(document.querySelectorAll(".download-list > .file")).forEach(el => el.remove());
+    console.log("clean all");
+    
     // 2. render loader 
     renderLoader(elements.emptyFileHint);
 
     // 3. filePaths.length = 0 沒有路徑
-    if (!filePaths.length) {
-        setTimeout(() => {
-            removeLoader(elements.emptyFileHint);
-        }, 500);
-        return false;
-    }
+    // if (!filePaths.length) {
+    //     setTimeout(() => {
+    //         removeLoader(elements.emptyFileHint);
+    //     }, 500);
+    //     return false;
+    // }
 
     // 4. fetch files
     hiddenElement(elements.emptyFileHint);
 
     Promise.all(filePaths.map(async filePath => fetchFile(filePath)))
         .then(resArr => {
-            // console.log(downloadFiles)
-            if (!downloadFiles.length) {
-                downloadFiles = downloadFiles.filter(f => resArr.findIndex(file => file.fid === f.fid) !== -1)
+            console.log(downloadFiles, resArr)
+            if (downloadFiles.length) {
+                downloadFiles.forEach((f, i) => {
+                    if(resArr.findIndex(file => file.fid === f.fid) === -1)
+                        downloadFiles.splice(i,1);
+                })
+                console.log(downloadFiles, resArr);
             }
             // removeLoader
             setTimeout(removeLoader, 500, elements.emptyFileHint);
@@ -638,6 +643,11 @@ const renderDownloadFiles = async filePaths => {
             elements.filesInfo.innerHTML = `Total ${downloadFiles.length} files &middot; ${formatFileSize(progressCalculator(downloadFiles).totalSize)}`;
 
             // 5. renderFiles
+            Array.from(document.querySelectorAll(".download-list > .file")).forEach(el => el.remove());
+
+            if(!downloadFiles.length) return false;
+
+            console.trace(downloadFiles);
             downloadFiles.forEach(file => {
                 renderFile(elements.downloadList, file)
             });
@@ -723,9 +733,9 @@ const openDownloadView = async () => {
         return false;
     } else {
         // console.log(v)
-        tabView2Location = `receive/${v}`;
+        // tabView2Location = `receive/${v}`;
         window.location.hash = `receive/${v}`;
-        checkURL()
+        // checkURL()
         // console.log(result, !!result)
     }
 }
@@ -733,7 +743,7 @@ const openDownloadView = async () => {
 const Router = function () {};
 
 Router.prototype.route = async hash => {
-    console.log(hash)
+    console.trace(hash)
     switch (true) {
         case hash.startsWith("#drop"):
             renderDropView();
@@ -768,7 +778,7 @@ Router.prototype.route = async hash => {
             renderConfirmPage();
             break;
         default:
-            renderDropView();
+            // renderDropView();
             break;
     }
     // send
@@ -844,7 +854,6 @@ const router = new Router();
 // }, false);
 
 window.addEventListener('popstate', (e) => {
-    if (!!window.location.hash.match(/\d{6}/))
         router.route(window.location.hash);
 }, false);
 

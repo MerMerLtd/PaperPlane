@@ -16066,6 +16066,10 @@ select.selectpicker {
   color: #e91e63;
   font-size: 20px;
   padding: 4px 0; }
+  .btn-ok:hover, .btn-ok:active {
+    background-color: #e91e63;
+    color: #fff;
+    border: 1px solid #e91e63; }
 
 .disable, .disable:active, .disable:visited {
   background-color: #fff !important;
@@ -16238,13 +16242,20 @@ select.selectpicker {
 a,
 a:active,
 a:visited {
+  display: block;
+  text-decoration: none;
   margin: 10px 0; }
+
+.sending-ways a,
+.sending-ways a:active,
+.sending-ways a:visited {
+  color: #6d6d6d;
+  margin: 10px 0;
+  -webkit-text-decoration-line: #6d6d6d;
+          text-decoration-line: #6d6d6d; }
 
 .form-control > .tooltip, .form-control > .tooltip:active, .form-control > .tooltip:visited {
   margin: 0; }
-
-footer a, footer a:active, footer a:visited {
-  display: inline-block; }
 
 .lds-spinner {
   color: official;
@@ -16414,14 +16425,6 @@ footer a, footer a:active, footer a:visited {
   -webkit-animation: shake .5s ease-in-out;
           animation: shake .5s ease-in-out; }
 
-.login-page #login {
-  padding-top: 23vh;
-  position: absolute;
-  z-index: 3;
-  background-color: #00000099;
-  max-width: 100%;
-  height: 100vh; }
-
 .sending-ways > * {
   display: none; }
 
@@ -16496,6 +16499,12 @@ footer a, footer a:active, footer a:visited {
 #sign-up:target {
   display: block; }
 
+#popup:target {
+  display: block;
+  -webkit-transform: scale(1);
+          transform: scale(1);
+  opacity: 1; }
+
 #popup {
   display: none;
   position: fixed;
@@ -16503,12 +16512,16 @@ footer a, footer a:active, footer a:visited {
   width: 100vw;
   top: 0;
   left: 0;
-  z-index: 1060; }
+  z-index: 1060;
+  -webkit-transform: scale(0.5);
+          transform: scale(0.5);
+  opacity: 0;
+  transition: all 0.5s ease; }
   #popup > .row {
     position: absolute;
     -webkit-transform: translate(-50%, -50%);
             transform: translate(-50%, -50%);
-    width: 85vw;
+    width: 86vw;
     height: 82vh;
     top: 53%;
     left: 50%;
@@ -16537,18 +16550,15 @@ footer a, footer a:active, footer a:visited {
   .popup > .row > .container {
     margin-top: 1rem; }
   #popup > .row .col-md-8 .tab-content .tab-pane {
-    height: 60vh;
+    height: 58vh;
     padding: 1rem; } }
 
 .popup__modal {
   background-color: #00000011;
-  height: 100%;
-  width: 100%;
+  height: 100vh;
+  width: 100vw;
   padding: 0;
   margin: 0; }
-
-#popup:target {
-  display: block; }
 
 .form-check .form-check-label {
   padding-top: 16px; }
@@ -16570,7 +16580,11 @@ footer a, footer a:active, footer a:visited {
   display: none; }
 
 .login-page footer.footer {
+  position: absolute;
+  bottom: 1rem;
   z-index: 10; }
+  .login-page footer.footer a, .login-page footer.footer a:active, .login-page footer.footer a:visited {
+    display: inline-block; }
   .login-page footer.footer .argee-terms {
     font-size: 1rem;
     padding: 0px; }

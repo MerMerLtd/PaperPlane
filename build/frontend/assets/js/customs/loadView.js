@@ -727,7 +727,7 @@ const displayDigit = (el, letter) => {
 }
 
 const displayLink = (el, letter) => {
-    el.firstElementChild.href += `#download/${letter}`;
+    el.firstElementChild.href += `#receive/${letter}`;
     el.firstElementChild.lastElementChild.innerText += `${letter}`;
 }
 
@@ -874,7 +874,7 @@ const renderTabView1 = () => {
 
 const renderTabView2 = () => {
     if(!window.location.hash.includes("receive"))
-    window.location.hash = "receive"
+        window.location.hash = "receive";
     elements.tabSend.classList.remove("active");
     elements.tabSend.classList.remove("show");
     elements.tabPane1.classList.remove("active");
