@@ -763,8 +763,8 @@ window.addEventListener('hashchange', (e) => {
 }, false);
 // Or, to listen to all URL changes:
 window.addEventListener('popstate', (e) => {
-    // const route = `/${window.location.hash}`;
-    // routes[route]();
+    const route = `/${window.location.hash}`;
+    routes[route]();
 }, false);
 
 // elements.downloadList.addEventListener("click", evt => {

@@ -477,6 +477,7 @@ const uiFileControl = evt => {
     const elementCover = evt.target.closest(".cover");
     const fid = element.dataset.fid;
     const type = element.dataset.type;
+    const index = uploadQueue.findIndex(file => file.fid === fid);
     const file = type === "upload" ?
         uploadQueue[uploadQueue.findIndex(file => file.fid === fid)] :
         downloadQueue[downloadQueue.findIndex(file => file.fid === fid)];
