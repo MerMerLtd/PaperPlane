@@ -108,7 +108,9 @@
             <div class="copyright">
                 &copy;2019 DropHere.io all right reserve.
             </div>
-            <a href="#popup" class="argee-terms">terms of use | privay policy.</a>
+            <a onclick="window.location = `/#terms`" class="agree-terms">terms of use</a>
+            |
+            <a onclick="window.location = `/#terms/privacy`" class="agree-terms">privacy policy.</a>
         </div>
     </footer>
 
@@ -183,8 +185,7 @@
                 url: `/verify/email?${user["email"]}&${user["code"]}`,
             }));
             if (err) {
-                // render404.html
-                // return;
+                window.location = `error.html`;
             }
             if (data) {
                 if (data.error) {
@@ -192,8 +193,9 @@
                     document.querySelector(".success-page").classList.add("u-hidden");
                     document.querySelector(".failed-page .description").innerText = data.error;
                     document.querySelector(".failed-page .btn-varify").addEventListener("click", async () => {
-                        if(document.querySelector(".failed-page .btn-varify").classList.contains("disable")) return;
-                        
+                        if (document.querySelector(".failed-page .btn-varify").classList.contains(
+                                "disable")) return;
+
                         countdown(document.querySelector(".failed-page .btn-varify"), 5);
                         let err, data;
                         [err, data] = await to(makeRequest({

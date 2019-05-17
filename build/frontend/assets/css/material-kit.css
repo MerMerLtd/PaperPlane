@@ -16586,9 +16586,7 @@ a:visited {
   display: none; }
 
 .login-page footer.footer {
-  position: absolute;
-  bottom: 1rem;
-  z-index: 10; }
+  position: absolute; }
   .login-page footer.footer a, .login-page footer.footer a:active, .login-page footer.footer a:visited {
     display: inline-block; }
   .login-page footer.footer .argee-terms {
