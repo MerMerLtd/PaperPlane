@@ -1133,7 +1133,7 @@ const renderPurchasePage = () => {
     hiddenElement(elements.mainPage);
     hiddenElement(elements.confirmPage);
     elements.terms.classList.remove("u-display");
-
+    
 
     unhiddenElement(elements.purchasePage);
 }
