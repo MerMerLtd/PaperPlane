@@ -140,7 +140,7 @@ const makeRequest = opts => {
                 Object.keys(opts.headers).forEach(key => xhr.setRequestHeader(key, opts.headers[key]));
             }
             // Send the request
-            if (opts.contentType == 'application/json') {
+            if (opts.contentType === 'application/json') {
                 xhr.setRequestHeader('content-type', 'application/json');
                 xhr.send(JSON.stringify(opts.payload));
             } else {
@@ -221,6 +221,10 @@ let elements = {
     btnSend: document.querySelector(".btn-send"),
     sendingCard: document.querySelector(".sending-card"),
     sendingWays: document.querySelector(".sending-ways"),
+    sendingEmailAddr: document.querySelector(".drop-card input[type=email]"),
+    sendingSubject: document.querySelector(".drop-card input[type=text]"),
+    sendingMessage: document.querySelector(".drop-card #message"),
+    navSendpills: document.querySelector(".drop-card .nav-pills"),
     countdown: document.querySelector(".countdown > span"),
     displayDigit: document.querySelector(".display-digit"),
     displayLink: document.querySelector(".display-link"),
@@ -494,6 +498,7 @@ const uiFileControl = evt => {
         uploadQueue.splice(index, 1);
         if (!elements.fileList.childElementCount) handleOutFileList();
         return makeRequest({
+            headers: {token: `${token}`}, // ?? token
             method: "DELETE",
             url: `/letter/${letter}/upload/${fid}`
         })
@@ -540,7 +545,27 @@ const uiFileControl = evt => {
 //================== Login View ==================
 
 // elements.downloadCheck.addEventListener("change", evt => document.querySelectorAll(".cover__select").toggle("selected"), false)
-
+const varifyEmail = el => {
+    // console.log(el);
+    if (!el.value) return;
+    // const regExp = new RegExp(/^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/);
+    if (dataType.isEmail(el.value) && !el.parentNode.classList.contains("has-success")) {
+        el.parentNode.classList.value = "input-group loading";
+        // if (regExp.test(el.value)) {
+        // el.parentNode.classList.remove("has-danger");
+        // el.parentNode.classList.remove("has-success");
+        // // render loader
+        // el.parentNode.classList.add("loading");
+        return true;
+    } else if (dataType.isEmail(el.value)) {
+        el.parentNode.classList.value = "input-group";
+    } else {
+        el.parentNode.classList.value = "input-group has-danger";
+        // el.parentNode.classList.add("has-danger");
+        // el.parentNode.classList.remove("loading");
+        return false;
+    }
+}
 
 // listen to change focus & ...
 const checkAvailability = async (el, isRequire) => {
@@ -557,7 +582,7 @@ const checkAvailability = async (el, isRequire) => {
     console.log(err, data)
     if (err) throw new Error(err);
     if (data.exists && isRequire) {
-        el.parentNode.classList.value("input-group has-success")
+        el.parentNode.classList.value = "input-group has-success";
         // el.parentNode.classList.add("has-success")
         // el.parentNode.classList.remove("loading");        
         // el.parentNode.classList.remove("has-danger");
@@ -566,7 +591,7 @@ const checkAvailability = async (el, isRequire) => {
         return true;
     } else {
         // ?? 
-        el.parentNode.classList.value("input-group has-danger not-allow")
+        el.parentNode.classList.value = "input-group has-danger not-allow";
         // el.parentNode.classList.remove("loading");
         // el.parentNode.classList.remove("has-success")
         // el.parentNode.classList.add("has-danger");
@@ -578,24 +603,6 @@ const checkAvailability = async (el, isRequire) => {
 
 }
 
-const varifyEmail = el => {
-    if (!el.value) return;
-    // const regExp = new RegExp(/^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/);
-    if (dataType.isEmail(el.value)) {
-        el.parentNode.classList.value("input-group loading")
-        // if (regExp.test(el.value)) {
-        // el.parentNode.classList.remove("has-danger");
-        // el.parentNode.classList.remove("has-success");
-        // // render loader
-        // el.parentNode.classList.add("loading");
-        return true;
-    } else {
-        el.parentNode.classList.value("input-group has-danger")
-        // el.parentNode.classList.add("has-danger");
-        // el.parentNode.classList.remove("loading");
-        return false;
-    }
-}
 const varifyPassword = el => {
     if (!el.value) return;
     // const regExp = new RegExp(/[\x21-\x7e]{8,}$/);
@@ -884,9 +891,7 @@ const doneWithSending = deleteFile => {
 
 //================================================
 //================ UI renderView =================
-
-
-const renderSendingView = () => {
+const renderSendingView = async () => {
     // 1. according to "#send .active" to render differ sendingWays
     const type = document.querySelector("#send .active").innerText || "LINK";
 
@@ -898,6 +903,25 @@ const renderSendingView = () => {
             elements.sendingCard.classList.remove("direct");
             console.log(type);
 
+            if (elements.btnSend.classList.contains("disable")) return;
+            let err, data;
+            [err, data] = await to(makeRequest({
+                method: "POST",
+                url: `/letter/${letter}/send`,
+                headers: {token: `${token}`}, // ?? token
+                payload: {
+                    "email": `${elements.sendingEmailAddr.value}`,
+                    "subject": `${elements.sendingSubject.value ||"Here is something for you"}`,
+                    "content": `${elements.sendingMessage.value ||"Guten Tag!"}`,
+                },
+            }));
+            if (err) {
+                throw new Error(err)
+            }
+            if (data) {
+                console.log(data);
+                return;
+            }
             break;
         case "LINK":
             elements.sendingCard.classList.remove("email");
@@ -1059,6 +1083,30 @@ const renderVerifyResultView = result => {
         unhiddenElement(elements.failedPage);
     }
 }
+
+elements.navSendpills.addEventListener("click", evt => {
+    if (evt.target.matches("a[href='#pill1']")) {
+        elements.btnSend.classList.remove("disable")
+    } else if (evt.target.matches("a[href='#pill2']")) {
+        // ?? token
+        // token? null:renderLoginView("sign-in")
+        elements.btnSend.classList.remove("disable")
+    } else if (evt.target.matches("a[href='#pill3']")) {
+        // ?? token
+        // token? null:renderLoginView("sign-in")
+        if (!elements.sendingEmailAddr.value || !varifyEmail(elements.sendingEmailAddr.value)) {
+            elements.btnSend.classList.add("disable")
+        }
+    }
+}, false);
+
+elements.sendingEmailAddr.addEventListener("input", () => {
+    if (varifyEmail(elements.sendingEmailAddr)) {
+        elements.btnSend.classList.remove("disable")
+    } else {
+        elements.btnSend.classList.add("disable")
+    }
+}, false)
 
 elements.boxFile.addEventListener("change", evt => handleFilesSelected(evt), false);
 elements.downloadList.addEventListener("click", evt => uiFileControl(evt), false);

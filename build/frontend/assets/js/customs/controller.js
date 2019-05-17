@@ -286,6 +286,7 @@ const uploadShard = async target => {
     const formData = new FormData();
     formData.append("file", hashShard.blob);
     [err, data] = await to(makeRequest({
+        headers: {token: `${token}`}, // ??token
         method: "POST",
         url: hashShard.path,
         payload: formData,
@@ -327,6 +328,8 @@ const uploadFiles = () => {
 }
 
 const handleFilesSelected = evt => {
+    // ?? token
+    // token? null:renderLoginView("sign-in")
     // （view: 提示訊息們）
     handleInFileList();
     // elements.alertSuccess.style.setProperty("--opacity", 0);
@@ -344,6 +347,7 @@ const handleFilesSelected = evt => {
             const opts = {
                 contentType: 'application/json',
                 method: "POST",
+                headers: ``, // ??token
                 url: `/letter/${letter}/upload`,
                 payload: {
                     fileName: f.fileName,
