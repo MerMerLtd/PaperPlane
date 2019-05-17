@@ -16591,6 +16591,32 @@ a:visited {
   .login-page footer.footer .copyright {
     padding: 0px; }
 
+.signin-page .card-body > :nth-child(2) > :first-child.has-danger.not-allow + .bmd-hint,
+.signin-page .card-body > :nth-child(2) > :first-child.has-danger + .bmd-hint + .bmd-hint {
+  display: none; }
+
+.signin-page .card-body > :nth-child(2) > :first-child.has-danger.not-allow + .bmd-hint + .bmd-hint {
+  display: block;
+  opacity: 1; }
+
+.signin-page .card-body .has-danger > .form-control-feedback .lds-spinner,
+.signin-page .card-body .has-success > .form-control-feedback .lds-spinner {
+  display: none;
+  opacity: 0; }
+
+.signin-page .card-body .loading > .form-control-feedback {
+  display: block;
+  opacity: 1; }
+  .signin-page .card-body .loading > .form-control-feedback .lds-spinner {
+    -webkit-transform: scale(0.35);
+            transform: scale(0.35);
+    position: absolute;
+    top: -21px;
+    left: -14px;
+    padding: 0; }
+    .signin-page .card-body .loading > .form-control-feedback .lds-spinner div:after {
+      background-color: #9b9b9b; }
+
 /**
  * Computes a CSS calc function that betweens a value from
  * A to B over viewport-width A to viewport-width B.

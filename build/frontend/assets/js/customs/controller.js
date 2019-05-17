@@ -831,7 +831,7 @@ elements.btnReceive.addEventListener("click", downloadAll, false);
 
 
 elements.btnConfirmed.addEventListener("click", renderDropView, false);
-elements.btnConfirmOK.addEventListener("click", checkEmailVerification, false);
+// elements.btnConfirmOK.addEventListener("click", checkEmailVerification, false);
 
 // Router.prototype.route = hash => {
 //     console.trace(hash)

@@ -541,9 +541,12 @@ const uiFileControl = evt => {
 
 // elements.downloadCheck.addEventListener("change", evt => document.querySelectorAll(".cover__select").toggle("selected"), false)
 
+
 // listen to change focus & ...
 const checkAvailability = async (el, isRequire) => {
-    console.trace("call checkAvailabity");
+    if (!el.value || varifyEmail(el.value)) return;
+    // console.log(el.parentElement, isRequire)
+    // console.trace("call checkAvailabity");
     let err, data;
     const opts = {
         method: "GET",
@@ -554,12 +557,21 @@ const checkAvailability = async (el, isRequire) => {
     console.log(err, data)
     if (err) throw new Error(err);
     if (data.exists && isRequire) {
-        // setTimeout remove loader
-        el.classList.add("has-success")
+        el.parentNode.classList.value("input-group has-success")
+        // el.parentNode.classList.add("has-success")
+        // el.parentNode.classList.remove("loading");        
+        // el.parentNode.classList.remove("has-danger");
+        // el.parentNode.classList.remove("not-allow");
+
         return true;
     } else {
         // ?? 
-        el.classList.add("not-allow");
+        el.parentNode.classList.value("input-group has-danger not-allow")
+        // el.parentNode.classList.remove("loading");
+        // el.parentNode.classList.remove("has-success")
+        // el.parentNode.classList.add("has-danger");
+        // el.parentNode.classList.add("not-allow");
+
         // css && html && isRequire? html.inner = "..." : html.inner = "...";
         return false;
     }
@@ -570,12 +582,17 @@ const varifyEmail = el => {
     if (!el.value) return;
     // const regExp = new RegExp(/^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/);
     if (dataType.isEmail(el.value)) {
+        el.parentNode.classList.value("input-group loading")
         // if (regExp.test(el.value)) {
-        el.parentNode.classList.remove("has-danger");
-        el.parentNode.classList.remove("has-success");
+        // el.parentNode.classList.remove("has-danger");
+        // el.parentNode.classList.remove("has-success");
+        // // render loader
+        // el.parentNode.classList.add("loading");
         return true;
     } else {
-        el.parentNode.classList.add("has-danger");
+        el.parentNode.classList.value("input-group has-danger")
+        // el.parentNode.classList.add("has-danger");
+        // el.parentNode.classList.remove("loading");
         return false;
     }
 }
@@ -609,10 +626,11 @@ const confirmPassword = el => {
 
 const signInValidation = async () => {
     console.log("called");
-    const e = varifyEmail(elements.signInEmail);
-    if (e) {
-        const ec = await checkAvailability(elements.signUpEmail, true);
-    }
+    varifyEmail(elements.signInEmail);
+    const e = elements.signInEmail.parentNode.classList.contains("has-success");
+    // if (e) {
+    //     const ec = await checkAvailability(elements.signUpEmail, true);
+    // }
     const pc = varifyPassword(elements.signInPassword);
     //    if(ec && pc){
     //        enableBtn(elements.btnSignIn);
@@ -629,10 +647,11 @@ const signInValidation = async () => {
 
 const signUpValidation = async () => {
     console.trace("signUpValidation")
-    const e = varifyEmail(elements.signUpEmail);
-    if (e) {
-        const ec = await checkAvailability(elements.signUpEmail, false);
-    }
+    varifyEmail(elements.signUpEmail);
+    const e = elements.signUpEmail.parentNode.classList.contains("has-success");
+    // if (e) {
+    //     const ec = await checkAvailability(elements.signUpEmail, false);
+    // }
     const pc = varifyPassword(elements.signUpPassword);
     const pc2 = confirmPassword(elements.passwordConfirm);
     // if(ec && pc && pc2 && elements.signUpCheck.checked){
@@ -878,7 +897,7 @@ const renderSendingView = () => {
             elements.sendingCard.classList.remove("link");
             elements.sendingCard.classList.remove("direct");
             console.log(type);
-            
+
             break;
         case "LINK":
             elements.sendingCard.classList.remove("email");
