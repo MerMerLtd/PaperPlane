@@ -1266,3 +1266,16 @@ a:visited {
         }
     }
 }
+
+.presentation-page .section-pricing .card-margin, .index-page .section-pricing .card-margin {
+    margin-top: 0px;
+}
+
+.presentation-page .section-pricing .card-pricing, .index-page .section-pricing .card-pricing {
+    margin-top: 0px;
+}
+
+
+.login-page >.presentation-page .page-header .container {
+    padding-top: 0vh;
+}

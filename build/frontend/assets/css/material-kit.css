@@ -16621,6 +16621,17 @@ a:visited {
     .signin-page .card-body .loading > .form-control-feedback .lds-spinner div:after {
       background-color: #9b9b9b; }
 
+.presentation-page .section-pricing .card-margin,
+.index-page .section-pricing .card-margin {
+  margin-top: 0px; }
+
+.presentation-page .section-pricing .card-pricing,
+.index-page .section-pricing .card-pricing {
+  margin-top: 0px; }
+
+.login-page > .presentation-page .page-header .container {
+  padding-top: 0vh; }
+
 /**
  * Computes a CSS calc function that betweens a value from
  * A to B over viewport-width A to viewport-width B.

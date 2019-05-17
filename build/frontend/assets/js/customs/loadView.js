@@ -191,6 +191,7 @@ let elements = {
     failedPage: document.querySelector(".failed-page"),
     confirmPage: document.querySelector(".confirm-page"),
     signinPage: document.querySelector(".signin-page"),
+    depositePage: document.querySelector(".deposite-page"),
     terms: document.querySelector("#terms"),
     tabSend: document.querySelector(".main-page a[href$='send']"),
     tabReceive: document.querySelector(".main-page a[href$='receive']"),
