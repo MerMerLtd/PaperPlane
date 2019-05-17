@@ -719,8 +719,8 @@ const renderDownloadView = filePaths => {
     closeNavbar();
     hiddenElement(elements.signinPage);
     hiddenElement(elements.confirmPage);
-    hiddenElement(elements.successPage);
-    hiddenElement(elements.failedPage);
+    // hiddenElement(elements.successPage);
+    // hiddenElement(elements.failedPage);
 
     unhiddenElement(elements.mainPage); // ++
     renderTabView2();

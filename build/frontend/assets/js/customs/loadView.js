@@ -1026,8 +1026,8 @@ const renderLoginView = target => {
     // window.location.hash = target;
     closeNavbar();
     hiddenElement(elements.confirmPage);
-    hiddenElement(elements.successPage);
-    hiddenElement(elements.failedPage);
+    // hiddenElement(elements.successPage);
+    // hiddenElement(elements.failedPage);
     hiddenElement(elements.mainPage);
     elements.terms.classList.remove("u-display");
 
@@ -1049,6 +1049,7 @@ const renderPrivacyPolicy = () => {
 const renderTerms = () => {
     elements.terms.classList.add("u-display");
     elements.usePane.classList.add("active");
+    
     elements.usePane.classList.add("show");
     elements.useTab.classList.add("active");
     elements.useTab.classList.add("show");
@@ -1075,8 +1076,8 @@ const renderDropView = () => {
     closeNavbar();
     hiddenElement(elements.signinPage);
     hiddenElement(elements.confirmPage);
-    hiddenElement(elements.successPage);
-    hiddenElement(elements.failedPage);
+    // hiddenElement(elements.successPage);
+    // hiddenElement(elements.failedPage);
     elements.terms.classList.remove("u-display");
 
     unhiddenElement(elements.mainPage); // ++
@@ -1091,8 +1092,8 @@ const renderDownloadInput = () => {
     closeNavbar();
     hiddenElement(elements.signinPage);
     hiddenElement(elements.confirmPage);
-    hiddenElement(elements.successPage);
-    hiddenElement(elements.failedPage);
+    // hiddenElement(elements.successPage);
+    // hiddenElement(elements.failedPage);
     elements.terms.classList.remove("u-display");
 
     unhiddenElement(elements.mainPage); //++
@@ -1106,8 +1107,8 @@ const renderConfirmPage = () => {
     // window.location.hash = "confirm";
     closeNavbar();
     hiddenElement(elements.signinPage);
-    hiddenElement(elements.successPage);
-    hiddenElement(elements.failedPage);
+    // hiddenElement(elements.successPage);
+    // hiddenElement(elements.failedPage);
     hiddenElement(elements.mainPage);
     elements.terms.classList.remove("u-display");
 
@@ -1116,25 +1117,25 @@ const renderConfirmPage = () => {
 
 //     '/#verification-success': verifyResultView(true),
 //     '/#verification-fail': verifyResultView(false),
-const renderVerifyResultView = result => {
-    closeNavbar();
-    hiddenElement(elements.signinPage);
-    hiddenElement(elements.confirmPage);
-    hiddenElement(elements.mainPage);
-    elements.terms.classList.remove("u-display");
+// const renderVerifyResultView = result => {
+//     closeNavbar();
+//     hiddenElement(elements.signinPage);
+//     hiddenElement(elements.confirmPage);
+//     hiddenElement(elements.mainPage);
+//     elements.terms.classList.remove("u-display");
 
-    if (result) {
-        // result === true 👉 驗證成功
-        window.location.hash = "verification-success";
-        hiddenElement(elements.failedPage);
-        unhiddenElement(elements.successPage);
-    } else {
-        // result === false 👉 驗證失敗
-        window.location.hash = "verification-fail";
-        hiddenElement(elements.successPage);
-        unhiddenElement(elements.failedPage);
-    }
-}
+//     if (result) {
+//         // result === true 👉 驗證成功
+//         window.location.hash = "verification-success";
+//         hiddenElement(elements.failedPage);
+//         unhiddenElement(elements.successPage);
+//     } else {
+//         // result === false 👉 驗證失敗
+//         window.location.hash = "verification-fail";
+//         hiddenElement(elements.successPage);
+//         unhiddenElement(elements.failedPage);
+//     }
+// }
 
 elements.navSendpills.addEventListener("click", evt => {
     if (evt.target.matches("a[href='#pill1']")) {
