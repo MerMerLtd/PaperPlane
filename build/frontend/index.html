@@ -143,7 +143,7 @@
     </div>
   </nav>
 
-  <div class="signin-page u-hidden">
+  <div class="page signin-page u-hidden">
     <div class="page-header header-filter"
       style="background-image: url('../assets/img/bg7.jpg'); background-size: cover; background-position: top center;">
       <div class="container">
@@ -213,7 +213,7 @@
                         <div></div>
                       </span>
                       <a class=tooltip"" data-toggle="tooltip" title="Password must be at least 8 Characters."
-                        style="color: grey; margin: 0px">
+                        style="color: grey; margin: 5px 0 0">
                         <i class="material-icons">
                           info
                         </i>
@@ -243,7 +243,9 @@
                         <span class="check"></span>
                       </span>
                       I agree to the
-                      <a href="#popup" class="argee-terms">terms of use and privay policy.</a>.
+                      <a href="#terms" class="agree-terms">terms of use</a>
+                      and
+                      <a href="#terms/privacy" class="agree-terms">privacy policy</a>.
                     </label>
                   </div>
                 </div>
@@ -335,7 +337,7 @@
                       <span class="form-check-sign">
                         <span class="check"></span>
                       </span>
-                      <a class="argee-terms"> Keep me signed in</a>.
+                      <a class="agree-terms"> Keep me signed in</a>.
                     </label>
                   </div>
                 </div>
@@ -359,7 +361,7 @@
     </div>
   </div>
 
-  <div class="main-page">
+  <div class="page active-page main-page">
     <div class="page-header header-filter"
       style="background-image: url('../assets/img/bg7.jpg'); background-size: cover; background-position: top center;">
       <div class="container">
@@ -584,7 +586,7 @@
     </div>
   </div>
 
-  <div class="confirm-page u-hidden">
+  <div class="page confirm-page u-hidden">
     <div class="page-header header-filter" style="background-image: url('../assets/img/dg2.jpg')">
       <!--   you can change the color of the filter page using: data-color="blue | green | orange | red | purple" -->
       <div class="container">
@@ -602,7 +604,7 @@
     </div>
   </div>
 
-  <div class="success-page u-hidden">
+  <div class="page success-page u-hidden">
     <div class="page-header header-filter" style="background-image: url('../assets/img/dg2.jpg')">
       <!--   you can change the color of the filter page using: data-color="blue | green | orange | red | purple" -->
       <div class="container">
@@ -623,7 +625,7 @@
     </div>
   </div>
 
-  <div class="failed-page u-hidden">
+  <div class="page failed-page u-hidden">
     <div class="page-header header-filter" style="background-image: url('../assets/img/dg2.jpg')">
       <!--   you can change the color of the filter page using: data-color="blue | green | orange | red | purple" -->
       <div class="container">
@@ -690,12 +692,14 @@
       <div class="copyright">
         &copy;2019 DropHere.io all right reserve.
       </div>
-      <a href="#popup" class="argee-terms">terms of use | privay policy.</a>
+      <a href="#terms" class="agree-terms">terms of use</a>
+      |
+      <a href="#terms/privacy" class="agree-terms">privacy policy.</a>
     </div>
   </footer>
 
-  <div class="popup" id="popup">
-    <a href="#sign-up" class="popup__modal"></a>
+  <div class="page popup" id="terms">
+    <a class="popup__modal" onclick="window.history.back()"></a>
     <div class="row">
       <div class="container">
         <div class="row">
@@ -705,7 +709,7 @@
                 <a class="nav-link active" href="#term-of-use" data-toggle="tab">TERMS OF USE</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="#privay-policy" data-toggle="tab">PRIVAY POLICY</a>
+                <a class="nav-link" href="#privacy-policy" data-toggle="tab">PRIVACY POLICY</a>
               </li>
             </ul>
           </div>
@@ -1437,7 +1441,7 @@
 
 
               </div>
-              <div class="tab-pane" id="privay-policy">
+              <div class="tab-pane" id="privacy-policy">
                 <div>
                   <p style="margin-top:10pt; margin-bottom:6pt; line-height:25pt">
                     <strong><span style="font-family:'Helvetica Neue'; font-size:20pt; background-color:#ffffff">Privacy
@@ -1762,7 +1766,7 @@
                       <span style="font-family:'Times New Roman'">&#xa0;</span>
                     </p>
                   </div>
-                  <a href="#sign-up" class="btn btn-rose btn-lg"><i class="material-icons">close</i> Close</a>
+                  <a onclick="window.history.back()" class="btn btn-rose btn-lg"><i class="material-icons">close</i> Close</a>
                 </div>
               </div>
             </div>

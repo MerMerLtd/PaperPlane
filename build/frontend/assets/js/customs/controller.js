@@ -756,7 +756,13 @@ const Router = function () {};
 Router.prototype.route = async hash => {
     console.trace(hash)
     switch (true) {
-        case hash.startsWith("#drop"):
+        case hash.startsWith("#terms/privacy"):
+            renderPrivacyPolicy();
+            break;
+        case hash.startsWith("#terms"):
+            renderTerms();
+            break;
+        case hash.startsWith("#send"):
             renderDropView();
             break;
         case hash.startsWith("#receive"):
@@ -821,11 +827,11 @@ if (performance.navigation.type === 1) {
 }
 
 
-elements.tabSend.addEventListener("click", renderTabView1, false);
-elements.tabReceive.addEventListener("click", renderTabView2, false);
+elements.tabSend.addEventListener("click", () => onNavItemClick("send"), false);
+elements.tabReceive.addEventListener("click", () => onNavItemClick(tabView2Location), false);
 
-elements.navBarBrand.addEventListener("click", renderDropView, false);
-elements.navLoginBtn.addEventListener("click", renderLoginView, false);
+elements.navBarBrand.addEventListener("click", () => onNavItemClick("send"), false);
+elements.navLoginBtn.addEventListener("click", () => onNavItemClick("sign-in"), false);
 elements.btnSend.addEventListener("click", renderSendingView, false);
 
 elements.btnRefresh.addEventListener("click", checkURL, false);
@@ -834,12 +840,12 @@ elements.btnDownload.addEventListener("click", openDownloadView, false);
 elements.btnReceive.addEventListener("click", downloadAll, false);
 
 
-elements.btnConfirmed.addEventListener("click", renderDropView, false);
+// elements.btnConfirmed.addEventListener("click", renderDropView, false);
 // elements.btnConfirmOK.addEventListener("click", checkEmailVerification, false);
 
 // Router.prototype.route = hash => {
 //     console.trace(hash)
-//     if (hash.startsWith("#drop")) {
+//     if (hash.startsWith("#send")) {
 //         renderDropView();
 //     } else if (hash.startsWith("#receive")) {
 //         if (regExp.hasDigit.test(hash)) {

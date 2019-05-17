@@ -77,6 +77,14 @@ const hiddenElement = (element, delay) => {
     // }, delay);
 }
 
+const onNavItemClick = (hash) => {
+    window.history.pushState(
+        hash,
+        window.location.href,
+    );
+    window.location.hash = hash;
+}
+
 // https://blog.grossman.io/how-to-write-async-await-without-try-catch-blocks-in-javascript/
 const to = promise => {
     return promise.then(data => {
@@ -183,6 +191,7 @@ let elements = {
     failedPage: document.querySelector(".failed-page"),
     confirmPage: document.querySelector(".confirm-page"),
     signinPage: document.querySelector(".signin-page"),
+    terms: document.querySelector("#terms"),
     tabSend: document.querySelector(".main-page a[href$='send']"),
     tabReceive: document.querySelector(".main-page a[href$='receive']"),
     tabPane1: document.querySelector(".main-page #send"), // same div 👉 dropCard: document.querySelector(".drop-card"),
@@ -209,6 +218,10 @@ let elements = {
     signUpCheck: document.querySelector("#sign-up input[type=checkbox]"),
     downloadCheck: document.querySelector(".download-card input[type=checkbox]"),
     agreeTerms: document.querySelector(".agree-terms"),
+    useTab: document.querySelector("#terms .nav-pills>:first-child .nav-link"),
+    privacyTab: document.querySelector("#terms .nav-pills>:last-child .nav-link"),
+    usePane: document.querySelector("#terms .tab-content>:first-child#term-of-use"),
+    privacyPane: document.querySelector("#terms .tab-content>:last-child#privacy-policy"),
     pageHeader: document.querySelector(".main-page > .page-header"),
     addIcon: document.querySelector(".add__icon"),
     addText: document.querySelector(".add__text"),
@@ -498,7 +511,9 @@ const uiFileControl = evt => {
         uploadQueue.splice(index, 1);
         if (!elements.fileList.childElementCount) handleOutFileList();
         return makeRequest({
-            headers: {token: `${token}`}, // ?? token
+            headers: {
+                token: `${token}`
+            }, // ?? token
             method: "DELETE",
             url: `/letter/${letter}/upload/${fid}`
         })
@@ -696,7 +711,7 @@ const signUp = async evt => {
     }
     if (data) {
         // 跳轉提示到email驗證email
-        window.location.hash = "verifiction";
+        onNavItemClick("confirm");
     }
 }
 
@@ -731,7 +746,7 @@ const signIn = async evt => {
             switch (data.error.code) {
                 case 123:
                     // 跳轉提示到email驗證email
-                    window.location.hash = "verifiction";
+                    onNavItemClick("confirm")
                     break;
                 case 122:
                     // 帳號密碼錯誤
@@ -908,7 +923,9 @@ const renderSendingView = async () => {
             [err, data] = await to(makeRequest({
                 method: "POST",
                 url: `/letter/${letter}/send`,
-                headers: {token: `${token}`}, // ?? token
+                headers: {
+                    token: `${token}`
+                }, // ?? token
                 payload: {
                     "email": `${elements.sendingEmailAddr.value}`,
                     "subject": `${elements.sendingSubject.value ||"Here is something for you"}`,
@@ -968,7 +985,8 @@ const sendingViewControl = evt => {
 }
 
 const renderTabView1 = () => {
-    window.location.hash = "send";
+    elements.terms.classList.remove("u-display");
+
     elements.tabSend.classList.add("active");
     elements.tabSend.classList.add("show");
     elements.tabPane1.classList.add("active");
@@ -977,10 +995,12 @@ const renderTabView1 = () => {
     elements.tabReceive.classList.remove("show");
     elements.tabPane2.classList.remove("active");
     elements.tabPane2.classList.remove("show");
+    // window.location.hash = "send";
 }
 
 let tabView2Location = "receive"
 const renderTabView2 = () => {
+    elements.terms.classList.remove("u-display");
 
     elements.tabSend.classList.remove("active");
     elements.tabSend.classList.remove("show");
@@ -990,7 +1010,7 @@ const renderTabView2 = () => {
     elements.tabReceive.classList.add("show");
     elements.tabPane2.classList.add("active");
     elements.tabPane2.classList.add("show");
-    window.location.hash = tabView2Location;
+    // window.location.hash = tabView2Location;
     // console.log(window.location.hash)
 }
 
@@ -1003,32 +1023,61 @@ const closeNavbar = () => {
 //     '/#sign-in': signInView,
 //     '/#sign-up': signUpView,
 const renderLoginView = target => {
-    window.location.hash = target;
+    // window.location.hash = target;
     closeNavbar();
     hiddenElement(elements.confirmPage);
     hiddenElement(elements.successPage);
     hiddenElement(elements.failedPage);
     hiddenElement(elements.mainPage);
+    elements.terms.classList.remove("u-display");
 
     unhiddenElement(elements.signinPage); //
 }
 
 
-const changeView = (currViewEl, nextViewEl) => {
-    closeNavbar();
-    hiddenElement(currViewEl);
-    unhiddenElement(nextViewEl);
+const renderPrivacyPolicy = () => {
+    elements.terms.classList.add("u-display");
+    elements.usePane.classList.remove("active");
+    elements.usePane.classList.remove("show");
+    elements.useTab.classList.remove("active");
+    elements.useTab.classList.remove("show");
+    elements.privacyPane.classList.add("active");
+    elements.privacyPane.classList.add("show");
+    elements.privacyTab.classList.add("active");
+    elements.privacyTab.classList.add("show");
 }
+const renderTerms = () => {
+    elements.terms.classList.add("u-display");
+    elements.usePane.classList.add("active");
+    elements.usePane.classList.add("show");
+    elements.useTab.classList.add("active");
+    elements.useTab.classList.add("show");
+    elements.privacyPane.classList.remove("active");
+    elements.privacyPane.classList.remove("show");
+    elements.privacyTab.classList.remove("active");
+    elements.privacyTab.classList.remove("show");
+}
+
+elements.privacyTab.addEventListener("click", () => window.location.hash = `terms/privacy`, false);
+elements.useTab.addEventListener("click", () => window.location.hash = `terms`, false);
+
+// const changeView = (nextView) => {
+//     closeNavbar();
+//     // const currViewEl = document.querySelector(".page.active-page");
+//     hiddenElement(currViewEl);
+//     unhiddenElement(nextViewEl);
+// }
 
 //     '/': dropView,
 //     '/#send': dropView,
 const renderDropView = () => {
-    window.location.hash = "send";
+    // window.location.hash = "send";
     closeNavbar();
     hiddenElement(elements.signinPage);
     hiddenElement(elements.confirmPage);
     hiddenElement(elements.successPage);
     hiddenElement(elements.failedPage);
+    elements.terms.classList.remove("u-display");
 
     unhiddenElement(elements.mainPage); // ++
     renderTabView1();
@@ -1036,7 +1085,7 @@ const renderDropView = () => {
 
 // '/#receive': downloadInput,
 const renderDownloadInput = () => {
-    window.location.hash = "receive";
+    // window.location.hash = "receive";
     tabView2Location = "receive";
 
     closeNavbar();
@@ -1044,6 +1093,7 @@ const renderDownloadInput = () => {
     hiddenElement(elements.confirmPage);
     hiddenElement(elements.successPage);
     hiddenElement(elements.failedPage);
+    elements.terms.classList.remove("u-display");
 
     unhiddenElement(elements.mainPage); //++
     renderTabView2();
@@ -1053,12 +1103,13 @@ const renderDownloadInput = () => {
 
 // '/#confirm
 const renderConfirmPage = () => {
-    window.location.hash = "confirm";
+    // window.location.hash = "confirm";
     closeNavbar();
     hiddenElement(elements.signinPage);
     hiddenElement(elements.successPage);
     hiddenElement(elements.failedPage);
     hiddenElement(elements.mainPage);
+    elements.terms.classList.remove("u-display");
 
     unhiddenElement(elements.confirmPage);
 }
@@ -1070,6 +1121,7 @@ const renderVerifyResultView = result => {
     hiddenElement(elements.signinPage);
     hiddenElement(elements.confirmPage);
     hiddenElement(elements.mainPage);
+    elements.terms.classList.remove("u-display");
 
     if (result) {
         // result === true 👉 驗證成功
