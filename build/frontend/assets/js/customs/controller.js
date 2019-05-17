@@ -762,6 +762,9 @@ Router.prototype.route = async hash => {
         case hash.startsWith("#terms"):
             renderTerms();
             break;
+        case hash.startsWith("#purchase"):
+            renderPurchasePage();
+            break;
         case hash.startsWith("#send"):
             renderDropView();
             break;

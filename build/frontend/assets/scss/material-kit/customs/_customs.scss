@@ -1276,6 +1276,17 @@ a:visited {
 }
 
 
-.login-page >.presentation-page .page-header .container {
+.login-page >.purchase-page .page-header .container {
     padding-top: 0vh;
+}
+
+.login-page > .main-page .page-header .container {
+    padding-top: 20vh;
+}
+
+@media screen and (max-width: 767px){
+    .login-page > .main-page .page-header > .container {
+        padding-top: 12vh;
+        padding-bottom: 100px;
+    }
 }

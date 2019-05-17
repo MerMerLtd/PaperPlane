@@ -1,4 +1,9 @@
 let token;
+// if(token){ // ?? token
+//     elements.navLogoutBtn.classList.remove("u-hidden");
+//     elements.dropdownUser.classList.remove("u-hidden");
+// }
+
 //check for Navigation Timing API support
 if (window.performance) {
     console.info("window.performance works fine on this browser");
@@ -191,7 +196,7 @@ let elements = {
     failedPage: document.querySelector(".failed-page"),
     confirmPage: document.querySelector(".confirm-page"),
     signinPage: document.querySelector(".signin-page"),
-    depositePage: document.querySelector(".deposite-page"),
+    purchasePage: document.querySelector(".purchase-page"),
     terms: document.querySelector("#terms"),
     tabSend: document.querySelector(".main-page a[href$='send']"),
     tabReceive: document.querySelector(".main-page a[href$='receive']"),
@@ -203,7 +208,8 @@ let elements = {
     signupCard: document.querySelector("#sign-up"),
     switchSignin: document.querySelector(".switch-signin > a"),
     switchSignup: document.querySelector(".switch-signup > a"),
-    navLoginBtn: document.querySelector("li[data-toggle='modal'] > .btn"),
+    navLoginBtn: document.querySelector("li[data-toggle='modal'] > a[href='#sign-in'].btn"),
+    navLogoutBtn: document.querySelector("li[data-toggle='modal'] > a[href='#sign-out'].btn"),
     navbarToggle: document.querySelector(".navbar-toggler"),
     html: document.querySelector("html"),
     // modal: document.querySelector(".modal"),
@@ -268,6 +274,8 @@ let elements = {
     btnBackToReceive: document.querySelector(".download-card .btn-back"),
     btnRefresh: document.querySelector(".download-card .btn-refresh"),
     btnConfirmOK: document.querySelector(".confirm-page .btn-ok"),
+    navPurchase: document.querySelector(".navbar-nav .dropdown-menu a[href='#purchase'].dropdown-item"),
+    dropdownUser: document.querySelector(".dropdown.nav-item.user-info"),
 }
 
 let letter;
@@ -1027,6 +1035,7 @@ const renderLoginView = target => {
     // window.location.hash = target;
     closeNavbar();
     hiddenElement(elements.confirmPage);
+    hiddenElement(elements.purchasePage);
     // hiddenElement(elements.successPage);
     // hiddenElement(elements.failedPage);
     hiddenElement(elements.mainPage);
@@ -1050,7 +1059,6 @@ const renderPrivacyPolicy = () => {
 const renderTerms = () => {
     elements.terms.classList.add("u-display");
     elements.usePane.classList.add("active");
-    
     elements.usePane.classList.add("show");
     elements.useTab.classList.add("active");
     elements.useTab.classList.add("show");
@@ -1077,6 +1085,7 @@ const renderDropView = () => {
     closeNavbar();
     hiddenElement(elements.signinPage);
     hiddenElement(elements.confirmPage);
+    hiddenElement(elements.purchasePage)
     // hiddenElement(elements.successPage);
     // hiddenElement(elements.failedPage);
     elements.terms.classList.remove("u-display");
@@ -1093,6 +1102,7 @@ const renderDownloadInput = () => {
     closeNavbar();
     hiddenElement(elements.signinPage);
     hiddenElement(elements.confirmPage);
+    hiddenElement(elements.purchasePage)
     // hiddenElement(elements.successPage);
     // hiddenElement(elements.failedPage);
     elements.terms.classList.remove("u-display");
@@ -1111,11 +1121,22 @@ const renderConfirmPage = () => {
     // hiddenElement(elements.successPage);
     // hiddenElement(elements.failedPage);
     hiddenElement(elements.mainPage);
+    hiddenElement(elements.purchasePage);
     elements.terms.classList.remove("u-display");
 
     unhiddenElement(elements.confirmPage);
 }
 
+const renderPurchasePage = () => {
+    closeNavbar();
+    hiddenElement(elements.signinPage);
+    hiddenElement(elements.mainPage);
+    hiddenElement(elements.confirmPage);
+    elements.terms.classList.remove("u-display");
+
+
+    unhiddenElement(elements.purchasePage);
+}
 //     '/#verification-success': verifyResultView(true),
 //     '/#verification-fail': verifyResultView(false),
 // const renderVerifyResultView = result => {
@@ -1166,3 +1187,4 @@ elements.boxFile.addEventListener("change", evt => handleFilesSelected(evt), fal
 elements.downloadList.addEventListener("click", evt => uiFileControl(evt), false);
 elements.fileList.addEventListener("click", evt => uiFileControl(evt), false);
 elements.sendingCard.addEventListener("click", evt => sendingViewControl(evt), false);
+elements.navLogoutBtn.addEventListener("click",() => onNavItemClick("purchase"), false);
