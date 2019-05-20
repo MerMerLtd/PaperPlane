@@ -605,7 +605,7 @@ const checkAvailability = async (el, isRequire) => {
     [err, data] = await to(makeRequest(opts));
     console.log(err, data)
     if (err) throw new Error(err);
-    if (data.exists && isRequire) {
+    if (data.exists === isRequire) {
         el.parentNode.classList.value = "input-group has-success";
         // el.parentNode.classList.add("has-success")
         // el.parentNode.classList.remove("loading");        
@@ -1133,7 +1133,7 @@ const renderPurchasePage = () => {
     hiddenElement(elements.mainPage);
     hiddenElement(elements.confirmPage);
     elements.terms.classList.remove("u-display");
-    
+
 
     unhiddenElement(elements.purchasePage);
 }
