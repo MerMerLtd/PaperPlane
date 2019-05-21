@@ -86,12 +86,18 @@
                                                             <i class="material-icons">email</i>
                                                         </span>
                                                     </div>
-                                                    <input type="email" class="form-control" placeholder="Email...">
+                                                    <input type="email" class="form-control" placeholder="Email..."
+                                                        name="account">
+                                                    <span class="form-control-feedback">
+                                                        <div></div>
+                                                        <div></div>
+                                                    </span>
                                                 </div>
+                                                <div class="bmd-hint">Please input valid email.</div>
                                             </span>
                                         </div>
                                         <div class="card-footer justify-content-center">
-                                            <a class="btn btn-rose btn-link btn-lg btn-varify">Lets Go</a>
+                                            <a class="btn btn-primary btn-link btn-lg btn-varify disable">Lets Go</a>
                                         </div>
                                     </div>
                                 </div>
@@ -115,11 +121,22 @@
     </footer>
 
     <script>
+        const els = {
+            failPage: document.querySelector(".failed-page"),
+            successPage: document.querySelector(".success-page"),
+            failReason: document.querySelector(".failed-page .description"),
+            btnVarify: document.querySelector(".failed-page .btn-varify"),
+            btnBackToHome: document.querySelector(".success-page button"),
+            emailInput: document.querySelector("input[type=email]"),
+        };
         const user = {};
-        window.location.search.match(/[^?&]+[^&]?/g).forEach(str => {
-            // user[str.split("=")[0]] = str.split("=")[1];
-            user[str.split("=")[0]] = str;
-        });
+        // window.location.search.match(/[^?&]+[^&]?/g).forEach(str => {
+        //     // user[str.split("=")[0]] = str.split("=")[1];
+        //     user[str.split("=")[0]] = str;
+        // });
+        const regExp = {
+            email: /^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/,
+        }
         const to = promise => {
             return promise.then(data => {
                     return [null, data];
@@ -128,23 +145,35 @@
         }
         const makeRequest = opts => {
             const xhr = new XMLHttpRequest();
+            // Setup HTTP request
+            xhr.open(opts.method || "GET", opts.url, true);
+            if (opts.headers) {
+                Object.keys(opts.headers).forEach(key => xhr.setRequestHeader(key, opts.headers[key]));
+            }
+            // Send the request
+            if (opts.contentType === 'application/json') {
+                // console.log(JSON.stringify(opts.payload))
+                xhr.setRequestHeader('content-type', 'application/json');
+                xhr.send(JSON.stringify(opts.payload));
+            } else {
+                console.log("called")
+                xhr.send(opts.payload);
+            }
             return new Promise((resolve, reject) => {
                 xhr.onreadystatechange = () => {
+                    // only run if the request is complete
                     if (xhr.readyState !== 4) return;
                     if (xhr.status >= 200 && xhr.status <= 300) {
+                        // If successful
                         resolve(JSON.parse(xhr.responseText));
                     } else {
+                        // If false 
                         reject(xhr.response);
                     }
                 }
             });
-            if (opts.headers) {
-                Object.keys(opts.headers).forEach(key => xhr.setRequestHeader(key, opts.headers[key]));
-            }
-            xhr.setRequestHeader('content-type', 'application/json');
-            xhr.open(opts.method || "GET", opts.url, true);
-            xhr.send();
         }
+
         let intervalId;
 
         const formatTime = time => {
@@ -162,25 +191,26 @@
             let timerTime = time * 60 * 1000;
             const interval = () => {
                 let min, sec;
+                // console.log(timerTime)
+                if (timerTime === 0) {
+                    clearInterval(intervalId);
+                    el.classList.remove("disable")
+                    el.innerText = `Lets Go`;
+                    // console.log(timerTime)
+                    return timerTime;
+                }
                 timerTime -= 1000;
                 [min, sec] = formatTime(timerTime);
                 el.innerText = `${min}:${sec}`;
                 return timerTime;
             }
-
-            if (!timerTime) {
-                clearInterval(intervalId);
-                el.classList.remove("disable")
-                el.innerText = `Lets Go`;
-                return timerTime;
-            }
-
             intervalId = setInterval(interval, 1000, timerTime);
         }
 
         const verifyEmail = async () => {
             let err, data;
             [err, data] = await to(makeRequest({
+                contentType: 'application/json',
                 method: "GET",
                 url: `/verify/email?${user["email"]}&${user["code"]}`,
             }));
@@ -189,31 +219,47 @@
             }
             if (data) {
                 if (data.error) {
-                    document.querySelector(".failed-page").classList.remove("u-hidden");
-                    document.querySelector(".success-page").classList.add("u-hidden");
-                    document.querySelector(".failed-page .description").innerText = data.error;
-                    document.querySelector(".failed-page .btn-varify").addEventListener("click", async () => {
-                        if (document.querySelector(".failed-page .btn-varify").classList.contains(
-                                "disable")) return;
-
-                        countdown(document.querySelector(".failed-page .btn-varify"), 5);
-                        let err, data;
-                        [err, data] = await to(makeRequest({
-                            method: "GET",
-                            url: `/resend/email?email=${document.querySelector(".failed-page input[type=email]").value}`,
-                        }));
-                    }, false);
+                    els.failPage.classList.remove("u-hidden");
+                    els.successPage.classList.add("u-hidden");
+                    els.failReason.innerText = data.error;
                 } else {
-                    document.querySelector(".failed-page").classList.add("u-hidden");
-                    document.querySelector(".success-page").classList.remove("u-hidden");
-                    document.querySelector(".success-page button").addEventListener("click", () => {
-                        // token
-                        window.location.href = `index.html?${data.token}`;
-                    }, false);
+                    els.failPage.classList.add("u-hidden");
+                    els.successPage.classList.remove("u-hidden");
                 }
             }
         }
-        verifyEmail();
+
+        els.btnBackToHome.addEventListener("click", () => {
+            // token
+            window.location.href = `index.html?${data.token}`;
+        }, false);
+
+        els.emailInput.addEventListener("input", () => {
+            if (!regExp.email.test(els.emailInput.value)) {
+                els.emailInput.parentNode.classList.add("has-danger");
+                els.btnVarify.classList.add("disable");
+            } else {
+                els.emailInput.parentNode.classList.remove("has-danger");
+                els.btnVarify.classList.remove("disable");
+            }
+        }, false);
+
+        els.btnVarify.addEventListener("click", async () => {
+            if (els.btnVarify.classList.contains(
+                    "disable")) return;
+
+            countdown(els.btnVarify, 5);
+            let err, data;
+            [err, data] = await to(makeRequest({
+                contentType: 'application/json',
+                method: "GET",
+                url: `/resend/email?email=${els.emailInput.value}`,
+            }));
+            console.log(err, data);
+            els.emailInput.value = "";
+        }, false);
+
+        // verifyEmail();
     </script>
 </body>
 

@@ -1330,3 +1330,18 @@ a:visited {
     border: 0;
     border-radius: 6px;
 }
+
+.failed-page{
+    .bmd-form-group{
+        position: relative;
+    }
+    .bmd-form-group .bmd-hint{
+        margin: 0;
+        bottom: -15px;
+        left: -197px;
+    }
+    .btn-varify{
+        margin: 2rem 0;
+        border: 1px solid #9c27b0;
+    }
+}

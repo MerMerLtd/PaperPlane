@@ -700,6 +700,7 @@ const signUp = async evt => {
     const hash = CryptoJS.enc.Hex.stringify(CryptoJS.HmacSHA256(elements.signUpPassword.value, salt));
     let err, data;
     [err, data] = await to(makeRequest({
+        contentType: 'application/json',
         method: "POST",
         url: "/member",
         payload: {
@@ -728,15 +729,16 @@ const signIn = async evt => {
     const hash = CryptoJS.enc.Hex.stringify(CryptoJS.HmacSHA256(password, salt));
     let err, data;
     const opts = {
+        contentType: 'application/json',
         method: "POST",
         url: "/member/login",
         // payload: formData,
-        payload: JSON.stringify({
+        payload: {
             account,
             password,
             hash,
             salt,
-        }),
+        },
     };
     console.log(typeof opts.payload);
     // const formData = new FormData();
@@ -928,15 +930,16 @@ const renderSendingView = async () => {
             elements.sendingCard.classList.remove("link");
             elements.sendingCard.classList.remove("direct");
             const opts = {
+                contentType: 'application/json',
                 method: "POST",
                 url: `/letter/${letter}/send`,
                 // headers: {
                 //     token: `${token}`
                 // }, // ?? token
                 payload: {
-                    "email": `${elements.sendingEmailAddr.value}`,
-                    "subject": `${elements.sendingSubject.value ||"Here is something for you"}`,
-                    "content": `${elements.sendingMessage.value ||"Guten Tag!"}`,
+                    email: elements.sendingEmailAddr.value,
+                    subject: elements.sendingSubject.value ||"Here is something for you",
+                    content: elements.sendingMessage.value ||"Guten Tag!",
                 },
             }
             console.log(opts)

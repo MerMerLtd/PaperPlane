@@ -16662,6 +16662,18 @@ a:visited {
   border: 0;
   border-radius: 6px; }
 
+.failed-page .bmd-form-group {
+  position: relative; }
+
+.failed-page .bmd-form-group .bmd-hint {
+  margin: 0;
+  bottom: -15px;
+  left: -197px; }
+
+.failed-page .btn-varify {
+  margin: 2rem 0;
+  border: 1px solid #9c27b0; }
+
 /**
  * Computes a CSS calc function that betweens a value from
  * A to B over viewport-width A to viewport-width B.
