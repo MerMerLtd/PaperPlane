@@ -732,7 +732,6 @@ const signIn = async evt => {
         contentType: 'application/json',
         method: "POST",
         url: "/member/login",
-        // payload: formData,
         payload: {
             account,
             password,
@@ -740,30 +739,28 @@ const signIn = async evt => {
             salt,
         },
     };
-    console.log(typeof opts.payload);
-    // const formData = new FormData();
-    // formData.append("account", email);
-    // formData.append("password", password);
-    // formData.append("hash", hash);
-    // formData.append("salt", salt);
 
     [err, data] = await to(makeRequest(opts));
     if (err) {
-        console.log(JSON.parse(err))
+        console.log(JSON.parse(err));
+        elements.signinCard.classList.add("shake");
+        setTimeout(() => elements.signinCard.classList.remove("shake"), 500);
+        elements.signInEmail.value = "";
+        elements.signInPassword.value = "";
         // throw new Error(err);
     }
     if (data) {
         if (data.token) token = data.token;
 
-        // 驗證未通過寄新的link給他
+    
         if (data.error) { // ??
             // switch (data.error.code) {
             //     case 123:
-            //         // 跳轉提示到email驗證email
+            //         驗證未通過寄新的link給他 跳轉提示到email驗證email
             //         onNavItemClick("confirm")
             //         break;
             //     case 122:
-            //         // 帳號密碼錯誤
+            //         帳號密碼錯誤
             //         elements.signinCard.classList.remove("shake");
             //         elements.signinCard.classList.add("shake");
             //         break;
