@@ -24,3 +24,42 @@ npm start
 ## Password
 - algorithm: HMACSHA256(password, salt)
 - salt: new Date().getTime.toString(16)
+
+## Route
+```shell
+Router.prototype.route = async hash => {
+    console.trace(hash)
+    switch (true) {
+        case hash.startsWith("#terms/privacy"):
+            renderPrivacyPolicy();
+            break;
+        case hash.startsWith("#terms"):
+            renderTerms();
+            break;
+        case hash.startsWith("#purchase"):
+            renderPurchasePage();
+            break;
+        case hash.startsWith("#send"):
+            renderDropView();
+            break;
+        case hash.startsWith("#receive"):
+            if (window.location.hash.match(/\d{6}/)) {
+                checkURL();
+            } else {
+                renderDownloadInput();
+            }
+            break;
+        case hash.startsWith("#sign-in"):
+            renderLoginView("sign-in");
+            break;
+        case hash.startsWith("#sign-up"):
+            renderLoginView("sign-up");
+            break;
+        case hash.startsWith("#confirm"):
+            renderConfirmPage();
+            break;
+        default:
+            break;
+    }
+}
+```
