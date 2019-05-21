@@ -43,7 +43,6 @@ Router.prototype.route = async hash => {
             renderDropView();
             break;
         case hash.startsWith("#receive"):
-            console.log("render receive")
             if (window.location.hash.match(/\d{6}/)) {
                 checkURL();
             } else {
@@ -52,11 +51,9 @@ Router.prototype.route = async hash => {
             }
             break;
         case hash.startsWith("#sign-in"):
-            console.log("render signin")
             renderLoginView("sign-in");
             break;
         case hash.startsWith("#sign-up"):
-            console.log("render signin")
             renderLoginView("sign-up");
             break;
         case hash.startsWith("#verification-success"):
@@ -72,7 +69,6 @@ Router.prototype.route = async hash => {
             renderConfirmPage();
             break;
         default:
-            // renderDropView();
             break;
     }
 }
