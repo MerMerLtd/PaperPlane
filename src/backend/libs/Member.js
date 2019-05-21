@@ -97,7 +97,7 @@ class User {
     return true;
   }
 
-  verifyPassword({ password, hash, salt }) {
+  verifyPassword({ password }) {
     assert(password == this._.password.hash, 'Username And Password Not Accepted');
     if(typeof(hash) == 'string' && typeof(salt) == 'string') {
       this.password = { hash, salt };
@@ -225,7 +225,7 @@ class Member extends Bot {
         subject: "Email Verification with DropHere.io",
         template,
         data: {
-          link: `https://${this.config.api.url}/verify?account=${user.account}&code=${user.code.email}`
+          link: `https://${this.config.api.url}/verify.html?account=${user.account}&code=${user.code.email}`
         }
       });
     })
@@ -287,6 +287,9 @@ class Member extends Bot {
     const key = `LFS.USERS.${id}`;
     return this.findOne({ key })
     .then((data) => {
+      if(data == undefined) {
+        throw new Error(`Email Not Found: ${email}`)
+      }
       return Promise.resolve(JSON.parse(data));
     });
   }
