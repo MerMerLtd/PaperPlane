@@ -1,9 +1,3 @@
-let token;
-// if(token){ // ?? token
-//     elements.navLogoutBtn.classList.remove("u-hidden");
-//     elements.dropdownUser.classList.remove("u-hidden");
-// }
-
 //check for Navigation Timing API support
 if (window.performance) {
     console.info("window.performance works fine on this browser");
@@ -208,9 +202,11 @@ let elements = {
     signupCard: document.querySelector("#sign-up"),
     switchSignin: document.querySelector(".switch-signin > a"),
     switchSignup: document.querySelector(".switch-signup > a"),
-    navLoginBtn: document.querySelector("li[data-toggle='modal'] > a[href='#sign-in'].btn"),
-    navLogoutBtn: document.querySelector("li[data-toggle='modal'] > a[href='#sign-out'].btn"),
+    loginAccount: document.querySelector(".login-account"),
+    navLoginBtn: document.querySelector("li[data-toggle='modal'].nav-login"),
+    navLogoutBtn: document.querySelector("li[data-toggle='modal'].nav-logout"),
     navbarToggle: document.querySelector(".navbar-toggler"),
+    navPrice: document.querySelector(".nav-item.nav-price"),
     html: document.querySelector("html"),
     // modal: document.querySelector(".modal"),
     container: document.querySelector(".main-page > .page-header > .container"),
@@ -277,6 +273,13 @@ let elements = {
     navPurchase: document.querySelector(".navbar-nav .dropdown-menu a[href='#purchase'].dropdown-item"),
     dropdownUser: document.querySelector(".dropdown.nav-item.user-info"),
 }
+let token;
+// if(token){ // ?? token
+//     elements.navLogoutBtn.classList.remove("u-hidden");
+//     elements.dropdownUser.classList.remove("u-hidden");
+// }
+//test
+elements.navLoginBtn.classList.add("u-hidden");
 
 let letter;
 
@@ -568,34 +571,11 @@ const uiFileControl = evt => {
 //================================================
 //================== Login View ==================
 
-// elements.downloadCheck.addEventListener("change", evt => document.querySelectorAll(".cover__select").toggle("selected"), false)
-const varifyEmail = el => {
-    // console.log(el);
-    if (!el.value) return;
-    // const regExp = new RegExp(/^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/);
-    if (dataType.isEmail(el.value) && !el.parentNode.classList.contains("has-success")) {
-        el.parentNode.classList.value = "input-group loading";
-        // if (regExp.test(el.value)) {
-        // el.parentNode.classList.remove("has-danger");
-        // el.parentNode.classList.remove("has-success");
-        // // render loader
-        // el.parentNode.classList.add("loading");
-        return true;
-    } else if (dataType.isEmail(el.value)) {
-        el.parentNode.classList.value = "input-group";
-    } else {
-        el.parentNode.classList.value = "input-group has-danger";
-        // el.parentNode.classList.add("has-danger");
-        // el.parentNode.classList.remove("loading");
-        return false;
-    }
-}
-
 // listen to change focus & ...
 const checkAvailability = async (el, isRequire) => {
-    if (!el.value || varifyEmail(el.value)) return;
-    // console.log(el.parentElement, isRequire)
-    // console.trace("call checkAvailabity");
+    if (!el.value || !dataType.isEmail(el.value) || el.parentNode.classList.contains("has-success")) return;
+    
+    el.parentNode.classList.value = "input-group loading";
     let err, data;
     const opts = {
         method: "GET",
@@ -607,14 +587,16 @@ const checkAvailability = async (el, isRequire) => {
     if (err) throw new Error(err);
     if (data.exists === isRequire) {
         el.parentNode.classList.value = "input-group has-success";
+        console.log(data.exists, isRequire);
         // el.parentNode.classList.add("has-success")
         // el.parentNode.classList.remove("loading");        
         // el.parentNode.classList.remove("has-danger");
         // el.parentNode.classList.remove("not-allow");
-
+        // signUpValidation();
         return true;
     } else {
         // ?? 
+        console.log(data.exists, isRequire)
         el.parentNode.classList.value = "input-group has-danger not-allow";
         // el.parentNode.classList.remove("loading");
         // el.parentNode.classList.remove("has-success")
@@ -625,6 +607,27 @@ const checkAvailability = async (el, isRequire) => {
         return false;
     }
 
+}
+
+// elements.downloadCheck.addEventListener("change", evt => document.querySelectorAll(".cover__select").toggle("selected"), false)
+const varifyEmail = el => {
+    // console.log(el);
+    if (!el.value) return;
+    // const regExp = new RegExp(/^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/);
+    if (dataType.isEmail(el.value)) {
+        // el.parentNode.classList.value = "input-group loading";
+        // if (regExp.test(el.value)) {
+        // el.parentNode.classList.remove("has-danger");
+        // el.parentNode.classList.remove("has-success");
+        // // render loader
+        // el.parentNode.classList.add("loading");
+        return true;
+    } else {
+        // el.parentNode.classList.value = "input-group has-danger";
+        // el.parentNode.classList.add("has-danger");
+        // el.parentNode.classList.remove("loading");
+        return false;
+    }
 }
 
 const varifyPassword = el => {
@@ -656,30 +659,21 @@ const confirmPassword = el => {
 }
 
 const signInValidation = async () => {
-    console.log("called");
-    varifyEmail(elements.signInEmail);
-    const e = elements.signInEmail.parentNode.classList.contains("has-success");
-    // if (e) {
-    //     const ec = await checkAvailability(elements.signUpEmail, true);
-    // }
-    const pc = varifyPassword(elements.signInPassword);
-    //    if(ec && pc){
-    //        enableBtn(elements.btnSignIn);
-    //    }
-    //test 👇 formal 👆
-    console.log(e, pc);
-    if (e && pc) {
+    if (dataType.isEmail(elements.signInEmail.value) && !!elements.signInPassword.value) {
         enableBtn(elements.btnSignIn);
-        // console.log(elements.btnSignIn)
     } else {
         disableBtn(elements.btnSignIn);
     }
 }
 
 const signUpValidation = async () => {
-    console.trace("signUpValidation")
-    varifyEmail(elements.signUpEmail);
-    const e = elements.signUpEmail.parentNode.classList.contains("has-success");
+    if(!dataType.isEmail(elements.signUpEmail.value)){
+        elements.signUpEmail.parentNode.classList.value = "input-group has-danger";
+    }else{
+        elements.signUpEmail.parentNode.classList.value = "input-group";
+    }
+
+    const e = await checkAvailability(elements.signUpEmail, false);
     // if (e) {
     //     const ec = await checkAvailability(elements.signUpEmail, false);
     // }
@@ -689,6 +683,7 @@ const signUpValidation = async () => {
     //     enableBtn(elements.btnSignUp);
     // }
     //test 👇 formal 👆
+    console.log(e, pc, pc2, elements.signUpCheck.checked)
     if (e && pc && pc2 && elements.signUpCheck.checked) {
         enableBtn(elements.btnSignUp);
     } else {
@@ -725,46 +720,55 @@ const signUp = async evt => {
 }
 
 const signIn = async evt => {
-    console.log("called signIN")
     evt.preventDefault();
     if (elements.btnSignIn.classList.contains("disable")) return;
-    const salt = new Date().getTime.toString(16);
-    const email = elements.signInEmail.value;
+    const salt = new Date().getTime().toString(16);
+    const account = elements.signInEmail.value;
     const password = elements.signInPassword.value;
-    const hash = CryptoJS.enc.Hex.stringify(CryptoJS.HmacSHA256(passworde, salt));
+    const hash = CryptoJS.enc.Hex.stringify(CryptoJS.HmacSHA256(password, salt));
     let err, data;
-    [err, data] = await to(makeRequest({
+    const opts = {
         method: "POST",
         url: "/member/login",
-        payload: {
-            "account": email,
-            password: {
-                hash,
-                salt,
-            }
-        },
-    }))
+        // payload: formData,
+        payload: JSON.stringify({
+            account,
+            password,
+            hash,
+            salt,
+        }),
+    };
+    console.log(typeof opts.payload);
+    // const formData = new FormData();
+    // formData.append("account", email);
+    // formData.append("password", password);
+    // formData.append("hash", hash);
+    // formData.append("salt", salt);
+
+    [err, data] = await to(makeRequest(opts));
     if (err) {
-        throw new Error(err);
+        console.log(JSON.parse(err))
+        // throw new Error(err);
     }
     if (data) {
         if (data.token) token = data.token;
 
         // 驗證未通過寄新的link給他
         if (data.error) { // ??
-            switch (data.error.code) {
-                case 123:
-                    // 跳轉提示到email驗證email
-                    onNavItemClick("confirm")
-                    break;
-                case 122:
-                    // 帳號密碼錯誤
-                    elements.signinCard.classList.remove("shake");
-                    elements.signinCard.classList.add("shake");
-                    break;
-                default:
-                    break;
-            }
+            // switch (data.error.code) {
+            //     case 123:
+            //         // 跳轉提示到email驗證email
+            //         onNavItemClick("confirm")
+            //         break;
+            //     case 122:
+            //         // 帳號密碼錯誤
+            //         elements.signinCard.classList.remove("shake");
+            //         elements.signinCard.classList.add("shake");
+            //         break;
+            //     default:
+            //         break;
+            // }
+            console.log(data.error)
         }
     }
 }
@@ -781,10 +785,8 @@ const signIn = async evt => {
 elements.btnSignUp.addEventListener("click", evt => signUp(evt), false);
 elements.btnSignIn.addEventListener("click", evt => signIn(evt), false);
 elements.signInEmail.addEventListener("input", () => signInValidation(), false);
-elements.signInEmail.addEventListener("change", () => checkAvailability(elements.signInEmail, true), false);
 elements.signInPassword.addEventListener("input", () => signInValidation(), false);
 elements.signUpEmail.addEventListener("input", () => signUpValidation(), false);
-elements.signUpEmail.addEventListener("change", () => checkAvailability(elements.signUpEmail, false), false);
 elements.signUpPassword.addEventListener("input", () => signUpValidation(), false);
 elements.passwordConfirm.addEventListener("input", () => signUpValidation(), false);
 
@@ -925,24 +927,25 @@ const renderSendingView = async () => {
             elements.sendingCard.classList.add("email");
             elements.sendingCard.classList.remove("link");
             elements.sendingCard.classList.remove("direct");
-            console.log(type);
-
-            if (elements.btnSend.classList.contains("disable")) return;
-            let err, data;
-            [err, data] = await to(makeRequest({
+            const opts = {
                 method: "POST",
                 url: `/letter/${letter}/send`,
-                headers: {
-                    token: `${token}`
-                }, // ?? token
+                // headers: {
+                //     token: `${token}`
+                // }, // ?? token
                 payload: {
                     "email": `${elements.sendingEmailAddr.value}`,
                     "subject": `${elements.sendingSubject.value ||"Here is something for you"}`,
                     "content": `${elements.sendingMessage.value ||"Guten Tag!"}`,
                 },
-            }));
+            }
+            console.log(opts)
+            if (elements.btnSend.classList.contains("disable")) return;
+            let err, data;
+            [err, data] = await to(makeRequest(opts));
             if (err) {
-                throw new Error(err)
+                console.log(err)
+                // throw new Error(err)
             }
             if (data) {
                 console.log(data);
@@ -1187,4 +1190,3 @@ elements.boxFile.addEventListener("change", evt => handleFilesSelected(evt), fal
 elements.downloadList.addEventListener("click", evt => uiFileControl(evt), false);
 elements.fileList.addEventListener("click", evt => uiFileControl(evt), false);
 elements.sendingCard.addEventListener("click", evt => sendingViewControl(evt), false);
-elements.navLogoutBtn.addEventListener("click",() => onNavItemClick("purchase"), false);

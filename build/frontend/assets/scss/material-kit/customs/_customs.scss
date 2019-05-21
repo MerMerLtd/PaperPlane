@@ -10,7 +10,7 @@
     display: none !important;
 }
 
-.u-display{
+.u-display {
     display: block !important;
     transform: scale(1) !important;
     opacity: 1 !important;
@@ -1267,26 +1267,66 @@ a:visited {
     }
 }
 
-.presentation-page .section-pricing .card-margin, .index-page .section-pricing .card-margin {
-    margin-top: 0px;
-}
+// .presentation-page .section-pricing .card-margin, .index-page .section-pricing .card-margin {
+//     margin-top: 0px;
+// }
 
-.presentation-page .section-pricing .card-pricing, .index-page .section-pricing .card-pricing {
-    margin-top: 0px;
-}
+// .presentation-page .section-pricing .card-pricing, .index-page .section-pricing .card-pricing {
+//     margin-top: 0px;
+// }
 
 
-.login-page >.purchase-page .page-header .container {
+.login-page>.purchase-page .page-header .container {
     padding-top: 0vh;
 }
 
-.login-page > .main-page .page-header .container {
+.login-page>.main-page .page-header .container {
     padding-top: 20vh;
 }
 
-@media screen and (max-width: 767px){
-    .login-page > .main-page .page-header > .container {
+@media screen and (max-width: 767px) {
+    .login-page>.main-page .page-header>.container {
         padding-top: 12vh;
         padding-bottom: 100px;
     }
+}
+
+
+.purchase-page {
+    .card p.card-description {
+        min-height: 50px;
+    }
+
+    .card .card-category {
+        font-size: 1.5rem;
+        text-transform: none;
+
+        & span {
+            color: #ff2d55;
+            transform: translateY(-3px);
+            display: inline-block;
+            font-weight: 600;
+        }
+    }
+
+    .card-plain .icon {
+        color: #FFFFFF;
+    }
+}
+
+.nav-price {
+    margin: 0 0.625rem;
+    .dropdown-item:hover, 
+    .dropdown-item:focus, 
+    .dropdown-item:active {
+        background-color: #9c27b0;
+        border-radius: 3px;
+        box-shadow: none;
+    }
+}
+
+.card .card-body + .card-footer {
+    padding: 0rem;
+    border: 0;
+    border-radius: 6px;
 }

@@ -38,16 +38,22 @@
         <ul class="navbar-nav ml-auto">
           <li class="dropdown nav-item user-info">
             <a href="#" class="dropdown-toggle nav-link" data-toggle="dropdown">
-              <i class="material-icons">face</i> <span class="login-account">luphia@mermer.cc</span>
+              <i class="material-icons">face</i> <span class="login-account">hazelliang@mermer.cc</span>
             </a>
             <div class="dropdown-menu dropdown-with-icons">
               <a href="#purchase" class="dropdown-item">
-                <i class="material-icons">local_florist</i> <span class="coin"></span> DHC
+                <i class="material-icons">local_florist</i>You have&nbsp;<span class="coin"
+                  style="color:#ff2d55">10</span>&nbsp;DHCs
               </a>
               <!-- <a href="../index.html" class="dropdown-item">
                 <i class="material-icons">wb_sunny</i> All Components
               </a> -->
             </div>
+          </li>
+          <li class="dropdown nav-item nav-price u-hidden">
+            <a href="#purchase" class="dropdown-item" style="color: white;">
+              Pricing
+            </a>
           </li>
           <!-- <li class="dropdown nav-item">
             <a href="#" class="dropdown-toggle nav-link" data-toggle="dropdown">
@@ -126,13 +132,13 @@
               </a>
             </div>
           </li> -->
-          <li class="button-container nav-item iframe-extern" data-toggle="modal" data-target="#loginModal">
-            <a href="#sign-in" class="btn  btn-rose btn-round btn-block">
+          <li class="button-container nav-item iframe-extern nav-login" data-toggle="modal" data-target="#loginModal">
+            <a href="#sign-in" class="btn  btn-rose btn-round btn-block ">
               <i class="material-icons">visibility</i> Login
             </a>
           </li>
-          <li class="button-container nav-item iframe-extern" data-toggle="modal" data-target="#loginModal">
-            <a href="#sign-out" class="btn  btn-rose btn-round btn-block">
+          <li class="button-container nav-item iframe-extern nav-logout" data-toggle="modal" data-target="#loginModal">
+            <a href="#sign-in" class="btn  btn-rose btn-round btn-block ">
               <i class="material-icons">visibility</i> Logout
             </a>
           </li>
@@ -181,20 +187,6 @@
                       <input type="email" class="form-control" placeholder="Email..." name="email">
                       <span class="form-control-feedback">
                         <div></div>
-                        <div class="lds-spinner">
-                          <div></div>
-                          <div></div>
-                          <div></div>
-                          <div></div>
-                          <div></div>
-                          <div></div>
-                          <div></div>
-                          <div></div>
-                          <div></div>
-                          <div></div>
-                          <div></div>
-                          <div></div>
-                        </div>
                         <div></div>
                       </span>
                     </div>
@@ -290,12 +282,12 @@
                         </span>
                       </div>
                       <input type="email" class="form-control" placeholder="Email..." name="account">
-
-                      <!-- <span class="form-control-feedback">
-                                          <i class="material-icons">clear</i>
-                                        </span> -->
+                      <span class="form-control-feedback">
+                        <div></div>
+                        <div></div>
+                      </span>
                     </div>
-                    <div class="bmd-hint">Can't be empty.</div>
+                    <div class="bmd-hint">Please input valid email.</div>
                   </span>
                   <span class="bmd-form-group">
                     <div class="input-group">
@@ -305,8 +297,12 @@
                         </span>
                       </div>
                       <input type="password" class="form-control" placeholder="Password..." name="password">
+                      <!-- <span class="form-control-feedback">
+                        <div></div>
+                        <div></div>
+                      </span> -->
                     </div>
-                    <div class="bmd-hint">Can't be empty.</div>
+                    <!-- <div class="bmd-hint">Can't be empty.</div> -->
                   </span>
                   <div class="form-check">
                     <label class="form-check-label">
@@ -563,10 +559,80 @@
     </div>
   </div>
 
- <div class="purchase-page u-hidden">
-    <div class="page-header header-filter" style="background-image: url('../assets/img/bg5.jpg')">
-      
-      <div class="section section-pricing pricing-5 iframe-extern">
+  <div class="purchase-page u-hidden">
+    <div class="page-header header-filter" style="background-image: url('../assets/img/bg2.jpg')">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8 ml-auto mr-auto text-center">
+            <div class="section-space"></div>
+            <h3 class="title">Want to buy some DropHere Coins?</h3>
+            <h5 class="description">Below we have some options for you.</h5>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg-3 col-md-6">
+            <div class="card card-pricing card-plain">
+              <div class="card-body ">
+                <h6 class="card-category">6 <span>+1</span>&nbsp;DHCs</h6>
+                <div class="icon">
+                  <i class="material-icons">weekend</i>
+                </div>
+                <h3 class="card-title">$29</h3>
+                <p class="card-description">
+                  Only purchase once per day. This is good if ...
+                </p>
+                <a href="#pablo" class="btn btn-white btn-round">Choose Plan</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="card card-pricing card-raised">
+              <div class="card-body ">
+                <h6 class="card-category">20&nbsp;DHCs</h6>
+                <div class="icon icon-rose">
+                  <i class="material-icons">home</i>
+                </div>
+                <h3 class="card-title">$99</h3>
+                <p class="card-description">
+                  This is good if...
+                </p>
+                <a href="#pablo" class="btn btn-rose btn-round">Choose Plan</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="card card-pricing card-plain">
+              <div class="card-body ">
+                <h6 class="card-category">100 <span>+10</span>&nbsp;DHCs</h6>
+                <div class="icon">
+                  <i class="material-icons">business</i>
+                </div>
+                <h3 class="card-title">$499</h3>
+                <p class="card-description">
+                  This is good if ...
+                </p>
+                <a href="#pablo" class="btn btn-white btn-round">Choose Plan</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="card card-pricing card-plain">
+              <div class="card-body ">
+                <h6 class="card-category">300 <span>+60</span>&nbsp;DHCs</h6>
+                <div class="icon">
+                  <i class="material-icons">account_balance</i>
+                </div>
+                <h3 class="card-title">$1499</h3>
+                <p class="card-description">
+                  This is good if ...
+                </p>
+                <a href="#pablo" class="btn btn-white btn-round">Choose Plan</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- <div class="section section-pricing pricing-5 iframe-extern">
         <div class="container">
           <div class="row">
             <div class="col-md-8 ml-auto mr-auto text-center">
@@ -668,11 +734,89 @@
             </div>
           </div>
         </div>
-      </div>
+      </div> -->
     </div>
-  </div> 
 
-  
+    <div class="cd-section" id="pricing">
+      <!--     *********    PRICING 1     *********      -->
+      <!-- <div class="pricing-1 section-image" style="background-image: url('./assets/img/bg11.jpg')" id="pricing-1">
+        <div class="container">
+          <div class="row">
+            <div class="col-md-6 ml-auto mr-auto text-center">
+              <h2 class="title">Pick the best plan for you</h2>
+              <h5 class="description">You have Free Unlimited Updates and Premium Support on each package.</h5>
+              <div class="section-space"></div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-lg-3 col-md-6">
+              <div class="card card-pricing card-plain">
+                <div class="card-body ">
+                  <h6 class="card-category">Freelancer</h6>
+                  <div class="icon">
+                    <i class="material-icons">weekend</i>
+                  </div>
+                  <h3 class="card-title">FREE</h3>
+                  <p class="card-description">
+                    This is good if your company size is between 2 and 10 Persons.
+                  </p>
+                  <a href="#pablo" class="btn btn-white btn-round">Choose Plan</a>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+              <div class="card card-pricing card-raised">
+                <div class="card-body ">
+                  <h6 class="card-category">Small Company</h6>
+                  <div class="icon icon-rose">
+                    <i class="material-icons">home</i>
+                  </div>
+                  <h3 class="card-title">$29</h3>
+                  <p class="card-description">
+                    This is good if your company size is between 2 and 10 Persons.
+                  </p>
+                  <a href="#pablo" class="btn btn-rose btn-round">Choose Plan</a>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+              <div class="card card-pricing card-plain">
+                <div class="card-body ">
+                  <h6 class="card-category">Medium Company</h6>
+                  <div class="icon">
+                    <i class="material-icons">business</i>
+                  </div>
+                  <h3 class="card-title">$69</h3>
+                  <p class="card-description">
+                    This is good if your company size is between 11 and 99 Persons.
+                  </p>
+                  <a href="#pablo" class="btn btn-white btn-round">Choose Plan</a>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+              <div class="card card-pricing card-plain">
+                <div class="card-body ">
+                  <h6 class="card-category">Enterprise</h6>
+                  <div class="icon">
+                    <i class="material-icons">account_balance</i>
+                  </div>
+                  <h3 class="card-title">$159</h3>
+                  <p class="card-description">
+                    This is good if your company size is 99+ persons.
+                  </p>
+                  <a href="#pablo" class="btn btn-white btn-round">Choose Plan</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div> -->
+      <!--     *********    END PRICING 1      *********      -->
+    </div>
+  </div>
+
+
 
   <div class="confirm-page u-hidden">
     <div class="page-header header-filter" style="background-image: url('../assets/img/dg2.jpg')">

@@ -773,28 +773,25 @@ Router.prototype.route = async hash => {
             if (window.location.hash.match(/\d{6}/)) {
                 checkURL();
             } else {
-                console.log("render renderDownloadInput")
+                // console.log("render renderDownloadInput")
                 renderDownloadInput();
             }
             break;
         case hash.startsWith("#sign-in"):
-            console.log("render signin")
+            // console.log("render signin")
             renderLoginView("sign-in");
             break;
         case hash.startsWith("#sign-up"):
-            console.log("render signin")
+            // console.log("render signin")
             renderLoginView("sign-up");
             break;
-        case hash.startsWith("#verification-success"):
-            renderVerifyResultView(true);
-            break;
-        case hash.startsWith("#verification-fail"):
-            renderVerifyResultView(false);
-            break;
+        // case hash.startsWith("#verification-success"):
+        //     renderVerifyResultView(true);
+        //     break;
+        // case hash.startsWith("#verification-fail"):
+        //     renderVerifyResultView(false);
+        //     break;
         case hash.startsWith("#confirm"):
-            renderConfirmPage();
-            break;
-        case hash.startsWith("#deposit"):
             renderConfirmPage();
             break;
         default:
@@ -829,12 +826,22 @@ if (performance.navigation.type === 1) {
     router.route(window.location.hash);
 }
 
+const logout = ()=> {
+    // ?? token: delete token;
+   onNavItemClick("sign-in");
+   elements.navLoginBtn.classList.remove("u-hidden");
+   elements.navPrice.classList.remove("u-hidden");
+   elements.navLogoutBtn.classList.add("u-hidden");
+   elements.dropdownUser.classList.add("u-hidden");
+}
+
 
 elements.tabSend.addEventListener("click", () => onNavItemClick("send"), false);
 elements.tabReceive.addEventListener("click", () => onNavItemClick(tabView2Location), false);
 
 elements.navBarBrand.addEventListener("click", () => onNavItemClick("send"), false);
 elements.navLoginBtn.addEventListener("click", () => onNavItemClick("sign-in"), false);
+elements.navLogoutBtn.addEventListener("click", logout, false);
 elements.btnSend.addEventListener("click", renderSendingView, false);
 
 elements.btnRefresh.addEventListener("click", checkURL, false);
