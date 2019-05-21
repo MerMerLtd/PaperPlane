@@ -46,7 +46,6 @@ Router.prototype.route = async hash => {
             if (window.location.hash.match(/\d{6}/)) {
                 checkURL();
             } else {
-                console.log("render renderDownloadInput")
                 renderDownloadInput();
             }
             break;
@@ -56,16 +55,7 @@ Router.prototype.route = async hash => {
         case hash.startsWith("#sign-up"):
             renderLoginView("sign-up");
             break;
-        case hash.startsWith("#verification-success"):
-            renderVerifyResultView(true);
-            break;
-        case hash.startsWith("#verification-fail"):
-            renderVerifyResultView(false);
-            break;
         case hash.startsWith("#confirm"):
-            renderConfirmPage();
-            break;
-        case hash.startsWith("#deposit"):
             renderConfirmPage();
             break;
         default:
