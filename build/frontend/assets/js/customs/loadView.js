@@ -919,7 +919,12 @@ const doneWithSending = deleteFile => {
 const renderSendingView = async () => {
     // 1. according to "#send .active" to render differ sendingWays
     const type = document.querySelector("#send .active").innerText || "LINK";
-
+    // 2.
+    if (elements.btnSend.classList.contains("disable")) return;
+    // 3. hidden drop-card
+    elements.dropCard.classList.add("u-hidden");
+    // 4. show sending-card
+    elements.sendingCard.classList.remove("u-hidden");
     // css
     switch (type) {
         case "EMAIL":
@@ -940,7 +945,7 @@ const renderSendingView = async () => {
                 },
             }
             console.log(opts)
-            if (elements.btnSend.classList.contains("disable")) return;
+        
             let err, data;
             [err, data] = await to(makeRequest(opts));
             if (err) {
@@ -973,10 +978,7 @@ const renderSendingView = async () => {
         default:
             throw new Error(`${type}`);
     }
-    // 2. hidden drop-card
-    elements.dropCard.classList.add("u-hidden");
-    // 3. show sending-card
-    elements.sendingCard.classList.remove("u-hidden");
+   
 }
 
 const sendingViewControl = evt => {

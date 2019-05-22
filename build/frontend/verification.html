@@ -130,10 +130,10 @@
             emailInput: document.querySelector("input[type=email]"),
         };
         const user = {};
-        window.location.search.match(/[^?&]+[^&]?/g).forEach(str => {
-            // user[str.split("=")[0]] = str.split("=")[1];
-            user[str.split("=")[0]] = str;
-        });
+        // window.location.search.match(/[^?&]+[^&]?/g).forEach(str => {
+        //     // user[str.split("=")[0]] = str.split("=")[1];
+        //     user[str.split("=")[0]] = str;
+        // });
         const regExp = {
             email: /^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/,
         }
@@ -259,7 +259,7 @@
             els.emailInput.value = "";
         }, false);
 
-        verifyEmail();
+        // verifyEmail();
     </script>
 </body>
 
